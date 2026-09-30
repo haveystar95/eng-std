@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 import 'package:eng_std/ui/paper_sheet.dart';
 
 import '../../../data/api_client.dart' show problemCodeOf;
@@ -252,7 +253,13 @@ class _DayWindowScreenState extends ConsumerState<DayWindowScreen> {
           final l = AppLocalizations.of(context);
           // A review and the rehearsal (37-1, 37-2) are the same window with other rows and, in place of the tabs,
           // the list of what the day is made of.
-          final system = WindowTexts.system(l, window.day, planTitle: _plan.shortTitle ?? _plan.displayTitle, slot: r.day.slot);
+          final system = WindowTexts.system(
+            l,
+            NativeTypesetter.of(context),
+            window.day,
+            planTitle: _plan.shortTitle ?? _plan.displayTitle,
+            slot: r.day.slot,
+          );
           // ОДНА КНОПКА ДНЯ (кадры 23-0a…0c, 37-1c; наряд FIX-3 §5, приёмка окна 2 п. 3): «Начать» / «Продолжить», у
           // пройденного дня — его итог: «Итог дня» (30-7) у дня плана и «Итог» у дня-системы, как на 37-1c. Повтора
           // дня целиком нет, «ещё раз» живёт у каждого ряда этапа.

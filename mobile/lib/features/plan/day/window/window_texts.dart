@@ -1,4 +1,5 @@
 import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/day_window.dart';
 import '../../../../data/plan/plan_models.dart';
@@ -13,13 +14,15 @@ enum WindowTab { words, phrases, dialogue }
 typedef WindowSystemDay = ({String brow, String title, String status, String lead});
 
 /// СЛОВА ОКНА ДНЯ И ШИТА СЛОВА — всё из словаря плана (`docs/plan-ui-glossary.md`), числа — из ответа сервера.
-/// Здесь только выбор ключа и склейка частей; ни одного числа, посчитанного на телефоне.
+/// Здесь только выбор ключа и склейка частей; ни одного числа, посчитанного на телефоне. What the server writes in the
+/// learner's language — the scene's title, the plan's name, the goals, the slot's word — is set by [NativeTypesetter]
+/// before it is joined (CLIENT-22-1 §2).
 abstract final class WindowTexts {
   /// Название на плите и в компактной шапке: сцена дня, у повторения и репетиции — имя дня.
-  static String title(AppLocalizations l, WindowDay day) => switch (day.type) {
+  static String title(AppLocalizations l, NativeTypesetter native, WindowDay day) => switch (day.type) {
     PlanDayType.review => l.planRouteDayReview,
     PlanDayType.rehearsal => l.planRouteDayRehearsal,
-    _ => day.titleNative ?? '',
+    _ => native(day.titleNative ?? ''),
   };
 
   /// THE PLATE OF A REVIEW OR THE REHEARSAL (кадры 37-1, 37-2, наряд CLIENT-CONV-1b); null — a scene day.
@@ -29,7 +32,13 @@ abstract final class WindowTexts {
   /// четверг»; «сегодня» / «завтра» come ready in the slot), then the state word, then the minutes the server sent —
   /// all of it before the start, what was spent once passed; while the day goes on the current row says its own.
   /// The two leads name the partner «собеседник»: the role arrives in the nominative only (as on 37-5).
-  static WindowSystemDay? system(AppLocalizations l, WindowDay day, {required String planTitle, PlanDaySlot? slot}) {
+  static WindowSystemDay? system(
+    AppLocalizations l,
+    NativeTypesetter native,
+    WindowDay day, {
+    required String planTitle,
+    PlanDaySlot? slot,
+  }) {
     final (state, minutes) = switch (day.status) {
       WindowDayStatus.notStarted => (
         l.planWindowStateNotStarted,
@@ -47,8 +56,8 @@ abstract final class WindowTexts {
     return switch (day.type) {
       PlanDayType.rehearsal => (
         brow: l.planRouteDayRehearsal,
-        title: planTitle,
-        status: line([l.planWindowRehearsalBefore, ?_when(l, slot), state, ?minutes]),
+        title: native(planTitle),
+        status: line([l.planWindowRehearsalBefore, ?_when(l, native, slot), state, ?minutes]),
         lead: l.planWindowRehearsalLead,
       ),
       PlanDayType.review => (
@@ -62,11 +71,11 @@ abstract final class WindowTexts {
   }
 
   /// When the day stands: «сегодня» / «завтра» as the server wrote them, otherwise its date's weekday — «в четверг».
-  static String? _when(AppLocalizations l, PlanDaySlot? slot) {
+  static String? _when(AppLocalizations l, NativeTypesetter native, PlanDaySlot? slot) {
     switch (slot?.code) {
       case PlanSlotCode.today || PlanSlotCode.tomorrow:
         final label = slot?.labelNative?.trim() ?? '';
-        return label.isEmpty ? null : label;
+        return label.isEmpty ? null : native.composed(label);
       case PlanSlotCode.date || PlanSlotCode.past:
         final date = PlanFormat.parseWireDate(slot?.date);
         return date == null ? null : l.planWindowOnWeekday(_weekdays[date.weekday - 1]);
@@ -139,8 +148,8 @@ abstract final class WindowTexts {
 
   /// ЦЕЛИ ОДНИМ ПРЕДЛОЖЕНИЕМ (23-0a…0c): «описать, где болит, ответить на вопросы врача и спросить про
   /// ограничения» — части через запятую, последняя через «и». Цели — сервера, склейка — словаря.
-  static String goalsList(AppLocalizations l, List<WindowGoal> goals) {
-    final parts = [for (final g in goals) if (g.text.trim().isNotEmpty) _lowerFirst(g.text.trim())];
+  static String goalsList(AppLocalizations l, NativeTypesetter native, List<WindowGoal> goals) {
+    final parts = [for (final g in goals) if (g.text.trim().isNotEmpty) native(_lowerFirst(g.text.trim()))];
     if (parts.isEmpty) return '';
     var line = parts.first;
     for (var i = 1; i < parts.length; i++) {

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 import 'package:eng_std/ui/paper_switch.dart';
 
 import '../../../data/local/cached_image_provider.dart';
@@ -84,11 +85,13 @@ class TalkEntryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // The scene's name, the talk's title and the roles are the server's, in the learner's language (CLIENT-22-1 §2).
+    final native = NativeTypesetter.of(context);
     final count = scenesCount;
     final eyebrow = rehearsal
         ? (count == null || count < 1 ? l.planTalkEntryWhole : l.planDot(l.planTalkEntryWhole, l.planTalkEntryScenes(count)))
-        : l.planDotPlain(l.planPlateStageTalk, scene?.titleNative.trim() ?? '');
-    final title = this.title;
+        : l.planDotPlain(l.planPlateStageTalk, native(scene?.titleNative.trim() ?? ''));
+    final title = this.title == null ? null : native(this.title!);
     return ClipRect(
       child: CustomMultiChildLayout(
         delegate: _EntryLayout(),
@@ -130,7 +133,7 @@ class TalkEntryView extends StatelessWidget {
                         ],
                         const SizedBox(height: 24),
                         for (final (i, (icon, line)) in [
-                          (_RuleIcon.talk, _firstRule(l)),
+                          (_RuleIcon.talk, _firstRule(l, native)),
                           (_RuleIcon.rescue, l.planTalkEntryRuleRescue(_gender)),
                           (_RuleIcon.counts, l.planTalkEntryRuleCounts),
                         ].indexed) ...[
@@ -138,7 +141,7 @@ class TalkEntryView extends StatelessWidget {
                           _Rule(icon: icon, text: line),
                         ],
                         if (scenes.length > 1)
-                          ..._byScene(l)
+                          ..._byScene(l, native)
                         else if (targets.isNotEmpty) ...[
                           const SizedBox(height: 24),
                           SessionEyebrow(l.planTalkEntrySay),
@@ -197,15 +200,15 @@ extension on TalkEntryView {
 
   /// «Собеседник начнёт первым…» — or, on a talk of several scenes, the first scene's role as the plan names it:
   /// «Регистратор начнёт первым…» (37-5b). The day keeps its line (наряд CLIENT-FIX-4 §5: «в дне — как было»).
-  String _firstRule(AppLocalizations l) {
+  String _firstRule(AppLocalizations l, NativeTypesetter native) {
     final role = _role;
     if (role.isEmpty) return l.planTalkEntryRuleStart;
-    return l.planTalkEntryRuleStartRole(role, _gender);
+    return l.planTalkEntryRuleStartRole(native(role), _gender);
   }
 
   /// 37-5b: a scene's caps and its constructions, 14 apart, the grey «Разговор идёт сцена за сценой» between two
   /// scenes, 24 around it.
-  List<Widget> _byScene(AppLocalizations l) => [
+  List<Widget> _byScene(AppLocalizations l, NativeTypesetter native) => [
     for (final (i, s) in scenes.indexed) ...[
       if (i > 0) ...[
         const SizedBox(height: 24),
@@ -213,7 +216,7 @@ extension on TalkEntryView {
       ],
       const SizedBox(height: 24),
       SessionEyebrow(
-        talkSceneLabel(l, number: i + 1, title: s.title.trim(), role: SessionTexts.roleInline(s.role.trim())),
+        talkSceneLabel(l, number: i + 1, title: native(s.title.trim()), role: SessionTexts.roleInline(native(s.role.trim()))),
         key: ValueKey('talk-entry-scene-${s.sceneId}'),
       ),
       const SizedBox(height: 14),

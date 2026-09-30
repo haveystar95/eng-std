@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/session/heard_words.dart';
 import '../../../../data/plan/session/intent_clause.dart';
@@ -116,7 +117,7 @@ mixin _JudgedCardState<T extends StatefulWidget> on State<T> {
         SessionSounds.verdict(correct: false);
         setState(() {
           verdict = outcome;
-          reason = outcome.reasonNative ?? '';
+          reason = context.nativeText(outcome.reasonNative ?? '');
           judging = false;
         });
       }
@@ -334,7 +335,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
           // what the learner actually said.
           if (_asks) ...[
             if (line != null) const SizedBox(height: 8),
-            TalkHintChip(key: const ValueKey('speak-ask-intent'), text: l.planSessionAskIntent(p.taskNative), alignEnd: true),
+            TalkHintChip(key: const ValueKey('speak-ask-intent'), text: l.planSessionAskIntent(context.nativeText(p.taskNative)), alignEnd: true),
           ],
           if (own != null) ...[const SizedBox(height: 8), own],
         ],
@@ -386,7 +387,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
 
   /// «Скажи, что …» — the card's task as the clause of the client's own sentence.
   Widget _chip(AppLocalizations l, {bool stretch = false}) =>
-      TalkHintChip(text: l.planTalkHintChip(IntentClause.of(p.taskNative)), stretch: stretch);
+      TalkHintChip(text: l.planTalkHintChip(IntentClause.of(context.nativeText(p.taskNative))), stretch: stretch);
 
   Widget _dock(AppLocalizations l) {
     // Rejected: the way on is a button, and «Пропустить» is a link over it (кадр 35-2 «не зачтено»); the chip stands in
@@ -539,7 +540,7 @@ class _SpeakEchoCardState extends State<SpeakEchoCard> with VoiceCardState<Speak
           // The line's own TRANSLATION once the text is open, and «текст закрыт» while it is not. What stood here
           // before was the canvas's note to itself — «совпавшее — шалфеем» is how 35-3 describes the sage marks to a
           // reader of the canvas, not something the learner is told.
-          meta: _revealed ? line.textNative : l.planSessionTextClosed,
+          meta: _revealed ? context.nativeText(line.textNative) : l.planSessionTextClosed,
         ),
       ),
       bottom: _dock(l),
@@ -723,7 +724,7 @@ class _SpeakRetellCardState extends State<SpeakRetellCard> with VoiceCardState<S
                 )
               : SessionPlateWave(key: const ValueKey('retell-wave'), playing: playing == _key),
           listen: CardListen(env: env, audio: line.audio, fallback: line.textTarget, playKey: _key),
-          below: Text(line.textNative, key: const ValueKey('retell-native'), style: AppTextSession.body),
+          below: Text(context.nativeText(line.textNative), key: const ValueKey('retell-native'), style: AppTextSession.body),
         ),
       ),
       bottom: _dock(l),

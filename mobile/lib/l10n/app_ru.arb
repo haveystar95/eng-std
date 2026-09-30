@@ -1,5 +1,5 @@
 {
-  "triageCounter": "{current} из {total}",
+  "triageCounter": "{current} из {total}",
   "@triageCounter": {
     "description": "Счётчик карточек в шапке триажа (кадр 2.2, «3 из 10»).",
     "placeholders": {
@@ -11,15 +11,15 @@
       }
     }
   },
-  "triageSwipeHint": "Свайпай или жми кнопки · тап — перевернуть",
+  "triageSwipeHint": "Свайпай или жми кнопки · тап — перевернуть",
   "@triageSwipeHint": {
     "description": "Обучающая подсказка на лице первых карточек первой сессии (кадр 2.2 / 3a)."
   },
-  "triageVerdictUnknown": "Не знаю",
+  "triageVerdictUnknown": "Не знаю",
   "@triageVerdictUnknown": {
     "description": "Кнопка/вердикт: свайп влево."
   },
-  "triageVerdictUnsure": "Не уверен",
+  "triageVerdictUnsure": "Не уверен",
   "@triageVerdictUnsure": {
     "description": "Кнопка/вердикт: свайп вверх."
   },
@@ -51,15 +51,15 @@
   "@triageAllDoneTitle": {
     "description": "Пустое состояние: на сервере не осталось новых терминов."
   },
-  "triageAllDoneBody": "В этом наборе не осталось новых слов для разбора.",
+  "triageAllDoneBody": "В этом наборе не осталось новых слов для разбора.",
   "@triageAllDoneBody": {
     "description": "Пояснение к «Всё разобрано»."
   },
-  "triageMoreLaterTitle": "На сейчас всё",
+  "triageMoreLaterTitle": "На сейчас всё",
   "@triageMoreLaterTitle": {
     "description": "Пустое состояние: страница пуста, но на сервере ещё есть."
   },
-  "triageMoreLaterBody": "Ещё {count} после синхронизации — зайдите снова, когда будет сеть.",
+  "triageMoreLaterBody": "Ещё {count} после синхронизации — зайдите снова, когда будет сеть.",
   "@triageMoreLaterBody": {
     "description": "Пояснение к «На сейчас всё».",
     "placeholders": {
@@ -88,7 +88,7 @@
   "@triageTallyLearning": {
     "description": "Итог сессии: лейбл счётчика «Не знаю» — слово ушло в изучение."
   },
-  "triageTallyUnsure": "Не уверен",
+  "triageTallyUnsure": "Не уверен",
   "@triageTallyUnsure": {
     "description": "Итог сессии: лейбл счётчика «Не уверен»."
   },
@@ -101,7 +101,7 @@
       }
     }
   },
-  "triageLoadError": "Не удалось загрузить: {error}",
+  "triageLoadError": "Не удалось загрузить: {error}",
   "@triageLoadError": {
     "description": "Ошибка загрузки колоды триажа.",
     "placeholders": {
@@ -110,7 +110,7 @@
       }
     }
   },
-  "homeGeneratePlaceholder": "Например: визит к врачу",
+  "homeGeneratePlaceholder": "Например: визит к врачу",
   "@homeGeneratePlaceholder": {
     "description": "Плейсхолдер поля темы на карточке генерации."
   },
@@ -139,7 +139,7 @@
       }
     }
   },
-  "collectionDueSuffix": "{count} к повторению сегодня",
+  "collectionDueSuffix": "{count} к повторению сегодня",
   "@collectionDueSuffix": {
     "description": "Хвост подзаголовка коллекции про due-слова.",
     "placeholders": {
@@ -157,7 +157,7 @@
       }
     }
   },
-  "collectionDensityInWork": "В работе {count}",
+  "collectionDensityInWork": "В работе {count}",
   "@collectionDensityInWork": {
     "description": "Легенда плотности: слово в очереди тренажёра. Было «Знакомое». Фраза «В работе» в этой легенде раньше стояла на ТРЕТЬЕМ сегменте и значила «ещё не тронуто» — одно словосочетание с двумя противоположными значениями на соседних экранах.",
     "placeholders": {
@@ -210,7 +210,7 @@
   "@collectionPracticeButton": {
     "description": "Главная кнопка коллекции: долг закрыт, тихая контурная кнопка."
   },
-  "collectionPracticeSubtitle": "Ничего не горит — можно просто позаниматься",
+  "collectionPracticeSubtitle": "Ничего не горит — можно просто позаниматься",
   "@collectionPracticeSubtitle": {
     "description": "Подстрока кнопки свободной тренировки."
   },
@@ -222,7 +222,7 @@
   "@collectionReferenceBadge": {
     "description": "Метка коллекции на справочном языке (zh/ja): читаем и слушаем, но не тренируем."
   },
-  "pairBadgeSemantics": "Языковая пара: {learned} на {support}",
+  "pairBadgeSemantics": "Языковая пара: {learned} на {support}",
   "@pairBadgeSemantics": {
     "description": "Озвучка бейджа пары для VoiceOver.",
     "placeholders": {
@@ -234,7 +234,7 @@
       }
     }
   },
-  "collectionReferenceHint": "Справочная коллекция: слова можно читать и слушать. Тренажёров для этого языка пока нет.",
+  "collectionReferenceHint": "Справочная коллекция: слова можно читать и слушать. Тренажёров для этого языка пока нет.",
   "@collectionReferenceHint": {
     "description": "Пояснение на экране справочной коллекции — почему нет кнопок тренировки."
   },
@@ -254,7 +254,7 @@
   "@collectionTriageBannerTitle": {
     "description": "Баннер первого контакта на свежесгенерированной коллекции."
   },
-  "collectionTriageBannerBody": "Отметь, что уже знаешь — остальное пойдёт в тренировку",
+  "collectionTriageBannerBody": "Отметь, что уже знаешь — остальное пойдёт в тренировку",
   "@collectionTriageBannerBody": {
     "description": "Пояснение баннера разбора."
   },
@@ -279,7 +279,7 @@
       }
     }
   },
-  "collectionDeleteWordMessage": "Слово останется в других коллекциях, прогресс сохранится.",
+  "collectionDeleteWordMessage": "Слово останется в других коллекциях, прогресс сохранится.",
   "@collectionDeleteWordMessage": {
     "description": "Текст подтверждения удаления слова (кадр 5d)."
   },
@@ -303,19 +303,19 @@
   "@wordTermHint": {
     "description": "Плейсхолдер поля термина."
   },
-  "wordTranslationHintOptional": "необязательно — подберём сами",
+  "wordTranslationHintOptional": "необязательно — подберём сами",
   "@wordTranslationHintOptional": {
     "description": "Плейсхолдер необязательного перевода (кадр 5b)."
   },
-  "wordSheetAddHelper": "Транскрипция, пример и фото подберутся автоматически.",
+  "wordSheetAddHelper": "Транскрипция, пример и фото подберутся автоматически.",
   "@wordSheetAddHelper": {
     "description": "Пояснение под полями при добавлении."
   },
-  "wordSheetEditHelper": "Пример и фото останутся прежними, если не менять термин.",
+  "wordSheetEditHelper": "Пример и фото останутся прежними, если не менять термин.",
   "@wordSheetEditHelper": {
     "description": "Пояснение под полями при редактировании."
   },
-  "wordSheetAddButton": "Добавить в коллекцию",
+  "wordSheetAddButton": "Добавить в коллекцию",
   "@wordSheetAddButton": {
     "description": "Главная кнопка шита добавления."
   },
@@ -323,7 +323,7 @@
   "@wordSheetSaveButton": {
     "description": "Главная кнопка шита редактирования."
   },
-  "wordSheetDeleteLink": "Удалить из коллекции",
+  "wordSheetDeleteLink": "Удалить из коллекции",
   "@wordSheetDeleteLink": {
     "description": "Деструктивная ссылка внизу шита редактирования (кадр 5c)."
   },
@@ -335,7 +335,7 @@
   "@collectionMoveWordTitle": {
     "description": "Заголовок листа выбора коллекции при переносе слова."
   },
-  "collectionMoveWordDone": "Перенесено в «{folder}»",
+  "collectionMoveWordDone": "Перенесено в «{folder}»",
   "@collectionMoveWordDone": {
     "description": "Подтверждение переноса.",
     "placeholders": {
@@ -344,7 +344,7 @@
       }
     }
   },
-  "collectionMoveWordFailed": "Не удалось перенести",
+  "collectionMoveWordFailed": "Не удалось перенести",
   "@collectionMoveWordFailed": {
     "description": "Ошибка переноса слова между коллекциями."
   },
@@ -360,11 +360,11 @@
   "@collectionMenuDelete": {
     "description": "Пункт меню коллекции: удалить (деструктив)."
   },
-  "collectionMenuRemoveFromMine": "Убрать из моих",
+  "collectionMenuRemoveFromMine": "Убрать из моих",
   "@collectionMenuRemoveFromMine": {
     "description": "Пункт меню подписанного набора: отписаться (деструктив)."
   },
-  "collectionUnsubscribeTitle": "Убрать «{title}» из моих?",
+  "collectionUnsubscribeTitle": "Убрать «{title}» из моих?",
   "@collectionUnsubscribeTitle": {
     "description": "Заголовок подтверждения отписки от набора стора.",
     "placeholders": {
@@ -373,7 +373,7 @@
       }
     }
   },
-  "collectionUnsubscribeMessage": "Набор пропадёт из «Моих». Слова и прогресс по ним сохранятся, набор снова можно добавить из стора.",
+  "collectionUnsubscribeMessage": "Набор пропадёт из «Моих». Слова и прогресс по ним сохранятся, набор снова можно добавить из стора.",
   "@collectionUnsubscribeMessage": {
     "description": "Текст подтверждения отписки от набора стора."
   },
@@ -386,7 +386,7 @@
       }
     }
   },
-  "collectionDeleteMessage": "Коллекция удалится, слова останутся в тренировке. Убрать слово из тренировки можно только на его карточке.",
+  "collectionDeleteMessage": "Коллекция удалится, слова останутся в тренировке. Убрать слово из тренировки можно только на его карточке.",
   "@collectionDeleteMessage": {
     "description": "Текст подтверждения удаления коллекции."
   },
@@ -415,7 +415,7 @@
   "@collectionsEmptyTitle": {
     "description": "Пустая вкладка коллекций — заголовок."
   },
-  "collectionsEmptyBody": "Опиши ситуацию — и ИИ соберёт первый набор.",
+  "collectionsEmptyBody": "Опиши ситуацию — и ИИ соберёт первый набор.",
   "@collectionsEmptyBody": {
     "description": "Пустая вкладка коллекций — пояснение."
   },
@@ -423,7 +423,7 @@
   "@collectionsCreateManual": {
     "description": "Выбор на «плюсе» вкладки коллекций: пустая коллекция, слова добавляются руками (SLV-6)."
   },
-  "collectionsCreateManualHint": "Пустая коллекция — слова добавишь сам",
+  "collectionsCreateManualHint": "Пустая коллекция — слова добавишь сам",
   "@collectionsCreateManualHint": {
     "description": "Пояснение к «Создать вручную» в шите выбора."
   },
@@ -431,7 +431,7 @@
   "@collectionsCreateGenerate": {
     "description": "Выбор на «плюсе» вкладки коллекций: экран генерации по теме (SLV-6)."
   },
-  "collectionsCreateGenerateHint": "ИИ соберёт набор по описанию ситуации",
+  "collectionsCreateGenerateHint": "ИИ соберёт набор по описанию ситуации",
   "@collectionsCreateGenerateHint": {
     "description": "Пояснение к «Сгенерировать» в шите выбора."
   },
@@ -470,7 +470,7 @@
       }
     }
   },
-  "generationGeneratingNote": "Подбираем слова и фотографии · обычно 20–30 секунд",
+  "generationGeneratingNote": "Подбираем слова и фотографии · обычно 20–30 секунд",
   "@generationGeneratingNote": {
     "description": "Пояснение под индикатором идущей генерации (кадр 2.5)."
   },
@@ -478,11 +478,11 @@
   "@generationQueuedNote": {
     "description": "Пояснение под карточкой генерации, ожидающей сеть (офлайн-очередь)."
   },
-  "generationFailedTitle": "Не получилось",
+  "generationFailedTitle": "Не получилось",
   "@generationFailedTitle": {
     "description": "Заголовок карточки ошибки генерации (кадр 2.5)."
   },
-  "generationFailedBody": "Сервис не ответил на запросе «{topic}». Генерация не потрачена.",
+  "generationFailedBody": "Сервис не ответил на запросе «{topic}». Генерация не потрачена.",
   "@generationFailedBody": {
     "description": "Текст ошибки генерации — квота не потрачена (кадр 2.5).",
     "placeholders": {
@@ -491,11 +491,11 @@
       }
     }
   },
-  "generationQuotaTitle": "Генерации на сегодня закончились",
+  "generationQuotaTitle": "Генерации на сегодня закончились",
   "@generationQuotaTitle": {
     "description": "Заголовок карточки генерации, отклонённой по дневному лимиту (429 generation_quota_exceeded)."
   },
-  "generationQuotaBody": "Коллекцию «{topic}» не создали. Лимит обновится в {time} — тогда можно повторить.",
+  "generationQuotaBody": "Коллекцию «{topic}» не создали. Лимит обновится в {time} — тогда можно повторить.",
   "@generationQuotaBody": {
     "description": "Текст карточки дневного лимита, когда известно время сброса.",
     "placeholders": {
@@ -507,7 +507,7 @@
       }
     }
   },
-  "generationQuotaBodyNoTime": "Коллекцию «{topic}» не создали: дневной лимит генераций исчерпан.",
+  "generationQuotaBodyNoTime": "Коллекцию «{topic}» не создали: дневной лимит генераций исчерпан.",
   "@generationQuotaBodyNoTime": {
     "description": "Текст карточки дневного лимита, когда время сброса неизвестно (офлайн).",
     "placeholders": {
@@ -528,7 +528,7 @@
   "@generationHide": {
     "description": "Убрать карточку ошибки генерации из списка (кадр 2.5)."
   },
-  "generateEnqueueFailed": "Не удалось поставить генерацию в очередь: {error}",
+  "generateEnqueueFailed": "Не удалось поставить генерацию в очередь: {error}",
   "@generateEnqueueFailed": {
     "description": "QA-23. Постановка генерации в очередь упала на ЛОКАЛЬНОМ хранилище — раньше это молча оставляло кнопку «Сгенерировать» серой навсегда.",
     "placeholders": {
@@ -541,7 +541,7 @@
   "@generationReadyLabel": {
     "description": "Метка готовой коллекции на карточке генерации."
   },
-  "generationReadyLoading": "Готово — загружаю «{topic}»…",
+  "generationReadyLoading": "Готово — загружаю «{topic}»…",
   "@generationReadyLoading": {
     "description": "Коллекция сгенерирована, ждём синхронизации перед открытием.",
     "placeholders": {
@@ -550,7 +550,7 @@
       }
     }
   },
-  "generationUnderBadge": "{delivered} из {requested}",
+  "generationUnderBadge": "{delivered} из {requested}",
   "@generationUnderBadge": {
     "description": "Контурный бейдж недобора, «13 из 15» (кадр 2.5).",
     "placeholders": {
@@ -574,27 +574,27 @@
   "@generateSituationLabel": {
     "description": "Лейбл поля ситуации (кадр 2.4)."
   },
-  "generateSituationHelper": "Чем конкретнее ситуация, тем точнее подборка. Например: «первый приём у врача, жалобы и запись на анализы».",
+  "generateSituationHelper": "Чем конкретнее ситуация, тем точнее подборка. Например: «первый приём у врача, жалобы и запись на анализы».",
   "@generateSituationHelper": {
     "description": "Пояснение под полем ситуации (кадр 6a)."
   },
-  "generatePlaceholder0": "Снимаю квартиру — разговор с агентом",
+  "generatePlaceholder0": "Снимаю квартиру — разговор с агентом",
   "@generatePlaceholder0": {
     "description": "Плейсхолдер-ротация поля ситуации."
   },
-  "generatePlaceholder1": "Первый приём у врача — жалобы и анализы",
+  "generatePlaceholder1": "Первый приём у врача — жалобы и анализы",
   "@generatePlaceholder1": {
     "description": "Плейсхолдер-ротация поля ситуации."
   },
-  "generatePlaceholder2": "Собеседование в IT — рассказ о проектах",
+  "generatePlaceholder2": "Собеседование в IT — рассказ о проектах",
   "@generatePlaceholder2": {
     "description": "Плейсхолдер-ротация поля ситуации."
   },
-  "generatePlaceholder3": "Открываю счёт в банке",
+  "generatePlaceholder3": "Открываю счёт в банке",
   "@generatePlaceholder3": {
     "description": "Плейсхолдер-ротация поля ситуации."
   },
-  "generatePlaceholder4": "Заказываю еду в кафе",
+  "generatePlaceholder4": "Заказываю еду в кафе",
   "@generatePlaceholder4": {
     "description": "Плейсхолдер-ротация поля ситуации."
   },
@@ -626,7 +626,7 @@
   "@generateLanguageLabel": {
     "description": "Лейбл выбора языка изучения (кадр 6b)."
   },
-  "generateLanguageDefault": "по умолчанию",
+  "generateLanguageDefault": "по умолчанию",
   "@generateLanguageDefault": {
     "description": "Пометка «по умолчанию» у языка из профиля (кадр 6b)."
   },
@@ -639,7 +639,7 @@
       }
     }
   },
-  "generateQuotaExhausted": "Генерации на сегодня закончились · обновятся в {time}",
+  "generateQuotaExhausted": "Генерации на сегодня закончились · обновятся в {time}",
   "@generateQuotaExhausted": {
     "description": "Строка исчерпанной квоты с локальным временем сброса (кадр 6b).",
     "placeholders": {
@@ -652,7 +652,7 @@
   "@generateSubmit": {
     "description": "Кнопка запуска генерации (кадр 2.4)."
   },
-  "generatePremiumUpsell": "Нужно больше? Premium — до 20 в день",
+  "generatePremiumUpsell": "Нужно больше? Premium — до 20 в день",
   "@generatePremiumUpsell": {
     "description": "Строка перехода на Premium под неактивной кнопкой (кадр 15c)."
   },
@@ -673,11 +673,11 @@
   "@generateVoiceStop": {
     "description": "Кнопка остановки голосового ввода (кадр 6c)."
   },
-  "generateVoiceHelper": "Текст появляется в поле по мере распознавания — после остановки его можно править руками.",
+  "generateVoiceHelper": "Текст появляется в поле по мере распознавания — после остановки его можно править руками.",
   "@generateVoiceHelper": {
     "description": "Пояснение под полем при голосовом вводе (кадр 6c)."
   },
-  "generateVoicePermissionDenied": "Нужен доступ к микрофону и распознаванию речи — включите в Настройках",
+  "generateVoicePermissionDenied": "Нужен доступ к микрофону и распознаванию речи — включите в Настройках",
   "@generateVoicePermissionDenied": {
     "description": "Сообщение при отказе в разрешении на микрофон/распознавание."
   },
@@ -705,7 +705,7 @@
   "@searchFieldHint": {
     "description": "Плейсхолдер поля поиска (кадр 01)."
   },
-  "searchRecentLabel": "Вы искали",
+  "searchRecentLabel": "Вы искали",
   "@searchRecentLabel": {
     "description": "Лейбл над тремя последними запросами на пустом экране поиска (кадр 01)."
   },
@@ -730,7 +730,7 @@
   "@searchBuildCard": {
     "description": "Главное действие на слове, которого у нас ещё нет (кадр 04). Продаёт не поиск — перевод уже показан — а то, чего нет: значение, пример, фото."
   },
-  "searchBuildCardNote": "Значение и пример. Повторно — бесплатно",
+  "searchBuildCardNote": "Значение и пример. Повторно — бесплатно",
   "@searchBuildCardNote": {
     "description": "Подпись под кнопкой «Собрать карточку» (кадр 04). Фото здесь НЕ обещается: лукап покупает один вызов модели, а картинку ищет Pexels уже после сохранения (/search/add) — обещание фото на этом шаге не выполняется (телефон, 24.08)."
   },
@@ -750,11 +750,11 @@
   "@searchBuildExample": {
     "description": "Строка чек-листа сборки карточки (кадр 05)."
   },
-  "searchBuildNote": "Пара секунд. Можно закрыть — карточка появится в поиске.",
+  "searchBuildNote": "Пара секунд. Можно закрыть — карточка появится в поиске.",
   "@searchBuildNote": {
     "description": "Строка под чек-листом сборки (кадр 05)."
   },
-  "searchLimitUsed": "{used} из {cap} на сегодня",
+  "searchLimitUsed": "{used} из {cap} на сегодня",
   "@searchLimitUsed": {
     "description": "Подпись рядом с пятью точками лимита (кадр 08).",
     "placeholders": {
@@ -766,19 +766,19 @@
       }
     }
   },
-  "searchLimitTitle": "Сборки с моделью вернутся в полночь",
+  "searchLimitTitle": "Сборки с моделью вернутся в полночь",
   "@searchLimitTitle": {
     "description": "Заголовок плашки исчерпанного дневного лимита (кадр 08)."
   },
-  "searchLookupFailed": "Не удалось найти это слово",
+  "searchLookupFailed": "Не удалось найти это слово",
   "@searchLookupFailed": {
     "description": "Модель ответила, но ответ не прошёл гейты, либо сеть не дала."
   },
-  "searchNotRecognized": "Не получилось распознать, проверьте написание",
+  "searchNotRecognized": "Не получилось распознать, проверьте написание",
   "@searchNotRecognized": {
     "description": "Модель не нашла в запросе слова ни на одном языке пары. Совет, а не ошибка: про приложение здесь ничего не сломалось."
   },
-  "searchQueryTooLong": "Поиск — для слов и коротких фраз",
+  "searchQueryTooLong": "Поиск — для слов и коротких фраз",
   "@searchQueryTooLong": {
     "description": "Запрос длиннее 120 символов. Спокойная строка вместо запрета: говорит, для чего поле, а не что человек сделал не так."
   },
@@ -786,7 +786,7 @@
   "@searchSaveToDefault": {
     "description": "Главная кнопка карточки: сохранить в личную папку по умолчанию."
   },
-  "searchAlreadyIn": "Уже в коллекции «{collection}»",
+  "searchAlreadyIn": "Уже в коллекции «{collection}»",
   "@searchAlreadyIn": {
     "description": "Строка шита неактивна: слово уже в этой коллекции. Плейсхолдер переименован с folder на collection в A-3 — «папка» ушла из словаря продукта.",
     "placeholders": {
@@ -795,7 +795,7 @@
       }
     }
   },
-  "searchSavedShelf": "Сохранено в «{collection}» · в очереди на разбор",
+  "searchSavedShelf": "Сохранено в «{collection}» · в очереди на разбор",
   "@searchSavedShelf": {
     "description": "Подтверждение после «Сохранить»: слово легло на полку и ждёт разбора. Тост и строка состояния — один текст, потому что это один факт.",
     "placeholders": {
@@ -804,7 +804,7 @@
       }
     }
   },
-  "searchSavedLearning": "Сохранено в «{collection}» · учится",
+  "searchSavedLearning": "Сохранено в «{collection}» · учится",
   "@searchSavedLearning": {
     "description": "Подтверждение после «Учить сразу»: слово на полке И в очереди тренажёра.",
     "placeholders": {
@@ -817,7 +817,7 @@
   "@searchLearnNow": {
     "description": "Второе, тихое действие рядом с «Сохранить»: слово идёт на полку и сразу в очередь тренажёра, минуя разбор."
   },
-  "searchAddToCollection": "Добавить в коллекцию",
+  "searchAddToCollection": "Добавить в коллекцию",
   "@searchAddToCollection": {
     "description": "Заголовок шита выбора коллекции на карточке слова и подпись квадратной кнопки рядом с главной. Была обрывком фразы со строчной буквы — «в коллекцию…» (QA-OBS-20)."
   },
@@ -834,15 +834,15 @@
       }
     }
   },
-  "searchSaveFailed": "Не удалось сохранить",
+  "searchSaveFailed": "Не удалось сохранить",
   "@searchSaveFailed": {
     "description": "Ошибка сохранения слова из поиска."
   },
-  "searchPairFrom": "С какого",
+  "searchPairFrom": "С какого",
   "@searchPairFrom": {
     "description": "Роль левой пилюли пары над полем поиска: язык, на котором задан запрос. Читается вслух, не рисуется."
   },
-  "searchPairTo": "На какой",
+  "searchPairTo": "На какой",
   "@searchPairTo": {
     "description": "Роль правой пилюли пары над полем поиска: язык, на котором придёт ответ."
   },
@@ -850,7 +850,7 @@
   "@searchPairSwap": {
     "description": "Кнопка-стрелка между пилюлями пары."
   },
-  "searchPairNoDefault": "«Сохранённые» — коллекция другой пары. Выберите коллекцию этой пары или создайте новую.",
+  "searchPairNoDefault": "«Сохранённые» — коллекция другой пары. Выберите коллекцию этой пары или создайте новую.",
   "@searchPairNoDefault": {
     "description": "Подпись под кнопкой на карточке слова, когда папка по умолчанию не совпадает по паре с лукапом: одна папка — одна пара (DECISIONS п. 81)."
   },
@@ -858,7 +858,7 @@
   "@searchPairMismatchTitle": {
     "description": "Заголовок алерта на 422 term_language_mismatch."
   },
-  "searchPairMismatchMessage": "Эта коллекция изучает {expected}, а слово — на {actual}. Одна коллекция — одна пара, поэтому нужна коллекция другой пары.",
+  "searchPairMismatchMessage": "Эта коллекция изучает {expected}, а слово — на {actual}. Одна коллекция — одна пара, поэтому нужна коллекция другой пары.",
   "@searchPairMismatchMessage": {
     "description": "Текст алерта на 422 term_language_mismatch. Языки названы эндонимами.",
     "placeholders": {
@@ -887,11 +887,11 @@
       }
     }
   },
-  "wordCardFolderHint": "Справа — выбрать другую коллекцию",
+  "wordCardFolderHint": "Справа — выбрать другую коллекцию",
   "@wordCardFolderHint": {
     "description": "Подпись под парой кнопок на карточке слова (кадр 06)."
   },
-  "wordCardSavedIn": "В коллекции «{folder}»",
+  "wordCardSavedIn": "В коллекции «{folder}»",
   "@wordCardSavedIn": {
     "description": "Контурная кнопка-состояние после сохранения (кадр 07).",
     "placeholders": {
@@ -900,7 +900,7 @@
       }
     }
   },
-  "wordCardAddToAnother": "Добавить в другую коллекцию",
+  "wordCardAddToAnother": "Добавить в другую коллекцию",
   "@wordCardAddToAnother": {
     "description": "Второе действие отдельной строкой на карточке слова (кадры 07/09). Канон — «коллекция»: кнопка и шит называют один объект одинаково (QA-OBS-21)."
   },
@@ -908,7 +908,7 @@
   "@wordCardProgressLabel": {
     "description": "Лейбл лестницы на карточке, открытой из папки (кадр 09)."
   },
-  "wordCardProgressCount": "{step} из {total}",
+  "wordCardProgressCount": "{step} из {total}",
   "@wordCardProgressCount": {
     "description": "Счётчик ступени рядом с лейблом лестницы (кадр 09).",
     "placeholders": {
@@ -941,7 +941,7 @@
   "@wordCardMenu": {
     "description": "Кнопка «…» поверх фото — подпись для VoiceOver."
   },
-  "wordCardNoPhoto": "Без фото",
+  "wordCardNoPhoto": "Без фото",
   "@wordCardNoPhoto": {
     "description": "Подпись на нейтральной подложке, когда у слова нет картинки."
   },
@@ -958,7 +958,7 @@
       }
     }
   },
-  "progressBestResult": "{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}",
+  "progressBestResult": "{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}",
   "@progressBestResult": {
     "description": "Строка «Лучший результат» под стриком.",
     "placeholders": {
@@ -999,7 +999,7 @@
   "@progressLearnedTotal": {
     "description": "Лейбл счётчика: усвоено слов всего."
   },
-  "progressThisWeek": "За неделю",
+  "progressThisWeek": "За неделю",
   "@progressThisWeek": {
     "description": "Лейбл счётчика: повторений за текущую неделю."
   },
@@ -1007,7 +1007,7 @@
   "@progressToday": {
     "description": "Лейбл счётчика: повторений сегодня."
   },
-  "progressActivityMonth": "Активность за месяц",
+  "progressActivityMonth": "Активность за месяц",
   "@progressActivityMonth": {
     "description": "Лейбл графика активности за месяц."
   },
@@ -1029,23 +1029,23 @@
       }
     }
   },
-  "homeLimitReachedTitle": "Лимит новых на сегодня",
+  "homeLimitReachedTitle": "Лимит новых на сегодня",
   "@homeLimitReachedTitle": {
     "description": "Неактивная карточка на главном, когда дневная квота новых слов исчерпана (F13)."
   },
-  "homeLimitReachedHint": "Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.",
+  "homeLimitReachedHint": "Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.",
   "@homeLimitReachedHint": {
     "description": "Подсказка под «Лимит новых на сегодня» — свободная тренировка не тратит квоту."
   },
-  "homeOfflineBanner": "Нет сети. Повторения идут как обычно — синхронизируем, когда связь вернётся.",
+  "homeOfflineBanner": "Нет сети. Повторения идут как обычно — синхронизируем, когда связь вернётся.",
   "@homeOfflineBanner": {
     "description": "Тихий офлайн-баннер на главной (кадр 9c)."
   },
-  "homeUnreachableTitle": "Сервер не отвечает",
+  "homeUnreachableTitle": "Сервер не отвечает",
   "@homeUnreachableTitle": {
     "description": "Заголовок карточки на главной, когда дня нет: сохранённого плана не осталось, а последний синк не прошёл (BUG-1)."
   },
-  "homeUnreachableBody": "День загрузить не удалось. Потяни вниз, чтобы попробовать снова — всё сохранённое на месте.",
+  "homeUnreachableBody": "День загрузить не удалось. Потяни вниз, чтобы попробовать снова — всё сохранённое на месте.",
   "@homeUnreachableBody": {
     "description": "Пояснение под homeUnreachableTitle: выход — pull-to-refresh, данные не потеряны (BUG-1)."
   },
@@ -1082,23 +1082,23 @@
       }
     }
   },
-  "sessionInstrAssemble": "собери из слов",
+  "sessionInstrAssemble": "собери из слов",
   "@sessionInstrAssemble": {
     "description": "Инструкция под промптом, сборка фразы из СЛОВЕСНЫХ фишек (кадр 12b)."
   },
-  "sessionInstrAssembleLetters": "собери из букв",
+  "sessionInstrAssembleLetters": "собери из букв",
   "@sessionInstrAssembleLetters": {
     "description": "То же для одиночного слова: с BUGFIX-2 Ч.2б D2 оно собирается буквенными фишками, и инструкция обязана называть то, что лежит на экране."
   },
-  "sessionAssemblyEmptyHint": "Собери из слов ниже",
+  "sessionAssemblyEmptyHint": "Собери из слов ниже",
   "@sessionAssemblyEmptyHint": {
     "description": "Плейсхолдер в пустой строке сборки (фраза в word_bank и scramble) — куда кладутся слова."
   },
-  "sessionAssemblyEmptyHintLetters": "Собери из букв ниже",
+  "sessionAssemblyEmptyHintLetters": "Собери из букв ниже",
   "@sessionAssemblyEmptyHintLetters": {
     "description": "Тот же плейсхолдер для одиночного слова, которое собирается по буквам."
   },
-  "sessionInstrAssembleSentence": "собери предложение из слов",
+  "sessionInstrAssembleSentence": "собери предложение из слов",
   "@sessionInstrAssembleSentence": {
     "description": "Инструкция под промптом, сборка предложения-примера из чипов (scramble)."
   },
@@ -1111,11 +1111,11 @@
       }
     }
   },
-  "sessionInstrListenChoose": "прослушай и выбери перевод · можно повторить",
+  "sessionInstrListenChoose": "прослушай и выбери перевод · можно повторить",
   "@sessionInstrListenChoose": {
     "description": "Инструкция аудирования-узнавания (кадр 12g)."
   },
-  "sessionInstrListenType": "прослушай и напиши {lang}",
+  "sessionInstrListenType": "прослушай и напиши {lang}",
   "@sessionInstrListenType": {
     "description": "Инструкция аудирования-воспроизведения (кадр 12h). {lang} — наречие изучаемой стороны карточки («по-итальянски»), languageAdverbFor.",
     "placeholders": {
@@ -1124,12 +1124,12 @@
       }
     }
   },
-  "sessionInstrDictation": "прослушай и запиши предложение",
+  "sessionInstrDictation": "прослушай и запиши предложение",
   "sessionInstrPickCorrect": "выбери верное предложение",
   "@sessionInstrPickCorrect": {
     "description": "Инструкция pick_correct: три предложения, одно верное."
   },
-  "sessionInstrDescriptionMatch": "выбери слово по описанию",
+  "sessionInstrDescriptionMatch": "выбери слово по описанию",
   "@sessionInstrDescriptionMatch": {
     "description": "Инструкция description_match: описание на изучаемом языке, четыре слова."
   },
@@ -1149,7 +1149,7 @@
   "@sessionClozeInsert": {
     "description": "Лейбл над примером с пропуском (кадр 12i)."
   },
-  "sessionChipReturnHint": "Тап по слову в строке возвращает его вниз",
+  "sessionChipReturnHint": "Тап по слову в строке возвращает его вниз",
   "@sessionChipReturnHint": {
     "description": "Подсказка под строкой сборки (кадр 12b)."
   },
@@ -1157,11 +1157,11 @@
   "@sessionHintFirstLetter": {
     "description": "Кнопка подсказки первой буквы в ввод/аудирование/пропуск (кадры 12c, 12h, 12i)."
   },
-  "sessionDontRemember": "Не помню",
+  "sessionDontRemember": "Не помню",
   "@sessionDontRemember": {
     "description": "Кнопка честного провала — показывает ответ, слово вернётся (кадры 12c, 12h, 12i)."
   },
-  "sessionWrongKeyboard": "Похоже, раскладка не та — переключи клавиатуру и введи ещё раз",
+  "sessionWrongKeyboard": "Похоже, раскладка не та — переключи клавиатуру и введи ещё раз",
   "@sessionWrongKeyboard": {
     "description": "Тихая подсказка под полем ввода: ответ целиком набран алфавитом, которым язык карточки не пишется. Ничего не засчитано, попытка не потрачена — поэтому это подсказка, а не вердикт."
   },
@@ -1197,7 +1197,7 @@
   "@sessionSpeakListening": {
     "description": "Индикатор под кнопкой записи, пока идёт распознавание."
   },
-  "sessionSpeakNotHeard": "Не расслышал. Попробуй ещё раз — ближе к микрофону.",
+  "sessionSpeakNotHeard": "Не расслышал. Попробуй ещё раз — ближе к микрофону.",
   "@sessionSpeakNotHeard": {
     "description": "Мягкая ошибка канала: распознавание вернулось пустым. Не является провалом ответа."
   },
@@ -1217,7 +1217,7 @@
       }
     }
   },
-  "buildStampUnstamped": "без метки",
+  "buildStampUnstamped": "без метки",
   "@buildStampUnstamped": {
     "description": "Сборка собрана мимо scripts/build_ios.sh — версии у неё нет, и экран говорит это, а не выдумывает SHA."
   },
@@ -1242,19 +1242,19 @@
       }
     }
   },
-  "qaReportFailed": "Жалоба не ушла",
+  "qaReportFailed": "Жалоба не ушла",
   "@qaReportFailed": {
     "description": "Отправка отчёта не удалась — сеть или закрытая дверь."
   },
-  "speechPermissionRecognitionDenied": "Распознавание речи выключено. Разреши распознавание речи в настройках — без него телефон слышит, но не понимает.",
+  "speechPermissionRecognitionDenied": "Распознавание речи выключено. Разреши распознавание речи в настройках — без него телефон слышит, но не понимает.",
   "@speechPermissionRecognitionDenied": {
     "description": "Отказано в NSSpeechRecognition (DAY-GATE-1, Ч.0.2). iOS спрашивает один раз за установку, поэтому «нажми ещё раз» не выход — только Настройки."
   },
-  "speechPermissionMicDenied": "Микрофон выключен. Разреши доступ к микрофону в настройках.",
+  "speechPermissionMicDenied": "Микрофон выключен. Разреши доступ к микрофону в настройках.",
   "@speechPermissionMicDenied": {
     "description": "Отказано в NSMicrophone (DAY-GATE-1, Ч.0.2)."
   },
-  "speechPermissionBothDenied": "Разреши в настройках микрофон и распознавание речи — нужны оба.",
+  "speechPermissionBothDenied": "Разреши в настройках микрофон и распознавание речи — нужны оба.",
   "@speechPermissionBothDenied": {
     "description": "Не хватает обоих разрешений сразу (DAY-GATE-1, Ч.0.2): называем оба, иначе второй заход в Настройки человек уже не сделает."
   },
@@ -1262,7 +1262,7 @@
   "@speechPermissionOpenSettings": {
     "description": "Кнопка под строкой об отказанном разрешении — ведёт на страницу приложения в Настройках iOS."
   },
-  "sessionSpeakCutOff": "Не расслышали до конца — скажи ещё раз.",
+  "sessionSpeakCutOff": "Не расслышали до конца — скажи ещё раз.",
   "@sessionSpeakCutOff": {
     "description": "Обрыв на полуслове (DAY-FIX-3, Ч.1.4): человек начал говорить, канал не дослушал. Не ошибка, журнал не пишется, вторая попытка."
   },
@@ -1270,11 +1270,11 @@
   "@sessionSpeakSkip": {
     "description": "Пропуск карточки говорения — с первой же неудачи микрофона, вместе с сообщением о ней (QA-OBS-7): ничего не записывается, слово вернётся своим чередом."
   },
-  "sessionSpeakSkipHint": "Пропуск ничего не испортит: слово вернётся своим чередом.",
+  "sessionSpeakSkipHint": "Пропуск ничего не испортит: слово вернётся своим чередом.",
   "@sessionSpeakSkipHint": {
     "description": "Пояснение под кнопкой пропуска — пропуск не пишет ни ревью, ни оценку."
   },
-  "sessionSpeakYourTurn": "Твоя очередь — нажми и говори",
+  "sessionSpeakYourTurn": "Твоя очередь — нажми и говори",
   "@sessionSpeakYourTurn": {
     "description": "Подпись под кнопкой микрофона, когда собеседник договорил, а запись ещё не идёт (SPEECH-2, Ч.1.1). Состояние без таймаута."
   },
@@ -1282,7 +1282,7 @@
   "@sessionSpeakWaitForRole": {
     "description": "Подпись под кнопкой микрофона, пока звучит реплика роли: кнопка ещё не зовёт и не нажимается."
   },
-  "sessionSpeakRecording": "Пишу — скажи и нажми «Готово»",
+  "sessionSpeakRecording": "Пишу — скажи и нажми «Готово»",
   "@sessionSpeakRecording": {
     "description": "Подпись под кнопкой микрофона во время записи (SPEECH-2, Ч.1.1)."
   },
@@ -1290,7 +1290,7 @@
   "@sessionSpeakVerdictCorrect": {
     "description": "Вердикт сказанной реплики: сказано достаточно (SPEECH-2, Ч.3.5)."
   },
-  "sessionSpeakVerdictAlmost": "Почти — не хватило: {words}",
+  "sessionSpeakVerdictAlmost": "Почти — не хватило: {words}",
   "@sessionSpeakVerdictAlmost": {
     "description": "Вердикт сказанной реплики: реплика узнана, но часть слов не прозвучала. Не зачёт (SPEECH-2, Ч.3.5).",
     "placeholders": {
@@ -1299,15 +1299,15 @@
       }
     }
   },
-  "sessionSpeakVerdictWrong": "Не то",
+  "sessionSpeakVerdictWrong": "Не то",
   "@sessionSpeakVerdictWrong": {
     "description": "Вердикт сказанной реплики: сказано не это (SPEECH-2, Ч.3.5)."
   },
-  "sessionSpeakHint": "Проверяем, вспомнил ли ты слово, а не произношение.",
+  "sessionSpeakHint": "Проверяем, вспомнил ли ты слово, а не произношение.",
   "@sessionSpeakHint": {
     "description": "Рамка тренажёра говорения: это не оценка акцента (показывается на карточке)."
   },
-  "sessionSpeakHintKey": "Скажи фразу, главное — «{key}».",
+  "sessionSpeakHintKey": "Скажи фразу, главное — «{key}».",
   "@sessionSpeakHintKey": {
     "description": "Подпись говорения у реплики плана: карточка проверяет только ключ — слово в дырке каркаса, — и остальную фразу ученик читает с экрана.",
     "placeholders": {
@@ -1370,7 +1370,7 @@
   "@statusToSort": {
     "description": "СЛОВАРЬ СТАТУСОВ (Ч.4), одно из пяти. Слово лежит на полке и ждёт решения. Заменил «В работе» в легенде коллекции (там оно значило противоположное — «ещё не тронуто») и «в каталоге» в списке слов."
   },
-  "statusInWork": "В работе",
+  "statusInWork": "В работе",
   "@statusInWork": {
     "description": "СЛОВАРЬ СТАТУСОВ: слово в очереди тренажёра — само возвращается на тренировках. Заменил «Знакомое»."
   },
@@ -1382,7 +1382,7 @@
   "@statusPaused": {
     "description": "СЛОВАРЬ СТАТУСОВ: слово убрано из очереди — пауза, не удаление: ступень и дата возврата сохранены."
   },
-  "statusLadderStep": "Ступень {step} из {total}: {rung}",
+  "statusLadderStep": "Ступень {step} из {total}: {rung}",
   "@statusLadderStep": {
     "description": "СЛОВАРЬ СТАТУСОВ: где слово внутри очереди. Ступеней пять — два узнавания (прямое и обратное) читаются как одна, потому что счёт идёт про пройденный путь, а не про направление вопроса.",
     "placeholders": {
@@ -1401,7 +1401,7 @@
   "@statusLegendTitle": {
     "description": "Заголовок шита-легенды, который открывается тапом по пяти точкам в «Моих словах» (Ч.4)."
   },
-  "poolKnownLegend": "Слово помечено «знаю» — по лестнице оно не шло.",
+  "poolKnownLegend": "Слово помечено «знаю» — по лестнице оно не шло.",
   "@poolKnownLegend": {
     "description": "Строка легенды про прочерк вместо точек: слово вне лестницы, а не в её начале."
   },
@@ -1429,11 +1429,11 @@
   "@sessionFeedbackAlmost": {
     "description": "Вердикт фидбека — принятая опечатка; следом правильная форма (кадр 12c)."
   },
-  "sessionFeedbackWrong": "Не то — правильная форма ниже",
+  "sessionFeedbackWrong": "Не то — правильная форма ниже",
   "@sessionFeedbackWrong": {
     "description": "Вердикт фидбека — ошибка на вводимом/собираемом ответе: правильная форма стоит ниже, в самом фидбеке (кадр 12d)."
   },
-  "sessionFeedbackWrongAbove": "Не то — верный ответ отмечен выше",
+  "sessionFeedbackWrongAbove": "Не то — верный ответ отмечен выше",
   "@sessionFeedbackWrongAbove": {
     "description": "Вердикт фидбека — ошибка на карточке узнавания: верный вариант подсвечен ВЫШЕ в списке вариантов, а ниже лишь напоминание термина (QA-8)."
   },
@@ -1515,7 +1515,7 @@
   "@sessionGoalClosed": {
     "description": "Лейбл блока дневной цели в итоге, когда цель закрыта (кадр 12e)."
   },
-  "sessionStreak": "{days, plural, one{Стрик — {days} день} few{Стрик — {days} дня} many{Стрик — {days} дней} other{Стрик — {days} дней}}",
+  "sessionStreak": "{days, plural, one{Стрик — {days} день} few{Стрик — {days} дня} many{Стрик — {days} дней} other{Стрик — {days} дней}}",
   "@sessionStreak": {
     "description": "Строка стрика в блоке дневной цели (кадр 12e).",
     "placeholders": {
@@ -1537,7 +1537,7 @@
       }
     }
   },
-  "sessionStrugglingBody": "Даётся тяжело. Можно собрать другой пример — иногда дело в контексте, а не в слове.",
+  "sessionStrugglingBody": "Даётся тяжело. Можно собрать другой пример — иногда дело в контексте, а не в слове.",
   "@sessionStrugglingBody": {
     "description": "Пояснение блока проседающего слова (кадр 12e)."
   },
@@ -1545,11 +1545,11 @@
   "@sessionNewExample": {
     "description": "Кнопка перегенерации примера в итоге (кадр 12e, B6)."
   },
-  "sessionNewExampleExhausted": "Лимит примеров на сегодня исчерпан",
+  "sessionNewExampleExhausted": "Лимит примеров на сегодня исчерпан",
   "@sessionNewExampleExhausted": {
     "description": "Сообщение при 429 на «Новый пример» (квота исчерпана)."
   },
-  "sessionPracticeBanner": "Свободная тренировка — прогресс не меняется",
+  "sessionPracticeBanner": "Свободная тренировка — прогресс не меняется",
   "@sessionPracticeBanner": {
     "description": "Тихая плашка сверху в тренировочной сессии (кадр 12f)."
   },
@@ -1557,7 +1557,7 @@
   "@sessionExitTitle": {
     "description": "Заголовок алерта выхода из сессии (кадр 12k)."
   },
-  "sessionExitBody": "Отвеченные слова сохранятся — вернуться можно в любой момент.",
+  "sessionExitBody": "Отвеченные слова сохранятся — вернуться можно в любой момент.",
   "@sessionExitBody": {
     "description": "Тело алерта выхода из сессии (кадр 12k)."
   },
@@ -1593,7 +1593,7 @@
   "@practiceDialogEntry": {
     "description": "Кнопка входа в голосовой разговор на экране коллекции (только Premium)."
   },
-  "practiceDialogEntrySubtitle": "Голосовая практика с ИИ",
+  "practiceDialogEntrySubtitle": "Голосовая практика с ИИ",
   "@practiceDialogEntrySubtitle": {
     "description": "Подстрока кнопки разговора."
   },
@@ -1601,11 +1601,11 @@
   "@practiceDialogOfflineHint": {
     "description": "Подсказка на неактивной кнопке разговора в офлайне."
   },
-  "practiceDialogPrestartTitle": "Разговор с ИИ",
+  "practiceDialogPrestartTitle": "Разговор с ИИ",
   "@practiceDialogPrestartTitle": {
     "description": "Заголовок пре-стартового листа разговора."
   },
-  "practiceDialogPrestartBody": "ИИ будет говорить с тобой на языке коллекции — {lang}. Отвечай вслух и старайся использовать эти слова.",
+  "practiceDialogPrestartBody": "ИИ будет говорить с тобой на языке коллекции — {lang}. Отвечай вслух и старайся использовать эти слова.",
   "@practiceDialogPrestartBody": {
     "description": "Пояснение на пре-старте: язык разговора = язык коллекции.",
     "placeholders": {
@@ -1614,7 +1614,7 @@
       }
     }
   },
-  "practiceDialogPrestartWordsLabel": "Слова для разговора",
+  "practiceDialogPrestartWordsLabel": "Слова для разговора",
   "@practiceDialogPrestartWordsLabel": {
     "description": "Лейбл над полосой target_words на пре-старте."
   },
@@ -1650,7 +1650,7 @@
   "@practiceDialogExitTitle": {
     "description": "Заголовок алерта выхода из разговора (крестик)."
   },
-  "practiceDialogExitMessage": "Разговор закончится, и ты увидишь итог.",
+  "practiceDialogExitMessage": "Разговор закончится, и ты увидишь итог.",
   "@practiceDialogExitMessage": {
     "description": "Пояснение в алерте выхода из разговора."
   },
@@ -1666,7 +1666,7 @@
   "@practiceDialogFinaleTitle": {
     "description": "Заголовок карточки итога разговора (антиква)."
   },
-  "practiceDialogFinaleWords": "Слов прозвучало: {used} из {total}",
+  "practiceDialogFinaleWords": "Слов прозвучало: {used} из {total}",
   "@practiceDialogFinaleWords": {
     "description": "Итог разговора: сколько target-слов прозвучало.",
     "placeholders": {
@@ -1682,11 +1682,11 @@
   "@practiceDialogFinaleDone": {
     "description": "Кнопка закрытия итога разговора."
   },
-  "practiceDialogErrorSubscription": "Разговоры доступны в Premium.",
+  "practiceDialogErrorSubscription": "Разговоры доступны в Premium.",
   "@practiceDialogErrorSubscription": {
     "description": "Ошибка: разговор недоступен без Premium (403)."
   },
-  "practiceDialogErrorRateLimited": "На сегодня разговоры закончились. Новые — после {time}.",
+  "practiceDialogErrorRateLimited": "На сегодня разговоры закончились. Новые — после {time}.",
   "@practiceDialogErrorRateLimited": {
     "description": "Ошибка: исчерпан дневной лимит разговоров (429), время сброса в локальном времени.",
     "placeholders": {
@@ -1695,15 +1695,15 @@
       }
     }
   },
-  "practiceDialogErrorRateLimitedNoTime": "На сегодня разговоры закончились. Попробуй завтра.",
+  "practiceDialogErrorRateLimitedNoTime": "На сегодня разговоры закончились. Попробуй завтра.",
   "@practiceDialogErrorRateLimitedNoTime": {
     "description": "Ошибка лимита разговоров без известного времени сброса."
   },
-  "practiceDialogErrorOffline": "Нет сети. Для разговора нужен интернет.",
+  "practiceDialogErrorOffline": "Нет сети. Для разговора нужен интернет.",
   "@practiceDialogErrorOffline": {
     "description": "Ошибка: нет сети для старта разговора."
   },
-  "practiceDialogErrorGeneric": "Не удалось начать разговор. Попробуй ещё раз.",
+  "practiceDialogErrorGeneric": "Не удалось начать разговор. Попробуй ещё раз.",
   "@practiceDialogErrorGeneric": {
     "description": "Общая ошибка старта разговора."
   },
@@ -1715,7 +1715,7 @@
   "@practiceDialogRepeat": {
     "description": "Кнопка запуска разговора, когда у коллекции уже есть результат прошлого."
   },
-  "practiceDialogResultWords": "слов: {used} из {total}",
+  "practiceDialogResultWords": "слов: {used} из {total}",
   "@practiceDialogResultWords": {
     "description": "Строка результата последнего разговора на экране коллекции.",
     "placeholders": {
@@ -1744,15 +1744,15 @@
       }
     }
   },
-  "storeInLibrary": "В моих",
+  "storeInLibrary": "В моих",
   "@storeInLibrary": {
     "description": "Бейдж на карточке стора: набор уже добавлен (кадр 2.8)."
   },
-  "storeAddToMine": "Добавить в мои",
+  "storeAddToMine": "Добавить в мои",
   "@storeAddToMine": {
     "description": "Кнопка добавления бесплатного набора из стора (кадр 8c)."
   },
-  "storeAvailableWithPremium": "Доступно с Premium",
+  "storeAvailableWithPremium": "Доступно с Premium",
   "@storeAvailableWithPremium": {
     "description": "Кнопка премиум-набора в сторе — ведёт на пейволл (кадр 15d)."
   },
@@ -1769,7 +1769,7 @@
   "@storeInsideLabel": {
     "description": "Заголовок списка терминов в превью-шите набора (кадр 8c)."
   },
-  "storeMoreWords": "и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "storeMoreWords": "и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@storeMoreWords": {
     "description": "Строка под превью-списком: сколько слов ещё в наборе (кадр 8c).",
     "placeholders": {
@@ -1786,15 +1786,15 @@
   "@storeEmptyTitle": {
     "description": "Пустой стор — контент ещё не опубликован."
   },
-  "storeEmptyBody": "Готовые коллекции по ситуациям добавим в ближайшее время.",
+  "storeEmptyBody": "Готовые коллекции по ситуациям добавим в ближайшее время.",
   "@storeEmptyBody": {
     "description": "Подпись пустого стора."
   },
-  "storePreviewAdded": "Набор добавлен в «Мои»",
+  "storePreviewAdded": "Набор добавлен в «Мои»",
   "@storePreviewAdded": {
     "description": "Тост после добавления бесплатного набора из стора."
   },
-  "storeSubscribeError": "Не удалось добавить набор. Попробуйте ещё раз.",
+  "storeSubscribeError": "Не удалось добавить набор. Попробуйте ещё раз.",
   "@storeSubscribeError": {
     "description": "Ошибка подписки на набор стора."
   },
@@ -1802,15 +1802,15 @@
   "@paywallClose": {
     "description": "Кнопка-крестик закрытия пейволла (кадр 2.13)."
   },
-  "paywallTitleQuota": "Больше коллекций за один вечер",
+  "paywallTitleQuota": "Больше коллекций за один вечер",
   "@paywallTitleQuota": {
     "description": "Заголовок пейволла при входе из исчерпанной квоты (кадр 14a)."
   },
-  "paywallTitleGeneric": "Premium без ограничений",
+  "paywallTitleGeneric": "Premium без ограничений",
   "@paywallTitleGeneric": {
     "description": "Заголовок пейволла при входе из профиля."
   },
-  "paywallTitleStore": "{title} и ещё {count} наборов",
+  "paywallTitleStore": "{title} и ещё {count} наборов",
   "@paywallTitleStore": {
     "description": "Заголовок пейволла при входе из премиум-набора: имя набора + остальные (кадр 14b).",
     "placeholders": {
@@ -1822,11 +1822,11 @@
       }
     }
   },
-  "paywallSubtitleQuota": "Premium поднимает дневной лимит до двадцати генераций.",
+  "paywallSubtitleQuota": "Premium поднимает дневной лимит до двадцати генераций.",
   "@paywallSubtitleQuota": {
     "description": "Строка ценности пейволла для входа из квоты (кадр 14a)."
   },
-  "paywallSubtitleStore": "Премиум-коллекции собраны редакцией и открываются все сразу — по одной их не продаём.",
+  "paywallSubtitleStore": "Премиум-коллекции собраны редакцией и открываются все сразу — по одной их не продаём.",
   "@paywallSubtitleStore": {
     "description": "Строка ценности пейволла для входа из стора (кадр 14b)."
   },
@@ -1834,11 +1834,11 @@
   "@paywallSubtitleGeneric": {
     "description": "Строка ценности пейволла для входа из профиля."
   },
-  "paywallBenefitGenerations": "До 20 генераций в день",
+  "paywallBenefitGenerations": "До 20 генераций в день",
   "@paywallBenefitGenerations": {
     "description": "Пункт Premium: лимит генераций (кадр 14a)."
   },
-  "paywallBenefitStore": "Все премиум-коллекции в сторе",
+  "paywallBenefitStore": "Все премиум-коллекции в сторе",
   "@paywallBenefitStore": {
     "description": "Пункт Premium: премиум-наборы стора (кадр 14a)."
   },
@@ -1846,7 +1846,7 @@
   "@paywallBenefitModes": {
     "description": "Пункт Premium: будущие режимы (кадр 14a)."
   },
-  "paywallFreeForever": "Повторения, разбор и офлайн — бесплатно всегда.",
+  "paywallFreeForever": "Повторения, разбор и офлайн — бесплатно всегда.",
   "@paywallFreeForever": {
     "description": "Строка «бесплатно всегда» на пейволле (кадр 14a, правило 22)."
   },
@@ -1866,11 +1866,11 @@
   "@paywallPriceMonth": {
     "description": "Плейсхолдер месячной цены (реальная приходит из StoreKit, кадр 4ж)."
   },
-  "paywallYearPerMonth": "$2.50 в месяц",
+  "paywallYearPerMonth": "$2.50 в месяц",
   "@paywallYearPerMonth": {
     "description": "Подстрока годовой карточки: цена за месяц (плейсхолдер, кадр 4ж)."
   },
-  "paywallPerMonth": "в месяц",
+  "paywallPerMonth": "в месяц",
   "@paywallPerMonth": {
     "description": "Подстрока месячной карточки (кадр 4ж)."
   },
@@ -1882,7 +1882,7 @@
   "@paywallContinue": {
     "description": "Главная кнопка пейволла (кадр 14a)."
   },
-  "paywallLegalYear": "Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
+  "paywallLegalYear": "Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
   "@paywallLegalYear": {
     "description": "Юридическая строка авто-продления для годового периода (кадр 14a).",
     "placeholders": {
@@ -1891,7 +1891,7 @@
       }
     }
   },
-  "paywallLegalMonth": "Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
+  "paywallLegalMonth": "Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
   "@paywallLegalMonth": {
     "description": "Юридическая строка авто-продления для месячного периода (кадр 14b).",
     "placeholders": {
@@ -1936,11 +1936,11 @@
   "@perfMonitorTitle": {
     "description": "Заголовок dev-экрана монитора подвисаний и пункт в секции «Разработка» (QA-OBS-24). Коротко по делу: «Монитор производительности» не влезал в AppBar и печатался как «Монитор производи…» — поймано живым прогоном на симуляторе."
   },
-  "perfMonitorToggle": "Записывать подвисания, кадры и тапы",
+  "perfMonitorToggle": "Записывать подвисания, кадры и тапы",
   "@perfMonitorToggle": {
     "description": "Переключатель записи на экране монитора."
   },
-  "perfMonitorToggleHint": "По умолчанию выключено — пока выключено, ничего не стоит",
+  "perfMonitorToggleHint": "По умолчанию выключено — пока выключено, ничего не стоит",
   "@perfMonitorToggleHint": {
     "description": "Подпись под переключателем записи."
   },
@@ -1948,7 +1948,7 @@
   "@perfMonitorEmpty": {
     "description": "Пустой журнал монитора."
   },
-  "perfMonitorCopy": "Скопировать в буфер",
+  "perfMonitorCopy": "Скопировать в буфер",
   "@perfMonitorCopy": {
     "description": "Главная кнопка монитора: копия журнала + дамп в файл."
   },
@@ -1969,11 +1969,11 @@
   "@sessionOffline": {
     "description": "Сессия не построилась из-за отсутствия сети. Сессии строятся на сервере (пока — см. офлайн-практику)."
   },
-  "sessionLoadFailed": "Не удалось загрузить сессию",
+  "sessionLoadFailed": "Не удалось загрузить сессию",
   "@sessionLoadFailed": {
     "description": "Прочие ошибки построения сессии. Текст исключения уходит только в лог, не на экран."
   },
-  "syncStuckBanner": "Ответы не уходят на сервер — проверь соединение",
+  "syncStuckBanner": "Ответы не уходят на сервер — проверь соединение",
   "@syncStuckBanner": {
     "description": "Очередь ответов упёрлась в потолок и содержит неотправленные ответы, влияющие на прогресс. Показывается вместо тихой потери данных (F20-r2)."
   },
@@ -1985,15 +1985,15 @@
   "@poolEnrollAction": {
     "description": "Кнопка карточки слова: зачислить пару в пул (16e)."
   },
-  "poolEnrollNote": "Слово встанет в очередь и начнёт приходить на тренировках.",
+  "poolEnrollNote": "Слово встанет в очередь и начнёт приходить на тренировках.",
   "@poolEnrollNote": {
     "description": "Пояснение под кнопкой «Учить это слово»: что именно произойдёт (16e)."
   },
-  "poolUnenrollAction": "Убрать из изучения",
+  "poolUnenrollAction": "Убрать из изучения",
   "@poolUnenrollAction": {
     "description": "Тихая кнопка карточки слова: пауза — слово перестаёт приходить (16e)."
   },
-  "poolUnenrollTitle": "Убрать «{term}» из изучения?",
+  "poolUnenrollTitle": "Убрать «{term}» из изучения?",
   "@poolUnenrollTitle": {
     "description": "Заголовок подтверждения паузы слова.",
     "placeholders": {
@@ -2002,7 +2002,7 @@
       }
     }
   },
-  "poolUnenrollMessage": "Слово перестанет приходить на тренировках. Прогресс и история сохранятся — слово можно вернуть в любой момент.",
+  "poolUnenrollMessage": "Слово перестанет приходить на тренировках. Прогресс и история сохранятся — слово можно вернуть в любой момент.",
   "@poolUnenrollMessage": {
     "description": "Текст подтверждения: это пауза, а не удаление."
   },
@@ -2023,7 +2023,7 @@
       }
     }
   },
-  "myWordsSearchHint": "Поиск по словам",
+  "myWordsSearchHint": "Поиск по словам",
   "@myWordsSearchHint": {
     "description": "Плейсхолдер поля поиска на экране «Мои слова»."
   },
@@ -2047,7 +2047,7 @@
   "@myWordsSourceAll": {
     "description": "Фильтр по коллекции-источнику на экране «Мои слова»: без фильтра."
   },
-  "myWordsSourceNone": "Без коллекции",
+  "myWordsSourceNone": "Без коллекции",
   "@myWordsSourceNone": {
     "description": "Фильтр по источнику: слова, чья коллекция удалена или отписана — из пула они не уходят."
   },
@@ -2055,11 +2055,11 @@
   "@myWordsEmptyTitle": {
     "description": "Пустое состояние экрана «Мои слова»."
   },
-  "myWordsEmptyMessage": "Слова попадают сюда, когда ты разбираешь коллекцию свайпами «не знаю» и «не уверен» — или нажимаешь «Учить это слово» на карточке слова.",
+  "myWordsEmptyMessage": "Слова попадают сюда, когда ты разбираешь коллекцию свайпами «не знаю» и «не уверен» — или нажимаешь «Учить это слово» на карточке слова.",
   "@myWordsEmptyMessage": {
     "description": "Пустое состояние объясняет два способа зачисления в пул."
   },
-  "myWordsNothingFound": "Ничего не нашлось",
+  "myWordsNothingFound": "Ничего не нашлось",
   "@myWordsNothingFound": {
     "description": "Пустое состояние экрана «Мои слова» под активным поиском или фильтром."
   },
@@ -2093,7 +2093,7 @@
   "@challengePraise": {
     "description": "Похвала после верного ответа (кадр 19-4б) — одна и короткая, с галкой вместо эмодзи."
   },
-  "challengeAnswer": "{term} — {translation}",
+  "challengeAnswer": "{term} — {translation}",
   "@challengeAnswer": {
     "description": "Раскрытый ответ (кадры 19-4б/в): термин и перевод через тире.",
     "placeholders": {
@@ -2105,7 +2105,7 @@
       }
     }
   },
-  "challengeExample": "{sentence} — {translation}",
+  "challengeExample": "{sentence} — {translation}",
   "@challengeExample": {
     "description": "Пример употребления с переводом (кадры 19-4б/в).",
     "placeholders": {
@@ -2117,7 +2117,7 @@
       }
     }
   },
-  "challengeMistake": "Вы выбрали «{chosen}» — это {term}",
+  "challengeMistake": "Вы выбрали «{chosen}» — это {term}",
   "@challengeMistake": {
     "description": "Разбор ошибки (кадр 19-4в): чем на самом деле является выбранный вариант. Рисуется только когда неверный вариант — перевод известного термина.",
     "placeholders": {
@@ -2141,7 +2141,7 @@
   "@challengeCollapsed": {
     "description": "Свёрнутая карточка одной строкой (кадр 19-4г) — та же типографика, что у «Завтра выпадет N слов»."
   },
-  "challengeLearning": "Слово в очереди",
+  "challengeLearning": "Слово в очереди",
   "@challengeLearning": {
     "description": "Состояние кнопки «Учить» после нажатия: акт совершён, слово зачислено."
   },
@@ -2218,7 +2218,7 @@
   "@homeDoneTitle": {
     "description": "Заголовок вечерней карточки (кадр 17b)."
   },
-  "homeDoneOfWords": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
+  "homeDoneOfWords": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
   "@homeDoneOfWords": {
     "description": "Итог дня в СЛОВАХ (кадр 19-2). Единица обязательна: «52 из 52» без неё — счёт карточек в форме счёта слов, и 52 не было числом слов ни у кого. Карточки и минуты идут подписью следом.",
     "placeholders": {
@@ -2248,7 +2248,7 @@
       }
     }
   },
-  "homeChainProgress": "{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}",
+  "homeChainProgress": "{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}",
   "@homeChainProgress": {
     "description": "Внутренний прогресс одного слова, когда день дошёл до него одного: «1 слово · карточка 2 из 3». Пока слово в цепочке — строка живёт; цепочка кончилась — слово ушло из плана, и строки нет.",
     "placeholders": {
@@ -2289,11 +2289,11 @@
   "@homeIdleTakeNew": {
     "description": "Главная кнопка состояния Б (кадр 17d)."
   },
-  "homeIdleQueueStalled": "Новые слова на сегодня не взяты — очередь стоит.",
+  "homeIdleQueueStalled": "Новые слова на сегодня не взяты — очередь стоит.",
   "@homeIdleQueueStalled": {
     "description": "Пояснение под «Всё повторено» (кадр 17d)."
   },
-  "homeNextReviewLine": "{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}",
+  "homeNextReviewLine": "{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}",
   "@homeNextReviewLine": {
     "description": "Когда и сколько ждёт следующий повтор (ICU plural).",
     "placeholders": {
@@ -2309,7 +2309,7 @@
   "@homeWhenTomorrow": {
     "description": "Подстановка «когда» для следующего повтора — завтра."
   },
-  "homeExtraFromCollection": "{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}",
+  "homeExtraFromCollection": "{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}",
   "@homeExtraFromCollection": {
     "description": "Предложение добрать слова из недоразобранной коллекции (кадр 17b).",
     "placeholders": {
@@ -2339,7 +2339,7 @@
       }
     }
   },
-  "homeStoreLink": "{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}",
+  "homeStoreLink": "{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}",
   "@homeStoreLink": {
     "description": "Тихая строка входа в магазин под генерацией (ICU plural).",
     "placeholders": {
@@ -2352,11 +2352,11 @@
   "@homeStatLearned": {
     "description": "Подпись первого числа плиты статистики (кадр 19-1). Значение приходит из /stats.learned."
   },
-  "homeStatWeek": "За неделю",
+  "homeStatWeek": "За неделю",
   "@homeStatWeek": {
     "description": "Подпись второго числа плиты статистики (кадр 19-1) — слов, дошедших до «выучено» за семь дней."
   },
-  "homeStatInWork": "В работе",
+  "homeStatInWork": "В работе",
   "@homeStatInWork": {
     "description": "Подпись третьего числа плиты статистики (кадр 19-1) — размер пула."
   },
@@ -2378,7 +2378,7 @@
       }
     }
   },
-  "homeAwardExample": "{term} дошло до «{rung}»",
+  "homeAwardExample": "{term} дошло до «{rung}»",
   "@homeAwardExample": {
     "description": "Вторая половина строки-награды (кадр 19-2): слово, дошедшее дальше всех, и имя его новой ступени — из тех же ladderStep*, что и карточка слова.",
     "placeholders": {
@@ -2394,7 +2394,7 @@
   "@homeGenerateCardTitle": {
     "description": "Заголовок карточки генерации (кадры 19-1, 19-2, 19-3). Тап открывает экран генерации — поля на главной больше нет: форма на главной была зрительным центром экрана, чей центр — день."
   },
-  "homeGenerateCardHint": "Опишите ситуацию — соберём набор под неё",
+  "homeGenerateCardHint": "Опишите ситуацию — соберём набор под неё",
   "@homeGenerateCardHint": {
     "description": "Подзаголовок карточки генерации (кадры 19-1, 19-2, 19-3)."
   },
@@ -2411,7 +2411,7 @@
       }
     }
   },
-  "homeFirstDayPromise": "5 минут в день — 20 слов в неделю",
+  "homeFirstDayPromise": "5 минут в день — 20 слов в неделю",
   "@homeFirstDayPromise": {
     "description": "Строка-обещание в подвале первого дня (кадр 19-3). Единственная цифра на экране, где статистики ещё нет."
   },
@@ -2423,11 +2423,11 @@
   "@homeGenerateChipMoving": {
     "description": "Чип-пример темы под карточкой генерации первого дня (кадр 19-3)."
   },
-  "homeFirstDayTitle": "Начнём с первого набора",
+  "homeFirstDayTitle": "Начнём с первого набора",
   "@homeFirstDayTitle": {
     "description": "Приветствие первого дня (кадр 17c)."
   },
-  "homeSortOffer": "{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}",
+  "homeSortOffer": "{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}",
   "@homeSortOffer": {
     "description": "Предложение свайп-прохода, когда день закрыт (кадры 17b/17d).",
     "placeholders": {
@@ -2452,7 +2452,7 @@
   "@homeSortFirstTitle": {
     "description": "Заголовок вместо «Всё повторено», когда в работе ещё ничего нет."
   },
-  "profileNativeLangConfirmTitle": "Переводы на «{language}»?",
+  "profileNativeLangConfirmTitle": "Переводы на «{language}»?",
   "@profileNativeLangConfirmTitle": {
     "description": "Заголовок подтверждения смены родного языка.",
     "placeholders": {
@@ -2461,7 +2461,7 @@
       }
     }
   },
-  "profileNativeLangConfirmBody": "Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.",
+  "profileNativeLangConfirmBody": "Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.",
   "@profileNativeLangConfirmBody": {
     "description": "Тело подтверждения смены родного языка."
   },
@@ -2481,7 +2481,7 @@
   "@devVoicesTitle": {
     "description": "Dev-экран прослушки голосов (наряд TTS-1, Ч.2.4) и пункт в секции «Разработка»."
   },
-  "devVoicesLead": "Одни и те же пять реплик qa-плана, прочитанные каждым кандидатом одним темпом. Слушайте на телефоне, а не в файлах: динамик и наушники решают больше, чем спектрограмма.",
+  "devVoicesLead": "Одни и те же пять реплик qa-плана, прочитанные каждым кандидатом одним темпом. Слушайте на телефоне, а не в файлах: динамик и наушники решают больше, чем спектрограмма.",
   "@devVoicesLead": {
     "description": "Пояснение под заголовком дев-экрана голосов."
   },
@@ -2489,11 +2489,11 @@
   "@devVoicesSystem": {
     "description": "Заголовок последнего блока — то, чем приложение читает сейчас."
   },
-  "devVoicesSystemNote": "Играется вживую, темпом реплик. Голос — тот, что стоит в Настройках iOS; enhanced-голос надо скачать там же.",
+  "devVoicesSystemNote": "Играется вживую, темпом реплик. Голос — тот, что стоит в Настройках iOS; enhanced-голос надо скачать там же.",
   "@devVoicesSystemNote": {
     "description": "Подпись под системным голосом: он не файл, а живой синтез."
   },
-  "devVoicesPrice": "≈ {price} за план",
+  "devVoicesPrice": "≈ {price} за план",
   "@devVoicesPrice": {
     "description": "Цена озвучки всего плана этим голосом.",
     "placeholders": {
@@ -2518,31 +2518,31 @@
   "@planTitle": {
     "description": "Шапка таба «План» (plan.title)."
   },
-  "planEmptyTitle": "Разговор, к которому готовишься",
+  "planEmptyTitle": "Разговор, к которому готовишься",
   "@planEmptyTitle": {
     "description": "Заголовок витрины, Literata 30 — обещание результата, а не вопрос (кадр 21-1, plan.empty.title)."
   },
-  "planEmptySub": "сцена в день · 20 минут · репетиция вслух",
+  "planEmptySub": "сцена в день · 20 минут · репетиция вслух",
   "@planEmptySub": {
     "description": "Подпись витрины в ОДНУ строку (кадр 21-1, plan.empty.sub)."
   },
-  "planRuleSituation": "Каждый день — одна ситуация. Дни открываются по одному",
+  "planRuleSituation": "Каждый день — одна ситуация. Дни открываются по одному",
   "@planRuleSituation": {
     "description": "Первое правило плана — витрина 21-1 и лист 21-8 (plan.rule.situation)."
   },
-  "planRuleStages": "Шесть этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам → разговор",
+  "planRuleStages": "Шесть этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам → разговор",
   "@planRuleStages": {
     "description": "Второе правило плана; в листе 21-8 под ним стоит ряд пяти значков этапов (plan.rule.stages)."
   },
-  "planRuleReturn": "То, что не получилось, вернётся в следующий день. Ничего не потеряется",
+  "planRuleReturn": "То, что не получилось, вернётся в следующий день. Ничего не потеряется",
   "@planRuleReturn": {
     "description": "Третье правило плана — витрина 21-1 и лист 21-8 (plan.rule.return)."
   },
-  "planExampleDoctorTitle": "Приём у врача",
+  "planExampleDoctorTitle": "Приём у врача",
   "@planExampleDoctorTitle": {
     "description": "Витрина 21-1, лента примеров: заголовок карточки «Приём у врача» (Literata 20). Статический пример клиента, тексты из кадра."
   },
-  "planExampleDoctorDay1": "Запись к врачу",
+  "planExampleDoctorDay1": "Запись к врачу",
   "@planExampleDoctorDay1": {
     "description": "Витрина 21-1, пример «Приём у врача»: название дня 1 — идёт после «День 1 · »."
   },
@@ -2550,7 +2550,7 @@
   "@planExampleDoctorGoal11": {
     "description": "Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleDoctorGoal12": "договориться о приёме",
+  "planExampleDoctorGoal12": "договориться о приёме",
   "@planExampleDoctorGoal12": {
     "description": "Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки."
   },
@@ -2558,7 +2558,7 @@
   "@planExampleDoctorGoal13": {
     "description": "Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleDoctorDay2": "Приём у врача",
+  "planExampleDoctorDay2": "Приём у врача",
   "@planExampleDoctorDay2": {
     "description": "Витрина 21-1, пример «Приём у врача»: название дня 2 — идёт после «День 2 · »."
   },
@@ -2566,7 +2566,7 @@
   "@planExampleDoctorGoal21": {
     "description": "Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleDoctorGoal22": "ответить про лекарства",
+  "planExampleDoctorGoal22": "ответить про лекарства",
   "@planExampleDoctorGoal22": {
     "description": "Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки."
   },
@@ -2598,7 +2598,7 @@
   "@planExampleInterviewDay1": {
     "description": "Витрина 21-1, пример «Собеседование»: название дня 1 — идёт после «День 1 · »."
   },
-  "planExampleInterviewGoal11": "рассказать о себе",
+  "planExampleInterviewGoal11": "рассказать о себе",
   "@planExampleInterviewGoal11": {
     "description": "Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки."
   },
@@ -2610,7 +2610,7 @@
   "@planExampleInterviewGoal13": {
     "description": "Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleInterviewDay2": "Вопросы о работе",
+  "planExampleInterviewDay2": "Вопросы о работе",
   "@planExampleInterviewDay2": {
     "description": "Витрина 21-1, пример «Собеседование»: название дня 2 — идёт после «День 2 · »."
   },
@@ -2618,7 +2618,7 @@
   "@planExampleInterviewGoal21": {
     "description": "Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleInterviewGoal22": "ответить про сроки",
+  "planExampleInterviewGoal22": "ответить про сроки",
   "@planExampleInterviewGoal22": {
     "description": "Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки."
   },
@@ -2634,7 +2634,7 @@
   "@planExampleInterviewGoal31": {
     "description": "Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleInterviewGoal32": "спросить про бонусы",
+  "planExampleInterviewGoal32": "спросить про бонусы",
   "@planExampleInterviewGoal32": {
     "description": "Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки."
   },
@@ -2646,7 +2646,7 @@
   "@planExampleLandlordTitle": {
     "description": "Витрина 21-1, лента примеров: заголовок карточки «Звонок арендодателю» (Literata 20). Статический пример клиента, тексты из кадра."
   },
-  "planExampleLandlordDay1": "Про залог",
+  "planExampleLandlordDay1": "Про залог",
   "@planExampleLandlordDay1": {
     "description": "Витрина 21-1, пример «Звонок арендодателю»: название дня 1 — идёт после «День 1 · »."
   },
@@ -2662,7 +2662,7 @@
   "@planExampleLandlordGoal13": {
     "description": "Витрина 21-1, пример «Звонок арендодателю», день 1: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleLandlordDay2": "Про ремонт",
+  "planExampleLandlordDay2": "Про ремонт",
   "@planExampleLandlordDay2": {
     "description": "Витрина 21-1, пример «Звонок арендодателю»: название дня 2 — идёт после «День 2 · »."
   },
@@ -2674,19 +2674,19 @@
   "@planExampleLandlordGoal22": {
     "description": "Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleLandlordGoal23": "договориться о времени",
+  "planExampleLandlordGoal23": "договориться о времени",
   "@planExampleLandlordGoal23": {
     "description": "Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleLandlordDay3": "Про договор",
+  "planExampleLandlordDay3": "Про договор",
   "@planExampleLandlordDay3": {
     "description": "Витрина 21-1, пример «Звонок арендодателю»: название дня 3 — идёт после «День 3 · »."
   },
-  "planExampleLandlordGoal31": "спросить про срок",
+  "planExampleLandlordGoal31": "спросить про срок",
   "@planExampleLandlordGoal31": {
     "description": "Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleLandlordGoal32": "уточнить про питомцев",
+  "planExampleLandlordGoal32": "уточнить про питомцев",
   "@planExampleLandlordGoal32": {
     "description": "Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки."
   },
@@ -2736,7 +2736,7 @@
       }
     }
   },
-  "planHeaderBrow": "План · день {n} из {total}",
+  "planHeaderBrow": "План · день {n} из {total}",
   "@planHeaderBrow": {
     "description": "Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow).",
     "placeholders": {
@@ -2787,7 +2787,7 @@
   "@planPlateStageDialog": {
     "description": "Плита дня, этап (plan.plate.stage.dialog); окно дня — ряд этапа на плите и вкладка «Диалог» с бровью (23-0a…0d)."
   },
-  "planPlateStageListen": "Слушаю и отвечаю",
+  "planPlateStageListen": "Слушаю и отвечаю",
   "@planPlateStageListen": {
     "description": "Плита дня, этап (plan.plate.stage.listen); окно дня — ряд этапа на плите (23-0a…0c)."
   },
@@ -2825,7 +2825,7 @@
       }
     }
   },
-  "planPlateStageSubUnfinished": "не закончен · {cards}",
+  "planPlateStageSubUnfinished": "не закончен · {cards}",
   "@planPlateStageSubUnfinished": {
     "description": "Плита дня, вторая строка брошенного этапа (plan.plate.stage.sub.unfinished); cards — planCardsCount. Оценки минут в контракте нет — часть «≈ N мин» не рисуется, как и вся строка plan.plate.meta «{n} карточек · ≈ {min} минут» (вопрос архитектору).",
     "placeholders": {
@@ -2917,7 +2917,7 @@
       }
     }
   },
-  "planClosedReturn": "{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}",
+  "planClosedReturn": "{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}",
   "@planClosedReturn": {
     "description": "Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return).",
     "placeholders": {
@@ -2929,7 +2929,7 @@
       }
     }
   },
-  "planRouteDayRepeatSub": "слова и фразы дней {a}–{b}",
+  "planRouteDayRepeatSub": "слова и фразы дней {a}–{b}",
   "@planRouteDayRepeatSub": {
     "description": "Строка маршрута (plan.route.day.repeat.sub).",
     "placeholders": {
@@ -2941,7 +2941,7 @@
       }
     }
   },
-  "planRouteDayRepeatSubOne": "слова и фразы дня {a}",
+  "planRouteDayRepeatSubOne": "слова и фразы дня {a}",
   "@planRouteDayRepeatSubOne": {
     "description": "Строка маршрута, когда повторению предшествует один день ситуации (день 1 → повторение день 2).",
     "placeholders": {
@@ -3030,7 +3030,7 @@
       }
     }
   },
-  "planDoneCollection": "Слова и фразы плана остались в коллекции «{name}» — они будут приходить на повторение",
+  "planDoneCollection": "Слова и фразы плана остались в коллекции «{name}» — они будут приходить на повторение",
   "@planDoneCollection": {
     "description": "Кадр 21-7 (plan.done.collection); name — сервер.",
     "placeholders": {
@@ -3093,7 +3093,7 @@
   "@planDateOptionOther": {
     "description": "Кадры 21-10, 22-3b (plan.date.option.other, entry.date.option.other)."
   },
-  "planDateOptionOtherSub": "выбрать в календаре",
+  "planDateOptionOtherSub": "выбрать в календаре",
   "@planDateOptionOtherSub": {
     "description": "Кадры 21-10, 22-3b (plan.date.option.other.sub, entry.date.option.other.sub)."
   },
@@ -3105,7 +3105,7 @@
   "@planDateCancel": {
     "description": "Кадры 21-10, 21-12 (plan.date.cancel)."
   },
-  "planDateRemove": "Без даты",
+  "planDateRemove": "Без даты",
   "@planDateRemove": {
     "description": "Кадр 21-10, план с датой: снять дату (event_date: null). Строки в таблице нет — добавлена нарядом PLAN-UI по контракту PATCH /schedule."
   },
@@ -3113,7 +3113,7 @@
   "@planNewTitle": {
     "description": "Кадр 21-11 (plan.new.title)."
   },
-  "planNewBody": "Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение",
+  "planNewBody": "Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение",
   "@planNewBody": {
     "description": "Кадр 21-11 (plan.new.body); name — сервер.",
     "placeholders": {
@@ -3140,7 +3140,7 @@
   "@planDeleteTitle": {
     "description": "Кадр 21-12 (plan.delete.title)."
   },
-  "planDeleteBody": "План исчезнет из истории. Коллекция «{name}» и её слова останутся",
+  "planDeleteBody": "План исчезнет из истории. Коллекция «{name}» и её слова останутся",
   "@planDeleteBody": {
     "description": "Кадр 21-12 (plan.delete.body); name — сервер.",
     "placeholders": {
@@ -3149,7 +3149,7 @@
       }
     }
   },
-  "planDeleteBodyNoCollection": "План исчезнет из истории",
+  "planDeleteBodyNoCollection": "План исчезнет из истории",
   "@planDeleteBodyNoCollection": {
     "description": "Кадр 21-12 у плана, у которого коллекции ещё нет (ни один день не закрыт)."
   },
@@ -3157,7 +3157,7 @@
   "@planDeleteConfirm": {
     "description": "Кадр 21-12, терракота (plan.delete.confirm)."
   },
-  "planOverdueMeta": "Пройдено {days} из {total}",
+  "planOverdueMeta": "Пройдено {days} из {total}",
   "@planOverdueMeta": {
     "description": "Кадр 21-14 (plan.overdue.meta): «Пройдено 4 дня из 7»; days — planDaysCount. Части «фраз и слов в работе» в контракте нет.",
     "placeholders": {
@@ -3182,7 +3182,7 @@
       }
     }
   },
-  "planHintFirstStart": "Начни с этапа «{stage}». Остальные откроются по порядку",
+  "planHintFirstStart": "Начни с этапа «{stage}». Остальные откроются по порядку",
   "@planHintFirstStart": {
     "description": "Кадр 21-2c (plan.hint.first.start). stage — имя первого ряда плиты дня из stages[] сервера: «Слова» у дня-сцены, «Повторение» у повторения, «Вспомнить» у репетиции (приёмка CLIENT-CONV-1c 22.09).",
     "placeholders": {
@@ -3212,7 +3212,7 @@
       }
     }
   },
-  "planHintFirstReturn": "Эти карточки придут в следующий день ещё раз — так они и запоминаются",
+  "planHintFirstReturn": "Эти карточки придут в следующий день ещё раз — так они и запоминаются",
   "@planHintFirstReturn": {
     "description": "Кадр 21-4c (plan.hint.first.return)."
   },
@@ -3228,7 +3228,7 @@
   "@planTabOffline": {
     "description": "Тихая строка на табе, когда показано последнее известное состояние из кэша (наряд PLAN-UI, §6)."
   },
-  "planTabLoadFailedTitle": "Не получилось загрузить план",
+  "planTabLoadFailedTitle": "Не получилось загрузить план",
   "@planTabLoadFailedTitle": {
     "description": "Таб без кэша, когда сервер не ответил (§6: состояние с «Повторить»). Строки в таблице нет — добавлена нарядом PLAN-UI."
   },
@@ -3240,45 +3240,53 @@
   "@planEntryNext": {
     "description": "Шапка входа, справа, 17/700 (entry.next)."
   },
-  "planEntryGoalTitle": "К чему готовишься?",
+  "planEntryGoalTitle": "К чему готовишься?",
   "@planEntryGoalTitle": {
     "description": "Вопрос шага цели, Literata 26 (кадр 22-1, entry.goal.title)."
   },
-  "planEntryGoalSub": "Расскажи ситуацию своими словами: что будет, с кем говоришь, чего боишься",
+  "planEntryGoalSub": "Расскажи ситуацию своими словами: что будет, с кем говоришь, чего боишься",
   "@planEntryGoalSub": {
     "description": "Подпись под вопросом цели (кадр 22-1, entry.goal.sub)."
   },
-  "planEntryGoalTyping1": "Собеседование в пятницу, боюсь…",
-  "@planEntryGoalTyping1": {
-    "description": "Печатающийся плейсхолдер поля цели, кадр 1 — примеры НЕ те, что в списке историй (кадр 22-1, entry.goal.typing.1)."
+  "planEntryGoalExample1": "Собеседование на повара в пятницу. Работал три года в ресторане",
+  "@planEntryGoalExample1": {
+    "description": "Пример-подсказка в пустом поле цели, 1 из 4 — с деталями о себе: профессия, опыт (наряд CLIENT-22-1 §1b). Сменяются плавно раз в 4 с, пока поле пустое и не идёт диктовка; первый символ останавливает (кадр 22-1)."
   },
-  "planEntryGoalTyping2": "Звоню в банк, не понимаю по телефону…",
-  "@planEntryGoalTyping2": {
-    "description": "Печатающийся плейсхолдер поля цели, кадр 2 (кадр 22-1, entry.goal.typing.2)."
+  "planEntryGoalExample2": "Приём у врача в Берлине — болит спина, нужен рецепт",
+  "@planEntryGoalExample2": {
+    "description": "Пример-подсказка в пустом поле цели, 2 из 4 — город, что болит, что нужно (кадр 22-1, CLIENT-22-1 §1b)."
   },
-  "planEntryGoalTyping3": "Иду к врачу…",
-  "@planEntryGoalTyping3": {
-    "description": "Печатающийся плейсхолдер поля цели, кадр 3 (кадр 22-1, entry.goal.typing.3)."
+  "planEntryGoalExample3": "Снять квартиру в Лиссабоне на год, с собакой",
+  "@planEntryGoalExample3": {
+    "description": "Пример-подсказка в пустом поле цели, 3 из 4 — город, срок, с кем (кадр 22-1, CLIENT-22-1 §1b)."
+  },
+  "planEntryGoalExample4": "Звонок в банк: заблокировали карту, я не резидент",
+  "@planEntryGoalExample4": {
+    "description": "Пример-подсказка в пустом поле цели, 4 из 4 — что случилось и кто ты для банка (кадр 22-1, CLIENT-22-1 §1b)."
   },
   "planEntryGoalStoriesTitle": "Так пишут другие",
   "@planEntryGoalStoriesTitle": {
     "description": "Метка списка историй под полем цели (кадр 22-1, entry.goal.stories.title)."
   },
-  "planEntryGoalStory1": "Собеседование в пятницу, боюсь вопросов про опыт",
+  "planEntryGoalStory1": "Собеседование в пятницу, боюсь вопросов про опыт",
   "@planEntryGoalStory1": {
     "description": "История «так пишут другие» — тап подставляет её в поле (кадр 22-1, entry.goal.story.1)."
   },
-  "planEntryGoalStory2": "К врачу с ребёнком, первый раз в местной клинике",
+  "planEntryGoalStory2": "К врачу с ребёнком, первый раз в местной клинике",
   "@planEntryGoalStory2": {
     "description": "История «так пишут другие» (кадр 22-1, entry.goal.story.2)."
   },
-  "planEntryGoalStory3": "Звонок арендодателю про залог",
+  "planEntryGoalStory3": "Звонок арендодателю про залог",
   "@planEntryGoalStory3": {
     "description": "История «так пишут другие» (кадр 22-1, entry.goal.story.3)."
   },
-  "planEntryGoalShortHint": "Добавь, с кем и что важно — план будет точнее",
-  "@planEntryGoalShortHint": {
-    "description": "Подсказка под коротким ответом; НЕ блокирует «Далее» (кадр 22-1c, entry.goal.short.hint)."
+  "planEntryGoalCompanion": "Кто ты и что важно — профессия, опыт, город. План соберётся под это.",
+  "@planEntryGoalCompanion": {
+    "description": "Спутник под полем цели — всегда виден, Inter 13 tertiary: подсказывает написать о себе, чтобы план собрался под ученика (наряд CLIENT-22-1 §1a, кадр 22-1)."
+  },
+  "planEntryGoalCompanionShort": "Добавь пару слов о себе: профессия, опыт — и план будет про тебя",
+  "@planEntryGoalCompanionShort": {
+    "description": "Спутник под полем цели при короткой цели — меньше четырёх слов после ввода или диктовки; «Далее» НЕ блокирует. Четыре слова и больше — снова обычный спутник (наряд CLIENT-22-1 §1c, кадр 22-1c)."
   },
   "planEntryGoalDictate": "или надиктуй",
   "@planEntryGoalDictate": {
@@ -3288,7 +3296,7 @@
   "@planEntryGoalDictateEdit": {
     "description": "Подпись у микрофона после распознавания (кадр 22-1, entry.goal.dictate.edit)."
   },
-  "planEntryGoalListening": "{time} · говори, я слушаю",
+  "planEntryGoalListening": "{time} · говори, я слушаю",
   "@planEntryGoalListening": {
     "description": "Таймер и приглашение над волной записи (кадр 22-1, entry.goal.listening).",
     "placeholders": {
@@ -3321,7 +3329,7 @@
       }
     }
   },
-  "planEntryLanguageTitle": "На каком языке говорить?",
+  "planEntryLanguageTitle": "На каком языке говорить?",
   "@planEntryLanguageTitle": {
     "description": "Вопрос шага языка (кадр 22-2, entry.language.title)."
   },
@@ -3345,11 +3353,11 @@
   "@planEntryLevelIntermediate": {
     "description": "Кадр 22-2 (entry.level.intermediate)."
   },
-  "planEntryLevelIntermediateSub": "понимаю простую речь, говорю с ошибками",
+  "planEntryLevelIntermediateSub": "понимаю простую речь, говорю с ошибками",
   "@planEntryLevelIntermediateSub": {
     "description": "Уровень описан тем, что человек умеет (кадр 22-2, entry.level.intermediate.sub)."
   },
-  "planEntryDaysTitle": "Сколько дней до разговора?",
+  "planEntryDaysTitle": "Сколько дней до разговора?",
   "@planEntryDaysTitle": {
     "description": "Вопрос шага длины плана (кадр 22-3a, entry.days.title)."
   },
@@ -3399,7 +3407,7 @@
   "@planEntryDateUnknown": {
     "description": "Равноправный вариант выбора даты (кадр 22-3b, entry.date.unknown)."
   },
-  "planEntryDateUnknownSub": "план без даты, дни идут подряд",
+  "planEntryDateUnknownSub": "план без даты, дни идут подряд",
   "@planEntryDateUnknownSub": {
     "description": "Подпись варианта без даты (кадр 22-3b, entry.date.unknown.sub)."
   },
@@ -3407,11 +3415,11 @@
   "@planEntryDateOther": {
     "description": "Третий вариант выбора даты (кадр 22-3b, entry.date.other)."
   },
-  "planEntryDateOtherSub": "выбрать в календаре",
+  "planEntryDateOtherSub": "выбрать в календаре",
   "@planEntryDateOtherSub": {
     "description": "Подпись варианта «Другая дата» (кадр 22-3b, entry.date.other.sub)."
   },
-  "planEntryDateRehearsalOn": "Репетиция встанет на {date} — день перед разговором",
+  "planEntryDateRehearsalOn": "Репетиция встанет на {date} — день перед разговором",
   "@planEntryDateRehearsalOn": {
     "description": "Строка следствия под выбором даты (кадр 22-3b, entry.date.rehearsal.on).",
     "placeholders": {
@@ -3436,15 +3444,15 @@
   "@planEntryPreviewAbout": {
     "description": "Срок сборки человеческими словами, без процента (кадр 22-4a, entry.preview.about)."
   },
-  "planEntryPreviewLine1": "Подбираю ситуации под твой разговор",
+  "planEntryPreviewLine1": "Подбираю ситуации под твой разговор",
   "@planEntryPreviewLine1": {
     "description": "Прелоадер 22-4a и 22-5a: первая строка статуса по кругу (om-pre-line1)."
   },
-  "planEntryPreviewLine2": "Раскладываю их по дням",
+  "planEntryPreviewLine2": "Раскладываю их по дням",
   "@planEntryPreviewLine2": {
     "description": "Прелоадер 22-4a и 22-5a: вторая строка статуса (om-pre-line2)."
   },
-  "planEntryPreviewLine3": "Собираю слова и фразы",
+  "planEntryPreviewLine3": "Собираю слова и фразы",
   "@planEntryPreviewLine3": {
     "description": "Прелоадер 22-4a и 22-5a: третья строка статуса (om-pre-line3)."
   },
@@ -3460,15 +3468,15 @@
   "@planEntryPreviewCta": {
     "description": "Кадр 22-4 (entry.preview.cta)."
   },
-  "planEntryPreviewErrorTitle": "План не собрался",
+  "planEntryPreviewErrorTitle": "План не собрался",
   "@planEntryPreviewErrorTitle": {
     "description": "Заголовок неудачной сборки (кадр 22-4c, entry.preview.error.title)."
   },
-  "planEntryPreviewErrorWhat": "Сеть пропала на середине",
+  "planEntryPreviewErrorWhat": "Сеть пропала на середине",
   "@planEntryPreviewErrorWhat": {
     "description": "Что случилось при неудачной сборке (кадр 22-4c, entry.preview.error.what)."
   },
-  "planEntryPreviewErrorSub": "Ответы сохранены — попробуй ещё раз, заново рассказывать не придётся",
+  "planEntryPreviewErrorSub": "Ответы сохранены — попробуй ещё раз, заново рассказывать не придётся",
   "@planEntryPreviewErrorSub": {
     "description": "Что уцелело при неудачной сборке (кадр 22-4c, entry.preview.error.sub)."
   },
@@ -3480,7 +3488,7 @@
   "@planEntryPreviewUnclearTitle": {
     "description": "Заголовок, когда цель непонятна — просьба, не упрёк (кадр 22-4d, entry.preview.unclear.title)."
   },
-  "planEntryPreviewUnclearQuote": "«{goal}» — это про что?",
+  "planEntryPreviewUnclearQuote": "«{goal}» — это про что?",
   "@planEntryPreviewUnclearQuote": {
     "description": "Цитата ответа человека в кадре «цель непонятна» (кадр 22-4d, entry.preview.unclear.quote).",
     "placeholders": {
@@ -3489,11 +3497,11 @@
       }
     }
   },
-  "planEntryPreviewUnclearSub": "Напиши, где будешь говорить и с кем: приём у врача, звонок в банк, разговор с соседом",
+  "planEntryPreviewUnclearSub": "Напиши, где будешь говорить и с кем: приём у врача, звонок в банк, разговор с соседом",
   "@planEntryPreviewUnclearSub": {
     "description": "Три примера того, чего не хватает (кадр 22-4d, entry.preview.unclear.sub)."
   },
-  "planEntryPreviewUnclearCta": "К цели",
+  "planEntryPreviewUnclearCta": "К цели",
   "@planEntryPreviewUnclearCta": {
     "description": "Кнопка возврата к полю цели с сохранённым текстом (кадр 22-4d, entry.preview.unclear.cta)."
   },
@@ -3501,7 +3509,7 @@
   "@planEntryPushTitle": {
     "description": "Кадр 22-6 (entry.push.title)."
   },
-  "planEntryPushBody": "{until}. День 1 — «{dayTitle}»",
+  "planEntryPushBody": "{until}. День 1 — «{dayTitle}»",
   "@planEntryPushBody": {
     "description": "Тело уведомления «План готов»: срок до события и первый день (кадр 22-6, entry.push.body).",
     "placeholders": {
@@ -3513,7 +3521,7 @@
       }
     }
   },
-  "planEntryPushBodyNoDate": "{days}. День 1 — «{dayTitle}»",
+  "planEntryPushBodyNoDate": "{days}. День 1 — «{dayTitle}»",
   "@planEntryPushBodyNoDate": {
     "description": "Тело уведомления у плана без даты события (кадр 22-6, entry.push.body.nodate).",
     "placeholders": {
@@ -3534,7 +3542,7 @@
       }
     }
   },
-  "planNotifyDayReadyBody": "«{title}» — можно начинать",
+  "planNotifyDayReadyBody": "«{title}» — можно начинать",
   "@planNotifyDayReadyBody": {
     "description": "Тело уведомления «день собран».",
     "placeholders": {
@@ -3552,7 +3560,7 @@
       }
     }
   },
-  "planNotifyReminderBody": "«{title}» — начни с того места, где остановился",
+  "planNotifyReminderBody": "«{title}» — начни с того места, где остановился",
   "@planNotifyReminderBody": {
     "description": "Тело ежедневного напоминания.",
     "placeholders": {
@@ -3574,11 +3582,11 @@
   "@planNotifyEventTodayTitleNoName": {
     "description": "Уведомление в день события, когда сервер не назвал событие."
   },
-  "planNotifyEventTodayBody": "Скажи сам перед разговором — прогони его вслух",
+  "planNotifyEventTodayBody": "Скажи сам перед разговором — прогони его вслух",
   "@planNotifyEventTodayBody": {
     "description": "Тело уведомления в день события."
   },
-  "planNotifySkippedTitle": "День {n} ждёт со вчера",
+  "planNotifySkippedTitle": "День {n} ждёт со вчера",
   "@planNotifySkippedTitle": {
     "description": "Локальное уведомление «дни пропущены»: наутро после даты дня, который не пройден.",
     "placeholders": {
@@ -3587,7 +3595,7 @@
       }
     }
   },
-  "planNotifySkippedBody": "Маршрут сдвинулся: следующие дни пойдут от сегодня",
+  "planNotifySkippedBody": "Маршрут сдвинулся: следующие дни пойдут от сегодня",
   "@planNotifySkippedBody": {
     "description": "Тело уведомления «дни пропущены» — говорит, что сделала система, без укора."
   },
@@ -3599,7 +3607,7 @@
   "@planBannerAppMark": {
     "description": "Баннер уведомления в приложении (кадр 22-6): буква-значок приложения «Слова» в квадрате 34."
   },
-  "planEntryOffline": "Без сети план не собрать",
+  "planEntryOffline": "Без сети план не собрать",
   "@planEntryOffline": {
     "description": "Вход офлайн (§6): нельзя начать сборку. Строки в таблице нет — добавлена нарядом PLAN-UI."
   },
@@ -3607,7 +3615,7 @@
   "@planWindowBack": {
     "description": "Окно дня (23-0a…0c): подпись стрелки назад на плите для читалки экрана."
   },
-  "planWindowStateNotStarted": "не начат",
+  "planWindowStateNotStarted": "не начат",
   "@planWindowStateNotStarted": {
     "description": "Окно дня, плита (23-0a): слово состояния дня под названием — «не начат · ≈ 20 минут»."
   },
@@ -3704,7 +3712,7 @@
       }
     }
   },
-  "planWindowGoalsJoinLast": "{head} и {last}",
+  "planWindowGoalsJoinLast": "{head} и {last}",
   "@planWindowGoalsJoinLast": {
     "description": "Окно дня, предложение целей (23-0a…0c): последняя цель через «и» — «… и спросить про ограничения».",
     "placeholders": {
@@ -3716,15 +3724,15 @@
       }
     }
   },
-  "planWindowSheetTalk": "В разговоре",
+  "planWindowSheetTalk": "В разговоре",
   "@planWindowSheetTalk": {
     "description": "Шит слова (23-0e): лейбл caps над репликой дня, где звучит слово (usage сервера), слово в реплике латунью."
   },
-  "planWindowSheetNotStarted": "не начато",
+  "planWindowSheetNotStarted": "не начато",
   "@planWindowSheetNotStarted": {
     "description": "Шит слова (23-0e): строка состояния слова, которое ещё не проходили (state = pending) — форма среднего рода от «не начат»."
   },
-  "planWindowSheetReturnsOn": "вернётся в день {n}",
+  "planWindowSheetReturnsOn": "вернётся в день {n}",
   "@planWindowSheetReturnsOn": {
     "description": "Шит слова (23-0e): часть строки состояния слова, проваленного дважды — «пройдено · вернётся в день 3»; n — returns_day сервера.",
     "placeholders": {
@@ -3766,7 +3774,7 @@
       }
     }
   },
-  "planSessionDescWords": "{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух",
+  "planSessionDescWords": "{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух",
   "@planSessionDescWords": {
     "description": "Сессия, вход в этап «Слова» (30-1): описание под названием; число — единицы этапа.",
     "placeholders": {
@@ -3775,7 +3783,7 @@
       }
     }
   },
-  "planSessionDescPhrases": "{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся",
+  "planSessionDescPhrases": "{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся",
   "@planSessionDescPhrases": {
     "description": "Сессия, вход в этап «Фразы» (30-1): описание под названием; число — каркасы этапа.",
     "placeholders": {
@@ -3784,27 +3792,27 @@
       }
     }
   },
-  "planSessionDescDialogue": "Разговор по шагам: пойми реплику и ответь фразами дня",
+  "planSessionDescDialogue": "Разговор по шагам: пойми реплику и ответь фразами дня",
   "@planSessionDescDialogue": {
     "description": "Сессия, вход в этап «Диалог» (30-1): описание."
   },
-  "planSessionDescListen": "Весь разговор на слух, потом вопросы о нём",
+  "planSessionDescListen": "Весь разговор на слух, потом вопросы о нём",
   "@planSessionDescListen": {
     "description": "Сессия, вход в этап «Слушаю и отвечаю» (30-1): описание."
   },
-  "planSessionDescSpeak": "Собеседник спрашивает — отвечай про себя, своими словами. Каркасы ты знаешь, окно — твоё",
+  "planSessionDescSpeak": "Собеседник спрашивает — отвечай про себя, своими словами. Каркасы ты знаешь, окно — твоё",
   "@planSessionDescSpeak": {
     "description": "Сессия, вход в этап «Говорю сам» (30-1): описание по кадру 30-1b; роль без склонения — «собеседник»."
   },
-  "planSessionNoHints": "Без подсказок",
+  "planSessionNoHints": "Без подсказок",
   "@planSessionNoHints": {
     "description": "Сессия, вход в этап (30-1): переключатель; хранится на телефоне на план."
   },
-  "planSessionNoHintsSub": "Диалог и «Говорю сам» — сразу голосом",
+  "planSessionNoHintsSub": "Диалог и «Говорю сам» — сразу голосом",
   "@planSessionNoHintsSub": {
     "description": "Сессия, вход в этап (30-1): подпись под переключателем «Без подсказок»."
   },
-  "planSessionNoHintsTalk": "В разговоре — без подсказок, текст собеседника закрыт",
+  "planSessionNoHintsTalk": "В разговоре — без подсказок, текст собеседника закрыт",
   "@planSessionNoHintsTalk": {
     "description": "Вход в день-репетицию (30-1, наряд FIX-3 §8): подпись тумблера — про разговор; «Диалог» и «Говорю сам» в этом дне не идут."
   },
@@ -3863,7 +3871,7 @@
   "@planSessionTaskSayWord": {
     "description": "Сессия, «Повтори слово» (31-2): задание над листом."
   },
-  "planSessionCompanionSayWord": "Скажи, как слышишь — {role} поймёт",
+  "planSessionCompanionSayWord": "Скажи, как слышишь — {role} поймёт",
   "@planSessionCompanionSayWord": {
     "description": "Сессия, «Повтори слово» (31-2): голос спутника под заданием; роль собеседника в именительном со строчной.",
     "placeholders": {
@@ -3884,15 +3892,15 @@
   "@planSessionTaskChooseHeard": {
     "description": "Сессия, «На слух» (31-5) и «Окно на слух» (32-5): задание."
   },
-  "planSessionTaskAssembleParts": "Собери из частей",
+  "planSessionTaskAssembleParts": "Собери из частей",
   "@planSessionTaskAssembleParts": {
     "description": "Сессия, сборка слова из плиток (31-6): задание."
   },
-  "planSessionTaskInsertWord": "Вставь слово в окно",
+  "planSessionTaskInsertWord": "Вставь слово в окно",
   "@planSessionTaskInsertWord": {
     "description": "Сессия, слово в окне (31-7): задание."
   },
-  "planSessionTaskLookListen": "Посмотри и послушай",
+  "planSessionTaskLookListen": "Посмотри и послушай",
   "@planSessionTaskLookListen": {
     "description": "Сессия, знакомство с каркасом (32-1): задание (наряд SESSION-1b′)."
   },
@@ -3900,16 +3908,16 @@
   "@planSessionTaskAssemblePhrase": {
     "description": "Сессия, перевод → сборка (32-2): задание."
   },
-  "planSessionTaskInsert": "Вставь в окно",
+  "planSessionTaskInsert": "Вставь в окно",
   "@planSessionTaskInsert": {
     "description": "Сессия, окно · вставь наполнение (32-4): задание."
   },
   "planSessionTaskSayPhrase": "Скажи фразу вслух",
-  "planSessionTaskSayEachMeaning": "Скажи фразу с каждым значением",
+  "planSessionTaskSayEachMeaning": "Скажи фразу с каждым значением",
   "@planSessionTaskSayEachMeaning": {
     "description": "Сессия, «Скажи целиком» (32-7): задание — фраза говорится с каждым значением окна по очереди (наряд FIX-1 §6)."
   },
-  "planSessionOwnWordNow": "а теперь со своим словом",
+  "planSessionOwnWordNow": "а теперь со своим словом",
   "@planSessionOwnWordNow": {
     "description": "Сессия, «Скажи целиком» (32-7): подпись под заданием в последнем круге — значение в окне своё (наряд FIX-1 §6)."
   },
@@ -3920,7 +3928,7 @@
   "@planSessionTaskSayPhrase": {
     "description": "Сессия, «Повтори вслух» (32-6): задание."
   },
-  "planSessionTaskWhatAnswer": "Что ты ответишь?",
+  "planSessionTaskWhatAnswer": "Что ты ответишь?",
   "@planSessionTaskWhatAnswer": {
     "description": "Сессия, комбинация (32-8): задание над тремя целыми предложениями-ответами (наряд SESSION-1b′)."
   },
@@ -3932,7 +3940,7 @@
   "@planSessionBrowTranslation": {
     "description": "Сессия, лист вопроса (31-4, 32-2): бровь над переводом."
   },
-  "planSessionBrowByEar": "На слух",
+  "planSessionBrowByEar": "На слух",
   "@planSessionBrowByEar": {
     "description": "Сессия, лист вопроса «На слух» (31-5, 32-5): бровь."
   },
@@ -3961,7 +3969,7 @@
       }
     }
   },
-  "planSessionWhatHeard": "Что ты услышал?",
+  "planSessionWhatHeard": "Что ты услышал?",
   "@planSessionWhatHeard": {
     "description": "Сессия, «На слух» (31-5): текст вопроса в листе."
   },
@@ -3977,15 +3985,15 @@
   "@planSessionNext": {
     "description": "Сессия: кнопка после неверного ответа (30-9), итога этапа (30-6), комбинации (32-8); бровь «Дальше» на итоге этапа."
   },
-  "planSessionByParts": "по частям",
+  "planSessionByParts": "по частям",
   "@planSessionByParts": {
     "description": "Сессия, сборка слова (31-6): подпись справа от перевода."
   },
-  "planSessionMicTap": "тап — говорить",
+  "planSessionMicTap": "тап — говорить",
   "@planSessionMicTap": {
     "description": "Сессия, микрофон (30-3) в покое: подпись над кнопкой."
   },
-  "planSessionMicListening": "говори, я слушаю",
+  "planSessionMicListening": "говори, я слушаю",
   "@planSessionMicListening": {
     "description": "Сессия, микрофон (30-3) «слушаю · пусто»: подпись."
   },
@@ -3997,11 +4005,11 @@
   "@planSessionPlaying": {
     "description": "Сессия, «Комбинация» (32-8) «собрано · играет»: подпись под волной, пока звучит собранная фраза."
   },
-  "planSessionMicMissed": "не расслышал, ещё раз",
+  "planSessionMicMissed": "не расслышал, ещё раз",
   "@planSessionMicMissed": {
     "description": "Сессия, микрофон (30-3) «не расслышал»: подпись."
   },
-  "planSessionEcho": "услышал — так же, как в записи",
+  "planSessionEcho": "услышал — так же, как в записи",
   "@planSessionEcho": {
     "description": "Сессия, «Повтори слово» (31-2c): подпись эха под услышанным словом."
   },
@@ -4017,7 +4025,7 @@
   "@planSessionNoMicTitle": {
     "description": "Сессия, «нет разрешения · экран» (30-3): заголовок."
   },
-  "planSessionNoMicBody": "Без него этапы «Слушаю и отвечаю» и «Говорю сам» не пройти. Слова и фразы можно делать выбором и плитками.",
+  "planSessionNoMicBody": "Без него этапы «Слушаю и отвечаю» и «Говорю сам» не пройти. Слова и фразы можно делать выбором и плитками.",
   "@planSessionNoMicBody": {
     "description": "Сессия, «нет разрешения · экран» (30-3): текст под заголовком."
   },
@@ -4037,7 +4045,7 @@
   "@planSessionExitTitle": {
     "description": "Сессия, шит выхода (30-8): заголовок."
   },
-  "planSessionExitBody": "Сделанные карточки этапа «{stage}» останутся закрытыми — продолжишь с того же места.",
+  "planSessionExitBody": "Сделанные карточки этапа «{stage}» останутся закрытыми — продолжишь с того же места.",
   "@planSessionExitBody": {
     "description": "Сессия, шит выхода (30-8): одно предложение; кадровое «вернёшься к пятой» требует порядкового числительного в падеже — заменено «с того же места».",
     "placeholders": {
@@ -4054,11 +4062,11 @@
   "@planSessionExitLeave": {
     "description": "Сессия, шит выхода (30-8): кнопка."
   },
-  "planSessionOffline": "нет связи — ответ отправится, как только сеть вернётся",
+  "planSessionOffline": "нет связи — ответ отправится, как только сеть вернётся",
   "@planSessionOffline": {
     "description": "Сессия: баннер под шапкой, пока ответ ждёт отправки (очередь отложенных ответов)."
   },
-  "planSessionLoadFailed": "День не загрузился",
+  "planSessionLoadFailed": "День не загрузился",
   "@planSessionLoadFailed": {
     "description": "Сессия: вход, когда сервер не ответил."
   },
@@ -4104,15 +4112,15 @@
   "@planSessionTaskSayLine": {
     "description": "Сессия, строка задания 33-3 и 33-4: реплика ученика голосом — с репликой на экране и вслепую (наряд SESSION-2a §5)."
   },
-  "planSessionTaskRescue": "Не понял — переспроси",
+  "planSessionTaskRescue": "Не понял — переспроси",
   "@planSessionTaskRescue": {
     "description": "Сессия, строка задания 33-6: «Не понял» в пузыре собеседника и медленный повтор. Канва — «Слушай назначение»: текста задания контракт не отдаёт."
   },
-  "planSessionAnyChip": "любое — твой ответ",
+  "planSessionAnyChip": "любое — твой ответ",
   "@planSessionAnyChip": {
     "description": "Сессия, 33-2: подпись под чипами наполнений — верен любой."
   },
-  "planSessionNotUnderstood": "Не понял",
+  "planSessionNotUnderstood": "Не понял",
   "@planSessionNotUnderstood": {
     "description": "Сессия, 33-6: кнопка 44 в пузыре собеседника — переспросить."
   },
@@ -4124,7 +4132,7 @@
   "@planSessionTaskListenTalk": {
     "description": "Сессия, строка задания 34-1: плеер визита."
   },
-  "planSessionByPartsAction": "По частям",
+  "planSessionByPartsAction": "По частям",
   "@planSessionByPartsAction": {
     "description": "Сессия, 34-1: текст над кнопкой — пауза после каждого обмена."
   },
@@ -4158,7 +4166,7 @@
   "@planSessionPause": {
     "description": "Сессия, 34-1: главное действие плеера, пока разговор играет."
   },
-  "planSessionPlayerRoles": "{role} и ты",
+  "planSessionPlayerRoles": "{role} и ты",
   "@planSessionPlayerRoles": {
     "description": "Сессия, 34-1: подпись пары кружков — кто говорит в разговоре.",
     "placeholders": {
@@ -4175,7 +4183,7 @@
   "@planSessionYou": {
     "description": "Сессия, 34-1: подпись пары кружков, когда роль собеседника не названа."
   },
-  "planSessionTaskWhatUnderstood": "Что ты понял?",
+  "planSessionTaskWhatUnderstood": "Что ты понял?",
   "@planSessionTaskWhatUnderstood": {
     "description": "Сессия, строка задания 34-2: вопрос о визите по памяти."
   },
@@ -4183,7 +4191,7 @@
   "@planSessionBrowQuestion": {
     "description": "Сессия, бровь листа вопроса (34-2, 34-7)."
   },
-  "planSessionFromMemory": "по памяти · звука нет",
+  "planSessionFromMemory": "по памяти · звука нет",
   "@planSessionFromMemory": {
     "description": "Сессия, 34-2: подпись под вопросом — переслушать нельзя."
   },
@@ -4191,7 +4199,7 @@
   "@planSessionTaskWhereHeard": {
     "description": "Сессия, строка задания 34-3: разбор визита с подсветкой ответов."
   },
-  "planSessionTaskListenChoose": "Послушай и выбери ответ",
+  "planSessionTaskListenChoose": "Послушай и выбери ответ",
   "@planSessionTaskListenChoose": {
     "description": "Сессия, строка задания 34-5: три озвучки без текста (наряд SESSION-2b §3)."
   },
@@ -4199,7 +4207,7 @@
   "@planSessionThisIsAnswer": {
     "description": "Сессия, 34-5: кнопка — отмеченная озвучка и есть ответ; активна только когда лист отмечен и прослушан."
   },
-  "planSessionTaskNormalPace": "А теперь в обычном темпе",
+  "planSessionTaskNormalPace": "А теперь в обычном темпе",
   "@planSessionTaskNormalPace": {
     "description": "Сессия, строка задания 34-6."
   },
@@ -4212,7 +4220,7 @@
       }
     }
   },
-  "planSessionBrowNormalPace": "В обычном темпе",
+  "planSessionBrowNormalPace": "В обычном темпе",
   "@planSessionBrowNormalPace": {
     "description": "Сессия, 34-6: бровь листа на обычном темпе."
   },
@@ -4273,7 +4281,7 @@
   "@planSessionWaiting": {
     "description": "Сессия, 35-3: подпись над микрофоном в паузе 3 с (кольцо)."
   },
-  "planSessionNotThat": "не то — попробуем ещё",
+  "planSessionNotThat": "не то — попробуем ещё",
   "@planSessionNotThat": {
     "description": "Сессия, 35-5: отказ судьи, когда сервер не прислал своей причины."
   },
@@ -4337,7 +4345,7 @@
       }
     }
   },
-  "planSessionAnd": "{a} и {b}",
+  "planSessionAnd": "{a} и {b}",
   "@planSessionAnd": {
     "description": "Сессия, 30-7: последняя пара перечисления.",
     "placeholders": {
@@ -4349,7 +4357,7 @@
       }
     }
   },
-  "planSessionNextDayBuilding": "День {n} — собираю",
+  "planSessionNextDayBuilding": "День {n} — собираю",
   "@planSessionNextDayBuilding": {
     "description": "Сессия, 30-7: следующий день плана, урок которого ещё пишется (или встанет в очередь при закрытии).",
     "placeholders": {
@@ -4358,7 +4366,7 @@
       }
     }
   },
-  "planSessionNextDayReady": "День {n} — готов",
+  "planSessionNextDayReady": "День {n} — готов",
   "@planSessionNextDayReady": {
     "description": "Сессия, 30-7: следующий день плана, урок которого уже написан.",
     "placeholders": {
@@ -4367,7 +4375,7 @@
       }
     }
   },
-  "planSessionCloseFailed": "День не закрылся — нет связи",
+  "planSessionCloseFailed": "День не закрылся — нет связи",
   "@planSessionCloseFailed": {
     "description": "Сессия, 30-7: POST закрытия дня не дошёл; кнопка остаётся."
   },
@@ -4405,7 +4413,7 @@
   "@planTalkEntryRuleStart": {
     "description": "Вход в разговор (37-5): первая строка правил. Роль без склонения — «собеседник»."
   },
-  "planTalkEntryRuleRescue": "Не понял — нажми «Не понял», и {gender, select, female{она} other{он}} повторит проще.",
+  "planTalkEntryRuleRescue": "Не понял — нажми «Не понял», и {gender, select, female{она повторит} other{он повторит}} проще.",
   "@planTalkEntryRuleRescue": {
     "description": "Вход в разговор (37-5): вторая строка правил. Пример «скажи „Sorry?“» из кадра снят: он на английском, а язык цели бывает любым. Род — тот же, что у первой строки (доработка CLIENT-START п. 2): female — роль первой сцены женщина (window.sources[].partner_gender, «Регистратор начнёт первой» → «она повторит»); male — роль мужчина; other — роли нет, строка «Собеседник начнёт первым» (→ «он»).",
     "placeholders": {
@@ -4422,7 +4430,7 @@
   "@planTalkStart": {
     "description": "Вход в разговор (37-5): кнопка — POST …/days/{n}/conversation."
   },
-  "planTalkRescueAction": "Не понял",
+  "planTalkRescueAction": "Не понял",
   "@planTalkRescueAction": {
     "description": "Экран разговора (37-6…37-10): кнопка слева от микрофона, во всех состояниях твоей очереди — ход kind=rescue, ход сцены не тратит."
   },
@@ -4443,27 +4451,27 @@
   "@planTalkInterrupted": {
     "description": "Экран разговора (37-9): пометка у реплики собеседника, которую прервали тапом по микрофону."
   },
-  "planTalkSilenceEnds": "тишина — конец",
+  "planTalkSilenceEnds": "тишина — конец",
   "@planTalkSilenceEnds": {
     "description": "Экран разговора (37-7, 37-9): подпись под живой строкой, пока идёт запись."
   },
-  "planTalkUnheard": "не расслышал — скажи ещё раз",
+  "planTalkUnheard": "не расслышал — скажи ещё раз",
   "@planTalkUnheard": {
     "description": "Экран разговора (37-10): запись вышла пустой. Ход на сервер не уходит."
   },
-  "planTalkOffline": "Связь пропала — разговор продолжится отсюда",
+  "planTalkOffline": "Связь пропала — разговор продолжится отсюда",
   "@planTalkOffline": {
     "description": "Экран разговора (37-10): ход не дошёл. «Повторить» перечитывает разговор и повторяет ход, если он всё ещё твой."
   },
-  "planTalkSilent": "Собеседник не отвечает — попробуй ещё раз",
+  "planTalkSilent": "Собеседник не отвечает — попробуй ещё раз",
   "@planTalkSilent": {
     "description": "Экран разговора (37-10): 503 plan_conversation_unavailable — в журнале не осталось ничего, ход повторяется один в один. Роль без склонения."
   },
-  "planTalkOpenFailed": "Разговор не начался — попробуй ещё раз",
+  "planTalkOpenFailed": "Разговор не начался — попробуй ещё раз",
   "@planTalkOpenFailed": {
     "description": "Экран разговора: старт не прошёл (нет связи, роль не ответила)."
   },
-  "planTalkNotInDay": "В этом дне разговора нет",
+  "planTalkNotInDay": "В этом дне разговора нет",
   "@planTalkNotInDay": {
     "description": "Экран разговора: 422 plan_conversation_not_in_day — день роздан без шестого этапа."
   },
@@ -4488,7 +4496,7 @@
   "@planTalkUnderstoodAll": {
     "description": "Итог разговора (37-12): understood_all = true."
   },
-  "planTalkUnderstoodExcept": "{n, plural, one{Понял вопросы, кроме одного — вернётся} other{Понял вопросы, кроме {n} — вернутся}}",
+  "planTalkUnderstoodExcept": "{n, plural, one{Понял вопросы, кроме одного — вернётся} other{Понял вопросы, кроме {n} — вернутся}}",
   "@planTalkUnderstoodExcept": {
     "description": "Итог разговора (37-12): not_understood > 0.",
     "placeholders": {
@@ -4506,7 +4514,7 @@
       }
     }
   },
-  "planTalkReady": "Ты готов к разговору",
+  "planTalkReady": "Ты готов к разговору",
   "@planTalkReady": {
     "description": "Итог разговора репетиции (37-12b): заголовок вместо счёта реплик. Канва — «Ты готов к приёму», но событие плана в дательном сервер не шлёт (есть только event_native в именительном), а склонять клиент не вправе, поэтому готов — к разговору, для любого плана (решение архитектора при приёмке CLIENT-FIX-4 25.09; «к событию» снято). Сборка (20) печатала «к приёму» любому плану, в том числе залу."
   },
@@ -4514,11 +4522,11 @@
   "@planTalkHighlights": {
     "description": "Итог дня (30-7): бровь блока готовых строк сервера (window.highlights)."
   },
-  "planSessionListenWholeOne": "Слушай целиком — ответ один",
+  "planSessionListenWholeOne": "Слушай целиком — ответ один",
   "@planSessionListenWholeOne": {
     "description": "«Что прозвучит в ответ?» (34-5): подпись задания под шапкой."
   },
-  "planSessionFrameWhole": "Эту фразу говорят целиком — в ней ничего не меняется",
+  "planSessionFrameWhole": "Эту фразу говорят целиком — в ней ничего не меняется",
   "@planSessionFrameWhole": {
     "description": "Знакомство с каркасом (32-1), третье состояние: у фразы одно значение, окна нет."
   },
@@ -4526,7 +4534,7 @@
   "@planSessionChangeable": {
     "description": "Знакомство с каркасом (32-1): подпись над плашками значений."
   },
-  "planSessionInTalk": "В разговоре",
+  "planSessionInTalk": "В разговоре",
   "@planSessionInTalk": {
     "description": "Знакомство с каркасом (32-1), третье состояние: бровь блока с репликой дня, в которой фраза звучит."
   },
@@ -4534,11 +4542,11 @@
   "@planSessionOwnWordChip": {
     "description": "«Скажи целиком» (32-7): последняя плашка ряда значений — круг своего слова."
   },
-  "planTalkNoMic": "Нужен микрофон — без него разговор не пройти",
+  "planTalkNoMic": "Нужен микрофон — без него разговор не пройти",
   "@planTalkNoMic": {
     "description": "Экран разговора: микрофон не пишет (нет разрешения или распознавания на устройстве). Рядом «Разрешить» — спросить систему ещё раз или открыть настройки, как на «Нужен микрофон» (30-3). Вместо «тап — говорить» над кнопкой, которая ничего не делает (пойман живым прогоном)."
   },
-  "planSessionDescRecall": "Свои реплики всех сцен — посмотри, послушай и скажи вслух",
+  "planSessionDescRecall": "Свои реплики всех сцен — посмотри, послушай и скажи вслух",
   "@planSessionDescRecall": {
     "description": "Вход в этап «Вспомнить» (30-1, день репетиции): описание этапа — обзор своих реплик по сценам (37-3), потом пять-шесть из них вслух (35-4)."
   },
@@ -4546,7 +4554,7 @@
   "@planSessionRecallTask": {
     "description": "Обзор «Вспомнить» (37-3): строка задания над репликами сцены."
   },
-  "planSessionRecallLast": "Дальше — повтори вслух",
+  "planSessionRecallLast": "Дальше — повтори вслух",
   "@planSessionRecallLast": {
     "description": "Обзор «Вспомнить» (37-3): кнопка на последней сцене — за ней пять-шесть своих реплик вслух (35-4)."
   },
@@ -4554,7 +4562,7 @@
   "@planWindowRehearsalBefore": {
     "description": "Окно дня репетиции (37-1): начало строки статуса — «перед событием · в четверг · не начат»."
   },
-  "planWindowOnWeekday": "{weekday, select, mon{в понедельник} tue{во вторник} wed{в среду} thu{в четверг} fri{в пятницу} sat{в субботу} sun{в воскресенье} other{}}",
+  "planWindowOnWeekday": "{weekday, select, mon{в понедельник} tue{во вторник} wed{в среду} thu{в четверг} fri{в пятницу} sat{в субботу} sun{в воскресенье} other{}}",
   "@planWindowOnWeekday": {
     "description": "Окно дня репетиции (37-1): в какой день недели стоит этот день плана — «в четверг». «Сегодня» и «завтра» приходят с сервера готовыми (slot.label_native).",
     "placeholders": {
@@ -4567,19 +4575,19 @@
   "@planWindowReviewTitle": {
     "description": "Окно дня повторения (37-2): название на плите."
   },
-  "planWindowRehearsalLead": "Проговоришь весь разговор с собеседником",
+  "planWindowRehearsalLead": "Проговоришь весь разговор с собеседником",
   "@planWindowRehearsalLead": {
     "description": "Окно дня репетиции (37-1): строка под статусом. Роли в творительном контракт не отдаёт — «с собеседником», как «Поговори с собеседником» на 37-5."
   },
-  "planWindowReviewLead": "Вернёшь фразы прошлых дней и поговоришь с собеседником",
+  "planWindowReviewLead": "Вернёшь фразы прошлых дней и поговоришь с собеседником",
   "@planWindowReviewLead": {
     "description": "Окно дня повторения (37-2): строка под статусом; роль — «с собеседником», как на 37-5."
   },
-  "planWindowFromScenes": "Из каких сцен",
+  "planWindowFromScenes": "Из каких сцен",
   "@planWindowFromScenes": {
     "description": "Окно дня репетиции (37-1): бровь списка сцен под плитой."
   },
-  "planWindowFromDays": "Из каких дней",
+  "planWindowFromDays": "Из каких дней",
   "@planWindowFromDays": {
     "description": "Окно дня повторения (37-2): бровь списка дней под плитой."
   },
@@ -4612,7 +4620,7 @@
   "@planSessionPassedDialogue": {
     "description": "Итог этапа (30-6, кадр SESSION-DES-4 «Диалог пройден · 3 минуты»): заголовок «Диалог» — к нему через « · » минуты этапа."
   },
-  "planSessionPassedListen": "Слушаю и отвечаю — пройдено",
+  "planSessionPassedListen": "Слушаю и отвечаю — пройдено",
   "@planSessionPassedListen": {
     "description": "Итог этапа (30-6): заголовок «Слушаю и отвечаю» — к нему через « · » минуты этапа (решение архитектора 22.09)."
   },
@@ -4640,7 +4648,7 @@
       }
     }
   },
-  "planSessionFirstTryWords": "{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}",
+  "planSessionFirstTryWords": "{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}",
   "@planSessionFirstTryWords": {
     "description": "Итог этапа «Слова» (30-6), первая строка: сколько слов в этапе и сколько из них зачтено с первой попытки без подсказки — по карточкам сервера.",
     "placeholders": {
@@ -4652,7 +4660,7 @@
       }
     }
   },
-  "planSessionFirstTryPhrases": "{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}",
+  "planSessionFirstTryPhrases": "{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}",
   "@planSessionFirstTryPhrases": {
     "description": "Итог этапа «Фразы» (30-6), первая строка: фразы этапа и зачтённые с первой попытки без подсказки.",
     "placeholders": {
@@ -4664,7 +4672,7 @@
       }
     }
   },
-  "planSessionFirstTryLines": "{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}",
+  "planSessionFirstTryLines": "{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}",
   "@planSessionFirstTryLines": {
     "description": "Итог этапа «Диалог» и «Говорю сам» (30-6, кадр «8 реплик, 6 с первого раза»), первая строка: реплики этапа и зачтённые с первой попытки без подсказки.",
     "placeholders": {
@@ -4676,7 +4684,7 @@
       }
     }
   },
-  "planSessionFirstTryQuestions": "{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}",
+  "planSessionFirstTryQuestions": "{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}",
   "@planSessionFirstTryQuestions": {
     "description": "Итог этапа «Слушаю и отвечаю» (30-6), первая строка: вопросы слушания и отвеченные верно с первого раза.",
     "placeholders": {
@@ -4688,7 +4696,7 @@
       }
     }
   },
-  "planSessionFirstTryCards": "{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}",
+  "planSessionFirstTryCards": "{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}",
   "@planSessionFirstTryCards": {
     "description": "Итог этапа «Повторение» (30-6), первая строка: карточки этапа и зачтённые с первой попытки без подсказки.",
     "placeholders": {
@@ -4700,7 +4708,7 @@
       }
     }
   },
-  "planSessionRecallLinesOfScenes": "{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}",
+  "planSessionRecallLinesOfScenes": "{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}",
   "@planSessionRecallLinesOfScenes": {
     "description": "Итог этапа «Вспомнить» (30-6), первая строка: «6 реплик из 2 сцен» — свои реплики, сказанные вслух, и из скольких сцен.",
     "placeholders": {
@@ -4721,7 +4729,7 @@
       }
     }
   },
-  "planSessionStageNoReturns": "завтра ничего не вернётся",
+  "planSessionStageNoReturns": "завтра ничего не вернётся",
   "@planSessionStageNoReturns": {
     "description": "Итог этапа (30-6), вторая строка, когда у этапа возвратов нет."
   },
@@ -4734,7 +4742,7 @@
       }
     }
   },
-  "planSessionRescuedSlower": "{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}",
+  "planSessionRescuedSlower": "{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}",
   "@planSessionRescuedSlower": {
     "description": "Итог этапа «Диалог» (30-6, кадр «дважды переспросил — врач повторил медленнее»), третья строка: пройденные обмены «Не понял» диалога; role — роль собеседника сцены строчной.",
     "placeholders": {
@@ -4746,23 +4754,23 @@
       }
     }
   },
-  "planSessionWarmWords": "Эти слова ты теперь узнаёшь — дальше они встретятся во фразах",
+  "planSessionWarmWords": "Эти слова ты теперь узнаёшь — дальше они встретятся во фразах",
   "@planSessionWarmWords": {
     "description": "Итог этапа «Слова» (30-6), третья строка — тёплая, одна на этап (решение архитектора 22.09)."
   },
-  "planSessionWarmPhrases": "Фразы собраны и сказаны вслух — в диалоге они пригодятся",
+  "planSessionWarmPhrases": "Фразы собраны и сказаны вслух — в диалоге они пригодятся",
   "@planSessionWarmPhrases": {
     "description": "Итог этапа «Фразы» (30-6), третья строка — тёплая, одна на этап."
   },
-  "planSessionWarmListen": "Реплики собеседника ты понимаешь на слух",
+  "planSessionWarmListen": "Реплики собеседника ты понимаешь на слух",
   "@planSessionWarmListen": {
     "description": "Итог этапа «Слушаю и отвечаю» (30-6), третья строка — тёплая, одна на этап."
   },
-  "planSessionWarmSpeak": "Свои реплики ты сказал сам — дальше живой разговор",
+  "planSessionWarmSpeak": "Свои реплики ты сказал сам — дальше живой разговор",
   "@planSessionWarmSpeak": {
     "description": "Итог этапа «Говорю сам» (30-6), третья строка — тёплая, одна на этап."
   },
-  "planSessionWarmRecall": "Реплики на месте — дальше разговор целиком",
+  "planSessionWarmRecall": "Реплики на месте — дальше разговор целиком",
   "@planSessionWarmRecall": {
     "description": "Итог этапа «Вспомнить» (30-6), третья строка — тёплая, одна на этап."
   },
@@ -4770,7 +4778,7 @@
   "@planSessionWarmRepetition": {
     "description": "Итог этапа «Повторение» (30-6), третья строка — тёплая, одна на этап."
   },
-  "planTalkEntrySay": "Скажи в разговоре",
+  "planTalkEntrySay": "Скажи в разговоре",
   "@planTalkEntrySay": {
     "description": "Вход в разговор (37-5, SESSION-DES-4): бровь списка фраз, ради которых разговор (targets ряда разговора окна)."
   },
@@ -4782,7 +4790,7 @@
   "@planVoiceMale": {
     "description": "Лист голоса (38-1): плашка мужского голоса."
   },
-  "planVoiceMaleHint": "ниже и спокойнее",
+  "planVoiceMaleHint": "ниже и спокойнее",
   "@planVoiceMaleHint": {
     "description": "Лист голоса (38-1): подпись мужской плашки."
   },
@@ -4790,19 +4798,19 @@
   "@planVoiceFemale": {
     "description": "Лист голоса (38-1): плашка женского голоса."
   },
-  "planVoiceFemaleHint": "выше и мягче",
+  "planVoiceFemaleHint": "выше и мягче",
   "@planVoiceFemaleHint": {
     "description": "Лист голоса (38-1): подпись женской плашки."
   },
-  "planVoiceInProfile": "Можно поменять в профиле",
+  "planVoiceInProfile": "Можно поменять в профиле",
   "@planVoiceInProfile": {
     "description": "Лист голоса (38-1): строка под плашками — выбор не навсегда."
   },
-  "planTalkConstructions": "Конструкции в разговоре",
+  "planTalkConstructions": "Конструкции в разговоре",
   "@planTalkConstructions": {
     "description": "Итог разговора (37-12, 37-12b): надпись над карточками конструкций; лист по тапу на ряд над микрофоном (37-8d): заголовок листа. Счётчика рядом нет — наряд FIX-3 §3 снял «N из M»."
   },
-  "planTalkYouSaid": "ты сказал: {said}",
+  "planTalkYouSaid": "ты сказал: {said}",
   "@planTalkYouSaid": {
     "description": "Итог разговора (37-12) и лист конструкций (37-8d): серая строка под закрашенной карточкой — каркас со значением ученика (value_target).",
     "placeholders": {
@@ -4815,7 +4823,7 @@
   "@planTalkRepeatBefore": {
     "description": "Итог репетиции и повтора (37-12b): серая строка под незакрашенной карточкой — завтра событие, а не новый день. «Разговором» — то же слово, что в заголовке planTalkReady: склонённой формы события сервер не шлёт (приёмка CLIENT-FIX-4 25.09, отчёт §7)."
   },
-  "planTalkAlmostLine": "почти — скажи целиком: {line}",
+  "planTalkAlmostLine": "почти — скажи целиком: {line}",
   "@planTalkAlmostLine": {
     "description": "Лист конструкций (37-8d): серая строка под плашкой, сказанной «почти» (targets[].state = almost) — строка урока на языке цели (каркас со значением урока).",
     "placeholders": {
@@ -4824,7 +4832,7 @@
       }
     }
   },
-  "planTalkFromLessonLine": "из урока: {line}",
+  "planTalkFromLessonLine": "из урока: {line}",
   "@planTalkFromLessonLine": {
     "description": "Лист конструкций (37-8d): серая строка под несказанной плашкой — строка урока на языке цели (каркас со значением урока).",
     "placeholders": {
@@ -4833,7 +4841,7 @@
       }
     }
   },
-  "planTalkAlmostJudge": "Почти — скажи целиком",
+  "planTalkAlmostJudge": "Почти — скажи целиком",
   "@planTalkAlmostJudge": {
     "description": "Лента разговора (37-8e): строка судьи чернилами под своим пузырём — ход сказал цель «почти» (одно слово мимо), цель ещё ждёт."
   },
@@ -4841,11 +4849,11 @@
   "@planTalkExtraSaid": {
     "description": "Итог разговора (37-12, 37-12b): бровь группы каркасов сцены, сказанных сверх целей (summary.extra_said). Нет таких — группы нет."
   },
-  "planTalkEndedByTime": "Разговор закончился по времени — несказанное вернётся",
+  "planTalkEndedByTime": "Разговор закончился по времени — несказанное вернётся",
   "@planTalkEndedByTime": {
     "description": "Итог разговора (37-12): серая строка над плашками, когда разговор кончил лимит (summary.ended_by_limit) и несказанное вернётся завтра (returns_tomorrow)."
   },
-  "planTalkEndedByTimeOnly": "Разговор закончился по времени",
+  "planTalkEndedByTimeOnly": "Разговор закончился по времени",
   "@planTalkEndedByTimeOnly": {
     "description": "Итог разговора репетиции и повтора (37-12b): та же строка про лимит, когда завтра ничего не вернётся (returns_tomorrow = false) — обещания «вернётся» нет. Строки нет в канве, её вариант назван в отчёте CLIENT-FIX-4."
   },
@@ -4854,7 +4862,7 @@
     "description": "Разговор по нескольким сценам: первая часть разделителя сцен в ленте (39-1b, «Сцена 2 · Приём у врача · врач») и заголовка группы на входе (37-5b).",
     "placeholders": { "n": { "type": "int" } }
   },
-  "planTalkSceneOf": "Сцена {n} из {total}",
+  "planTalkSceneOf": "Сцена {n} из {total}",
   "@planTalkSceneOf": {
     "description": "Карточка перехода между сценами (39-1): капитель над названием следующей сцены.",
     "placeholders": { "n": { "type": "int" }, "total": { "type": "int" } }
@@ -4868,11 +4876,11 @@
     "description": "Вход в разговор по нескольким сценам (37-5b): первая строка правил с ролью первой сцены в именительном, как её назвал план («Регистратор»); род — window.sources[].partner_gender первой сцены (FIX-4c §3): «Медсестра начнёт первой».",
     "placeholders": { "role": { "type": "String" }, "gender": { "type": "String" } }
   },
-  "planTalkEntrySceneByScene": "Разговор идёт сцена за сценой",
+  "planTalkEntrySceneByScene": "Разговор идёт сцена за сценой",
   "@planTalkEntrySceneByScene": {
     "description": "Вход в разговор по нескольким сценам (37-5b): серая строка между группами конструкций сцен."
   },
-  "planWindowReturnedFromDay": "Вернулось из дня {n}",
+  "planWindowReturnedFromDay": "Вернулось из дня {n}",
   "@planWindowReturnedFromDay": {
     "description": "Окно дня, вкладка программы (23-0d · вернулось): заголовок группы единиц, вернувшихся из прошлого дня — items[].source = returned, номер дня из items[].scene.day_number.",
     "placeholders": { "n": { "type": "int" } }
@@ -4885,7 +4893,7 @@
   "@planWindowStageAgain": {
     "description": "Окно дня и вход в этап (23-0c, 30-1): вторичное действие пройденного ряда — пройти этап ещё раз; по stages[].again сервера."
   },
-  "planWindowTalkLimitToday": "лимит на сегодня",
+  "planWindowTalkLimitToday": "лимит на сегодня",
   "@planWindowTalkLimitToday": {
     "description": "Ряд разговора пройденного дня, когда повторы суток исчерпаны (30-1e): stages[].again = false."
   },
@@ -4897,7 +4905,7 @@
   "@planWindowSummary": {
     "description": "Окно пройденного дня-системы (37-1c, 37-2): кнопка внизу — итог репетиции или повторения; «Итог дня» остаётся дню плана (23-0c)."
   },
-  "planWindowTalkReplayLimit": "Разговор сегодня уже повторяли — вернись завтра",
+  "planWindowTalkReplayLimit": "Разговор сегодня уже повторяли — вернись завтра",
   "@planWindowTalkReplayLimit": {
     "description": "Окно пройденного дня: шит на 409 plan_conversation_replay_limit — повтор разговора на сегодня исчерпан."
   },
@@ -4917,7 +4925,7 @@
   "@startSignInFailed": {
     "description": "Вход (41-4b): строка чернилами над кнопками, когда вход не удался (сеть, сервер, провайдер). Отмена своего окна Apple/Google — не ошибка, строки нет."
   },
-  "startLegal": "Продолжая, ты принимаешь {terms} и {privacy}",
+  "startLegal": "Продолжая, ты принимаешь {terms} и {privacy}",
   "@startLegal": {
     "description": "Вход (41-4): юрстрока под кнопками, 13 серым; {terms} и {privacy} — ссылки латунью (startLegalTerms, startLegalPrivacy).",
     "placeholders": {"terms": {"type": "String"}, "privacy": {"type": "String"}}
@@ -4938,15 +4946,15 @@
   "@introStart": {
     "description": "Последний лист «зачем» (41-2e): угольная кнопка → вкладка «План»."
   },
-  "introATitle": "Скоро важный\nразговор.\nТы будешь готов.",
+  "introATitle": "Скоро важный\nразговор.\nТы будешь готов.",
   "@introATitle": {
     "description": "Лист a (41-2a): заголовок Literata 30, три строки ручным переносом; точки латунью."
   },
-  "introAThought": "Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.",
+  "introAThought": "Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.",
   "@introAThought": {
     "description": "Лист a (41-2a): мысль под заголовком, Inter 15 серым."
   },
-  "introALineNative": "Я хочу записаться на приём.",
+  "introALineNative": "Я хочу записаться на приём.",
   "@introALineNative": {
     "description": "Лист a (41-2a): перевод реплики «I’d like to make an appointment.» под ней, 13 серым. В английском интерфейсе пусто — строки нет."
   },
@@ -4970,11 +4978,11 @@
   "@introSceneDoctor": {
     "description": "Лист a (41-2a): капитель на верхней карточке сцены."
   },
-  "introBTitle": "Язык —\nпод каждый разговор.",
+  "introBTitle": "Язык —\nпод каждый разговор.",
   "@introBTitle": {
     "description": "Лист b (41-2b): заголовок, две строки; точка латунью."
   },
-  "introBThought": "Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.",
+  "introBThought": "Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.",
   "@introBThought": {
     "description": "Лист b (41-2b): мысль — семь языков дословно по реестру канвы."
   },
@@ -5022,7 +5030,7 @@
   "@introCTitle": {
     "description": "Лист c (41-2c): заголовок, две строки; точка латунью."
   },
-  "introCThought": "Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.",
+  "introCThought": "Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.",
   "@introCThought": {
     "description": "Лист c (41-2c): мысль под заголовком."
   },
@@ -5034,15 +5042,15 @@
   "@introDTap": {
     "description": "Лист d (41-2d): подпись у микрофона 30-3 в покое."
   },
-  "introDTitle": "Живой разговор с ИИ —\nне по сценарию.",
+  "introDTitle": "Живой разговор с ИИ —\nне по сценарию.",
   "@introDTitle": {
     "description": "Лист d (41-2d): заголовок, две строки; точка латунью. Тире — в конце первой строки, перенос после него жёсткий: вторая строка с тире не начинается (доработка CLIENT-START п. 1)."
   },
-  "introDThought": "Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.",
+  "introDThought": "Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.",
   "@introDThought": {
     "description": "Лист d (41-2d): мысль под заголовком."
   },
-  "introECaption": "три подборки из стора · свои слова из планов",
+  "introECaption": "три подборки из стора · свои слова из планов",
   "@introECaption": {
     "description": "Лист e (41-2e): подпись 13 серым над заголовком."
   },
@@ -5208,12 +5216,12 @@
   "@accountDeleteTitle": {
     "description": "Шит удаления (42-3): заголовок."
   },
-  "accountDeleteBodyPlan": "Исчезнут план «{plan}», пройденные дни и настройки. Восстановить их будет нельзя.",
+  "accountDeleteBodyPlan": "Исчезнут план «{plan}», пройденные дни и настройки. Восстановить их будет нельзя.",
   "@accountDeleteBodyPlan": {
     "description": "Шит удаления (42-3): что исчезнет, с названием текущего плана.",
     "placeholders": {"plan": {"type": "String"}}
   },
-  "accountDeleteBody": "Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.",
+  "accountDeleteBody": "Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.",
   "@accountDeleteBody": {
     "description": "Шит удаления (42-3): то же, когда плана нет."
   },
@@ -5233,7 +5241,7 @@
   "@accountRemindersTitle": {
     "description": "Шит напоминаний (42-4): заголовок."
   },
-  "accountRemindersNote": "Мы напоминаем раз в день, когда ждёт следующий день плана",
+  "accountRemindersNote": "Мы напоминаем раз в день, когда ждёт следующий день плана",
   "@accountRemindersNote": {
     "description": "Шит напоминаний (42-4): строка под колесом."
   },
@@ -5241,12 +5249,12 @@
   "@accountRemindersDenied": {
     "description": "Шит напоминаний (42-4): вместо колеса, когда iOS запретила уведомления; тап — Настройки."
   },
-  "notifyAskTitle": "Напомнить про день {day} завтра в {time}?",
+  "notifyAskTitle": "Напомнить про день {day} завтра в {time}?",
   "@notifyAskTitle": {
     "description": "Пред-запрос уведомлений (43-1): после итога дня 1 (и дня 2 после «Не сейчас»); день — следующий, время — своё из профиля или час сервера.",
     "placeholders": {"day": {"type": "int"}, "time": {"type": "String"}}
   },
-  "notifyAskBody": "Раз в день, без лишнего",
+  "notifyAskBody": "Раз в день, без лишнего",
   "@notifyAskBody": {
     "description": "Пред-запрос уведомлений (43-1): строка под вопросом."
   },
@@ -5258,7 +5266,7 @@
   "@notifyAskYes": {
     "description": "Пред-запрос уведомлений (43-1): угольная кнопка → системный запрос iOS."
   },
-  "micAskTitle": "Ritora слушает, как ты говоришь",
+  "micAskTitle": "Ritora слушает, как ты говоришь",
   "@micAskTitle": {
     "description": "Пред-запрос микрофона (41-3): на первой карточке с микрофоном."
   },
@@ -5278,7 +5286,7 @@
   "@planPlateNoNetwork": {
     "description": "Плита упавшего дня (22-5c): вторая строка, только когда «Повторить» не ушёл — сети действительно нет (CLIENT-START §6)."
   },
-  "planPlateBySubscription": "по подписке",
+  "planPlateBySubscription": "по подписке",
   "@planPlateBySubscription": {
     "description": "Плита дня, запертого подпиской (21-3 / 23-0a «по подписке»): начало строки под названием — «по подписке · 75 карточек»."
   },
@@ -5294,7 +5302,7 @@
   "@planRouteMetaOpensWithSubscription": {
     "description": "Маршрут (22-5a / 21-3 «по подписке»): мета первого дня, запертого подпиской."
   },
-  "planRouteMetaBySubscription": "по подписке",
+  "planRouteMetaBySubscription": "по подписке",
   "@planRouteMetaBySubscription": {
     "description": "Маршрут (22-5a / 21-3 «по подписке»): мета следующих дней, запертых подпиской."
   },
@@ -5302,7 +5310,7 @@
   "@planKitLabel": {
     "description": "Таб «План» (21-2b): карточка спасательного набора под маршрутом — rescue_kit плана (LANG-1b §2)."
   },
-  "planKitSub": "{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}",
+  "planKitSub": "{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}",
   "@planKitSub": {
     "description": "Карточка набора (21-2b): строка под названием — сколько фраз.",
     "placeholders": {"n": {"type": "int"}}
@@ -5316,7 +5324,7 @@
   "@planKitCollapse": {
     "description": "Карточка набора (21-2b): свернуть до первой фразы."
   },
-  "planEntrySubscriptionTitle": "Второй план — по подписке",
+  "planEntrySubscriptionTitle": "Второй план — по подписке",
   "@planEntrySubscriptionTitle": {
     "description": "Вход в план: POST /plans ответил 402 plan_subscription_required — экран-заглушка до пейволла PAY-1, кнопка «Подписка» → профиль."
   },

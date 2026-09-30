@@ -96,25 +96,25 @@ abstract class AppLocalizations {
   /// Счётчик карточек в шапке триажа (кадр 2.2, «3 из 10»).
   ///
   /// In ru, this message translates to:
-  /// **'{current} из {total}'**
+  /// **'{current} из {total}'**
   String triageCounter(int current, int total);
 
   /// Обучающая подсказка на лице первых карточек первой сессии (кадр 2.2 / 3a).
   ///
   /// In ru, this message translates to:
-  /// **'Свайпай или жми кнопки · тап — перевернуть'**
+  /// **'Свайпай или жми кнопки · тап — перевернуть'**
   String get triageSwipeHint;
 
   /// Кнопка/вердикт: свайп влево.
   ///
   /// In ru, this message translates to:
-  /// **'Не знаю'**
+  /// **'Не знаю'**
   String get triageVerdictUnknown;
 
   /// Кнопка/вердикт: свайп вверх.
   ///
   /// In ru, this message translates to:
-  /// **'Не уверен'**
+  /// **'Не уверен'**
   String get triageVerdictUnsure;
 
   /// Кнопка/вердикт: свайп вправо.
@@ -162,19 +162,19 @@ abstract class AppLocalizations {
   /// Пояснение к «Всё разобрано».
   ///
   /// In ru, this message translates to:
-  /// **'В этом наборе не осталось новых слов для разбора.'**
+  /// **'В этом наборе не осталось новых слов для разбора.'**
   String get triageAllDoneBody;
 
   /// Пустое состояние: страница пуста, но на сервере ещё есть.
   ///
   /// In ru, this message translates to:
-  /// **'На сейчас всё'**
+  /// **'На сейчас всё'**
   String get triageMoreLaterTitle;
 
   /// Пояснение к «На сейчас всё».
   ///
   /// In ru, this message translates to:
-  /// **'Ещё {count} после синхронизации — зайдите снова, когда будет сеть.'**
+  /// **'Ещё {count} после синхронизации — зайдите снова, когда будет сеть.'**
   String triageMoreLaterBody(int count);
 
   /// Кнопка выхода из триажа.
@@ -210,7 +210,7 @@ abstract class AppLocalizations {
   /// Итог сессии: лейбл счётчика «Не уверен».
   ///
   /// In ru, this message translates to:
-  /// **'Не уверен'**
+  /// **'Не уверен'**
   String get triageTallyUnsure;
 
   /// Итог сессии: сколько терминов ещё придёт после синхронизации (ICU plural).
@@ -222,13 +222,13 @@ abstract class AppLocalizations {
   /// Ошибка загрузки колоды триажа.
   ///
   /// In ru, this message translates to:
-  /// **'Не удалось загрузить: {error}'**
+  /// **'Не удалось загрузить: {error}'**
   String triageLoadError(String error);
 
   /// Плейсхолдер поля темы на карточке генерации.
   ///
   /// In ru, this message translates to:
-  /// **'Например: визит к врачу'**
+  /// **'Например: визит к врачу'**
   String get homeGeneratePlaceholder;
 
   /// Чип-пример темы.
@@ -264,7 +264,7 @@ abstract class AppLocalizations {
   /// Хвост подзаголовка коллекции про due-слова.
   ///
   /// In ru, this message translates to:
-  /// **'{count} к повторению сегодня'**
+  /// **'{count} к повторению сегодня'**
   String collectionDueSuffix(int count);
 
   /// Легенда плотности, СЛОВАРЬ СТАТУСОВ (Ч.4): слово прошло все ступени. Было «Подтверждено».
@@ -276,7 +276,7 @@ abstract class AppLocalizations {
   /// Легенда плотности: слово в очереди тренажёра. Было «Знакомое». Фраза «В работе» в этой легенде раньше стояла на ТРЕТЬЕМ сегменте и значила «ещё не тронуто» — одно словосочетание с двумя противоположными значениями на соседних экранах.
   ///
   /// In ru, this message translates to:
-  /// **'В работе {count}'**
+  /// **'В работе {count}'**
   String collectionDensityInWork(int count);
 
   /// Легенда плотности: слово на полке, ждёт решения. Было «В работе».
@@ -318,7 +318,7 @@ abstract class AppLocalizations {
   /// Подстрока кнопки свободной тренировки.
   ///
   /// In ru, this message translates to:
-  /// **'Ничего не горит — можно просто позаниматься'**
+  /// **'Ничего не горит — можно просто позаниматься'**
   String get collectionPracticeSubtitle;
 
   /// Лейбл секции списка слов.
@@ -336,13 +336,13 @@ abstract class AppLocalizations {
   /// Озвучка бейджа пары для VoiceOver.
   ///
   /// In ru, this message translates to:
-  /// **'Языковая пара: {learned} на {support}'**
+  /// **'Языковая пара: {learned} на {support}'**
   String pairBadgeSemantics(String learned, String support);
 
   /// Пояснение на экране справочной коллекции — почему нет кнопок тренировки.
   ///
   /// In ru, this message translates to:
-  /// **'Справочная коллекция: слова можно читать и слушать. Тренажёров для этого языка пока нет.'**
+  /// **'Справочная коллекция: слова можно читать и слушать. Тренажёров для этого языка пока нет.'**
   String get collectionReferenceHint;
 
   /// Кнопка добавления слова в коллекцию.
@@ -372,7 +372,7 @@ abstract class AppLocalizations {
   /// Пояснение баннера разбора.
   ///
   /// In ru, this message translates to:
-  /// **'Отметь, что уже знаешь — остальное пойдёт в тренировку'**
+  /// **'Отметь, что уже знаешь — остальное пойдёт в тренировку'**
   String get collectionTriageBannerBody;
 
   /// Кнопка запуска разбора из баннера.
@@ -402,7 +402,7 @@ abstract class AppLocalizations {
   /// Текст подтверждения удаления слова (кадр 5d).
   ///
   /// In ru, this message translates to:
-  /// **'Слово останется в других коллекциях, прогресс сохранится.'**
+  /// **'Слово останется в других коллекциях, прогресс сохранится.'**
   String get collectionDeleteWordMessage;
 
   /// Заголовок шита добавления слова (кадр 5b).
@@ -438,25 +438,25 @@ abstract class AppLocalizations {
   /// Плейсхолдер необязательного перевода (кадр 5b).
   ///
   /// In ru, this message translates to:
-  /// **'необязательно — подберём сами'**
+  /// **'необязательно — подберём сами'**
   String get wordTranslationHintOptional;
 
   /// Пояснение под полями при добавлении.
   ///
   /// In ru, this message translates to:
-  /// **'Транскрипция, пример и фото подберутся автоматически.'**
+  /// **'Транскрипция, пример и фото подберутся автоматически.'**
   String get wordSheetAddHelper;
 
   /// Пояснение под полями при редактировании.
   ///
   /// In ru, this message translates to:
-  /// **'Пример и фото останутся прежними, если не менять термин.'**
+  /// **'Пример и фото останутся прежними, если не менять термин.'**
   String get wordSheetEditHelper;
 
   /// Главная кнопка шита добавления.
   ///
   /// In ru, this message translates to:
-  /// **'Добавить в коллекцию'**
+  /// **'Добавить в коллекцию'**
   String get wordSheetAddButton;
 
   /// Главная кнопка шита редактирования.
@@ -468,7 +468,7 @@ abstract class AppLocalizations {
   /// Деструктивная ссылка внизу шита редактирования (кадр 5c).
   ///
   /// In ru, this message translates to:
-  /// **'Удалить из коллекции'**
+  /// **'Удалить из коллекции'**
   String get wordSheetDeleteLink;
 
   /// Пункт меню слова: перенести в другую свою коллекцию.
@@ -486,13 +486,13 @@ abstract class AppLocalizations {
   /// Подтверждение переноса.
   ///
   /// In ru, this message translates to:
-  /// **'Перенесено в «{folder}»'**
+  /// **'Перенесено в «{folder}»'**
   String collectionMoveWordDone(String folder);
 
   /// Ошибка переноса слова между коллекциями.
   ///
   /// In ru, this message translates to:
-  /// **'Не удалось перенести'**
+  /// **'Не удалось перенести'**
   String get collectionMoveWordFailed;
 
   /// Переносить некуда — у пользователя одна коллекция.
@@ -516,19 +516,19 @@ abstract class AppLocalizations {
   /// Пункт меню подписанного набора: отписаться (деструктив).
   ///
   /// In ru, this message translates to:
-  /// **'Убрать из моих'**
+  /// **'Убрать из моих'**
   String get collectionMenuRemoveFromMine;
 
   /// Заголовок подтверждения отписки от набора стора.
   ///
   /// In ru, this message translates to:
-  /// **'Убрать «{title}» из моих?'**
+  /// **'Убрать «{title}» из моих?'**
   String collectionUnsubscribeTitle(String title);
 
   /// Текст подтверждения отписки от набора стора.
   ///
   /// In ru, this message translates to:
-  /// **'Набор пропадёт из «Моих». Слова и прогресс по ним сохранятся, набор снова можно добавить из стора.'**
+  /// **'Набор пропадёт из «Моих». Слова и прогресс по ним сохранятся, набор снова можно добавить из стора.'**
   String get collectionUnsubscribeMessage;
 
   /// Заголовок подтверждения удаления коллекции.
@@ -540,7 +540,7 @@ abstract class AppLocalizations {
   /// Текст подтверждения удаления коллекции.
   ///
   /// In ru, this message translates to:
-  /// **'Коллекция удалится, слова останутся в тренировке. Убрать слово из тренировки можно только на его карточке.'**
+  /// **'Коллекция удалится, слова останутся в тренировке. Убрать слово из тренировки можно только на его карточке.'**
   String get collectionDeleteMessage;
 
   /// Кнопка отмены в подтверждениях.
@@ -576,7 +576,7 @@ abstract class AppLocalizations {
   /// Пустая вкладка коллекций — пояснение.
   ///
   /// In ru, this message translates to:
-  /// **'Опиши ситуацию — и ИИ соберёт первый набор.'**
+  /// **'Опиши ситуацию — и ИИ соберёт первый набор.'**
   String get collectionsEmptyBody;
 
   /// Выбор на «плюсе» вкладки коллекций: пустая коллекция, слова добавляются руками (SLV-6).
@@ -588,7 +588,7 @@ abstract class AppLocalizations {
   /// Пояснение к «Создать вручную» в шите выбора.
   ///
   /// In ru, this message translates to:
-  /// **'Пустая коллекция — слова добавишь сам'**
+  /// **'Пустая коллекция — слова добавишь сам'**
   String get collectionsCreateManualHint;
 
   /// Выбор на «плюсе» вкладки коллекций: экран генерации по теме (SLV-6).
@@ -600,7 +600,7 @@ abstract class AppLocalizations {
   /// Пояснение к «Сгенерировать» в шите выбора.
   ///
   /// In ru, this message translates to:
-  /// **'ИИ соберёт набор по описанию ситуации'**
+  /// **'ИИ соберёт набор по описанию ситуации'**
   String get collectionsCreateGenerateHint;
 
   /// A11y-лейбл кнопки «+» создания коллекции (кадр 2.5).
@@ -630,7 +630,7 @@ abstract class AppLocalizations {
   /// Пояснение под индикатором идущей генерации (кадр 2.5).
   ///
   /// In ru, this message translates to:
-  /// **'Подбираем слова и фотографии · обычно 20–30 секунд'**
+  /// **'Подбираем слова и фотографии · обычно 20–30 секунд'**
   String get generationGeneratingNote;
 
   /// Пояснение под карточкой генерации, ожидающей сеть (офлайн-очередь).
@@ -642,31 +642,31 @@ abstract class AppLocalizations {
   /// Заголовок карточки ошибки генерации (кадр 2.5).
   ///
   /// In ru, this message translates to:
-  /// **'Не получилось'**
+  /// **'Не получилось'**
   String get generationFailedTitle;
 
   /// Текст ошибки генерации — квота не потрачена (кадр 2.5).
   ///
   /// In ru, this message translates to:
-  /// **'Сервис не ответил на запросе «{topic}». Генерация не потрачена.'**
+  /// **'Сервис не ответил на запросе «{topic}». Генерация не потрачена.'**
   String generationFailedBody(String topic);
 
   /// Заголовок карточки генерации, отклонённой по дневному лимиту (429 generation_quota_exceeded).
   ///
   /// In ru, this message translates to:
-  /// **'Генерации на сегодня закончились'**
+  /// **'Генерации на сегодня закончились'**
   String get generationQuotaTitle;
 
   /// Текст карточки дневного лимита, когда известно время сброса.
   ///
   /// In ru, this message translates to:
-  /// **'Коллекцию «{topic}» не создали. Лимит обновится в {time} — тогда можно повторить.'**
+  /// **'Коллекцию «{topic}» не создали. Лимит обновится в {time} — тогда можно повторить.'**
   String generationQuotaBody(String topic, String time);
 
   /// Текст карточки дневного лимита, когда время сброса неизвестно (офлайн).
   ///
   /// In ru, this message translates to:
-  /// **'Коллекцию «{topic}» не создали: дневной лимит генераций исчерпан.'**
+  /// **'Коллекцию «{topic}» не создали: дневной лимит генераций исчерпан.'**
   String generationQuotaBodyNoTime(String topic);
 
   /// Кнопка перехода на пейволл с карточки дневного лимита генераций.
@@ -690,7 +690,7 @@ abstract class AppLocalizations {
   /// QA-23. Постановка генерации в очередь упала на ЛОКАЛЬНОМ хранилище — раньше это молча оставляло кнопку «Сгенерировать» серой навсегда.
   ///
   /// In ru, this message translates to:
-  /// **'Не удалось поставить генерацию в очередь: {error}'**
+  /// **'Не удалось поставить генерацию в очередь: {error}'**
   String generateEnqueueFailed(String error);
 
   /// Метка готовой коллекции на карточке генерации.
@@ -702,13 +702,13 @@ abstract class AppLocalizations {
   /// Коллекция сгенерирована, ждём синхронизации перед открытием.
   ///
   /// In ru, this message translates to:
-  /// **'Готово — загружаю «{topic}»…'**
+  /// **'Готово — загружаю «{topic}»…'**
   String generationReadyLoading(String topic);
 
   /// Контурный бейдж недобора, «13 из 15» (кадр 2.5).
   ///
   /// In ru, this message translates to:
-  /// **'{delivered} из {requested}'**
+  /// **'{delivered} из {requested}'**
   String generationUnderBadge(int delivered, int requested);
 
   /// Строка состояния готовой коллекции с недобором (кадр 2.5).
@@ -732,37 +732,37 @@ abstract class AppLocalizations {
   /// Пояснение под полем ситуации (кадр 6a).
   ///
   /// In ru, this message translates to:
-  /// **'Чем конкретнее ситуация, тем точнее подборка. Например: «первый приём у врача, жалобы и запись на анализы».'**
+  /// **'Чем конкретнее ситуация, тем точнее подборка. Например: «первый приём у врача, жалобы и запись на анализы».'**
   String get generateSituationHelper;
 
   /// Плейсхолдер-ротация поля ситуации.
   ///
   /// In ru, this message translates to:
-  /// **'Снимаю квартиру — разговор с агентом'**
+  /// **'Снимаю квартиру — разговор с агентом'**
   String get generatePlaceholder0;
 
   /// Плейсхолдер-ротация поля ситуации.
   ///
   /// In ru, this message translates to:
-  /// **'Первый приём у врача — жалобы и анализы'**
+  /// **'Первый приём у врача — жалобы и анализы'**
   String get generatePlaceholder1;
 
   /// Плейсхолдер-ротация поля ситуации.
   ///
   /// In ru, this message translates to:
-  /// **'Собеседование в IT — рассказ о проектах'**
+  /// **'Собеседование в IT — рассказ о проектах'**
   String get generatePlaceholder2;
 
   /// Плейсхолдер-ротация поля ситуации.
   ///
   /// In ru, this message translates to:
-  /// **'Открываю счёт в банке'**
+  /// **'Открываю счёт в банке'**
   String get generatePlaceholder3;
 
   /// Плейсхолдер-ротация поля ситуации.
   ///
   /// In ru, this message translates to:
-  /// **'Заказываю еду в кафе'**
+  /// **'Заказываю еду в кафе'**
   String get generatePlaceholder4;
 
   /// Лейбл выбора размера набора (кадр 2.4).
@@ -810,7 +810,7 @@ abstract class AppLocalizations {
   /// Пометка «по умолчанию» у языка из профиля (кадр 6b).
   ///
   /// In ru, this message translates to:
-  /// **'по умолчанию'**
+  /// **'по умолчанию'**
   String get generateLanguageDefault;
 
   /// Строка оставшейся квоты генераций (кадр 6a, ICU plural).
@@ -822,7 +822,7 @@ abstract class AppLocalizations {
   /// Строка исчерпанной квоты с локальным временем сброса (кадр 6b).
   ///
   /// In ru, this message translates to:
-  /// **'Генерации на сегодня закончились · обновятся в {time}'**
+  /// **'Генерации на сегодня закончились · обновятся в {time}'**
   String generateQuotaExhausted(String time);
 
   /// Кнопка запуска генерации (кадр 2.4).
@@ -834,7 +834,7 @@ abstract class AppLocalizations {
   /// Строка перехода на Premium под неактивной кнопкой (кадр 15c).
   ///
   /// In ru, this message translates to:
-  /// **'Нужно больше? Premium — до 20 в день'**
+  /// **'Нужно больше? Premium — до 20 в день'**
   String get generatePremiumUpsell;
 
   /// Ссылка на ручное создание коллекции (кадр 6b).
@@ -858,13 +858,13 @@ abstract class AppLocalizations {
   /// Пояснение под полем при голосовом вводе (кадр 6c).
   ///
   /// In ru, this message translates to:
-  /// **'Текст появляется в поле по мере распознавания — после остановки его можно править руками.'**
+  /// **'Текст появляется в поле по мере распознавания — после остановки его можно править руками.'**
   String get generateVoiceHelper;
 
   /// Сообщение при отказе в разрешении на микрофон/распознавание.
   ///
   /// In ru, this message translates to:
-  /// **'Нужен доступ к микрофону и распознаванию речи — включите в Настройках'**
+  /// **'Нужен доступ к микрофону и распознаванию речи — включите в Настройках'**
   String get generateVoicePermissionDenied;
 
   /// Заголовок шита создания коллекции вручную.
@@ -906,7 +906,7 @@ abstract class AppLocalizations {
   /// Лейбл над тремя последними запросами на пустом экране поиска (кадр 01).
   ///
   /// In ru, this message translates to:
-  /// **'Вы искали'**
+  /// **'Вы искали'**
   String get searchRecentLabel;
 
   /// Подсказка под списком во время набора (кадр 02).
@@ -936,7 +936,7 @@ abstract class AppLocalizations {
   /// Подпись под кнопкой «Собрать карточку» (кадр 04). Фото здесь НЕ обещается: лукап покупает один вызов модели, а картинку ищет Pexels уже после сохранения (/search/add) — обещание фото на этом шаге не выполняется (телефон, 24.08).
   ///
   /// In ru, this message translates to:
-  /// **'Значение и пример. Повторно — бесплатно'**
+  /// **'Значение и пример. Повторно — бесплатно'**
   String get searchBuildCardNote;
 
   /// Состояние во время вызова модели.
@@ -966,37 +966,37 @@ abstract class AppLocalizations {
   /// Строка под чек-листом сборки (кадр 05).
   ///
   /// In ru, this message translates to:
-  /// **'Пара секунд. Можно закрыть — карточка появится в поиске.'**
+  /// **'Пара секунд. Можно закрыть — карточка появится в поиске.'**
   String get searchBuildNote;
 
   /// Подпись рядом с пятью точками лимита (кадр 08).
   ///
   /// In ru, this message translates to:
-  /// **'{used} из {cap} на сегодня'**
+  /// **'{used} из {cap} на сегодня'**
   String searchLimitUsed(int used, int cap);
 
   /// Заголовок плашки исчерпанного дневного лимита (кадр 08).
   ///
   /// In ru, this message translates to:
-  /// **'Сборки с моделью вернутся в полночь'**
+  /// **'Сборки с моделью вернутся в полночь'**
   String get searchLimitTitle;
 
   /// Модель ответила, но ответ не прошёл гейты, либо сеть не дала.
   ///
   /// In ru, this message translates to:
-  /// **'Не удалось найти это слово'**
+  /// **'Не удалось найти это слово'**
   String get searchLookupFailed;
 
   /// Модель не нашла в запросе слова ни на одном языке пары. Совет, а не ошибка: про приложение здесь ничего не сломалось.
   ///
   /// In ru, this message translates to:
-  /// **'Не получилось распознать, проверьте написание'**
+  /// **'Не получилось распознать, проверьте написание'**
   String get searchNotRecognized;
 
   /// Запрос длиннее 120 символов. Спокойная строка вместо запрета: говорит, для чего поле, а не что человек сделал не так.
   ///
   /// In ru, this message translates to:
-  /// **'Поиск — для слов и коротких фраз'**
+  /// **'Поиск — для слов и коротких фраз'**
   String get searchQueryTooLong;
 
   /// Главная кнопка карточки: сохранить в личную папку по умолчанию.
@@ -1008,19 +1008,19 @@ abstract class AppLocalizations {
   /// Строка шита неактивна: слово уже в этой коллекции. Плейсхолдер переименован с folder на collection в A-3 — «папка» ушла из словаря продукта.
   ///
   /// In ru, this message translates to:
-  /// **'Уже в коллекции «{collection}»'**
+  /// **'Уже в коллекции «{collection}»'**
   String searchAlreadyIn(String collection);
 
   /// Подтверждение после «Сохранить»: слово легло на полку и ждёт разбора. Тост и строка состояния — один текст, потому что это один факт.
   ///
   /// In ru, this message translates to:
-  /// **'Сохранено в «{collection}» · в очереди на разбор'**
+  /// **'Сохранено в «{collection}» · в очереди на разбор'**
   String searchSavedShelf(String collection);
 
   /// Подтверждение после «Учить сразу»: слово на полке И в очереди тренажёра.
   ///
   /// In ru, this message translates to:
-  /// **'Сохранено в «{collection}» · учится'**
+  /// **'Сохранено в «{collection}» · учится'**
   String searchSavedLearning(String collection);
 
   /// Второе, тихое действие рядом с «Сохранить»: слово идёт на полку и сразу в очередь тренажёра, минуя разбор.
@@ -1032,7 +1032,7 @@ abstract class AppLocalizations {
   /// Заголовок шита выбора коллекции на карточке слова и подпись квадратной кнопки рядом с главной. Была обрывком фразы со строчной буквы — «в коллекцию…» (QA-OBS-20).
   ///
   /// In ru, this message translates to:
-  /// **'Добавить в коллекцию'**
+  /// **'Добавить в коллекцию'**
   String get searchAddToCollection;
 
   /// Пункт меню: создать коллекцию и сохранить туда.
@@ -1050,19 +1050,19 @@ abstract class AppLocalizations {
   /// Ошибка сохранения слова из поиска.
   ///
   /// In ru, this message translates to:
-  /// **'Не удалось сохранить'**
+  /// **'Не удалось сохранить'**
   String get searchSaveFailed;
 
   /// Роль левой пилюли пары над полем поиска: язык, на котором задан запрос. Читается вслух, не рисуется.
   ///
   /// In ru, this message translates to:
-  /// **'С какого'**
+  /// **'С какого'**
   String get searchPairFrom;
 
   /// Роль правой пилюли пары над полем поиска: язык, на котором придёт ответ.
   ///
   /// In ru, this message translates to:
-  /// **'На какой'**
+  /// **'На какой'**
   String get searchPairTo;
 
   /// Кнопка-стрелка между пилюлями пары.
@@ -1074,7 +1074,7 @@ abstract class AppLocalizations {
   /// Подпись под кнопкой на карточке слова, когда папка по умолчанию не совпадает по паре с лукапом: одна папка — одна пара (DECISIONS п. 81).
   ///
   /// In ru, this message translates to:
-  /// **'«Сохранённые» — коллекция другой пары. Выберите коллекцию этой пары или создайте новую.'**
+  /// **'«Сохранённые» — коллекция другой пары. Выберите коллекцию этой пары или создайте новую.'**
   String get searchPairNoDefault;
 
   /// Заголовок алерта на 422 term_language_mismatch.
@@ -1086,7 +1086,7 @@ abstract class AppLocalizations {
   /// Текст алерта на 422 term_language_mismatch. Языки названы эндонимами.
   ///
   /// In ru, this message translates to:
-  /// **'Эта коллекция изучает {expected}, а слово — на {actual}. Одна коллекция — одна пара, поэтому нужна коллекция другой пары.'**
+  /// **'Эта коллекция изучает {expected}, а слово — на {actual}. Одна коллекция — одна пара, поэтому нужна коллекция другой пары.'**
   String searchPairMismatchMessage(String expected, String actual);
 
   /// Кнопка алерта: создать коллекцию нужной пары и сохранить слово туда.
@@ -1110,19 +1110,19 @@ abstract class AppLocalizations {
   /// Подпись под парой кнопок на карточке слова (кадр 06).
   ///
   /// In ru, this message translates to:
-  /// **'Справа — выбрать другую коллекцию'**
+  /// **'Справа — выбрать другую коллекцию'**
   String get wordCardFolderHint;
 
   /// Контурная кнопка-состояние после сохранения (кадр 07).
   ///
   /// In ru, this message translates to:
-  /// **'В коллекции «{folder}»'**
+  /// **'В коллекции «{folder}»'**
   String wordCardSavedIn(String folder);
 
   /// Второе действие отдельной строкой на карточке слова (кадры 07/09). Канон — «коллекция»: кнопка и шит называют один объект одинаково (QA-OBS-21).
   ///
   /// In ru, this message translates to:
-  /// **'Добавить в другую коллекцию'**
+  /// **'Добавить в другую коллекцию'**
   String get wordCardAddToAnother;
 
   /// Лейбл лестницы на карточке, открытой из папки (кадр 09).
@@ -1134,7 +1134,7 @@ abstract class AppLocalizations {
   /// Счётчик ступени рядом с лейблом лестницы (кадр 09).
   ///
   /// In ru, this message translates to:
-  /// **'{step} из {total}'**
+  /// **'{step} из {total}'**
   String wordCardProgressCount(int step, int total);
 
   /// Атрибуция фотографа поверх фото-героя (лицензия Pexels).
@@ -1164,7 +1164,7 @@ abstract class AppLocalizations {
   /// Подпись на нейтральной подложке, когда у слова нет картинки.
   ///
   /// In ru, this message translates to:
-  /// **'Без фото'**
+  /// **'Без фото'**
   String get wordCardNoPhoto;
 
   /// Заголовок экрана прогресса (кадр 2.6).
@@ -1182,7 +1182,7 @@ abstract class AppLocalizations {
   /// Строка «Лучший результат» под стриком.
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}'**
+  /// **'{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}'**
   String progressBestResult(int count);
 
   /// Календарь-неделя: понедельник.
@@ -1236,7 +1236,7 @@ abstract class AppLocalizations {
   /// Лейбл счётчика: повторений за текущую неделю.
   ///
   /// In ru, this message translates to:
-  /// **'За неделю'**
+  /// **'За неделю'**
   String get progressThisWeek;
 
   /// Лейбл счётчика: повторений сегодня.
@@ -1248,7 +1248,7 @@ abstract class AppLocalizations {
   /// Лейбл графика активности за месяц.
   ///
   /// In ru, this message translates to:
-  /// **'Активность за месяц'**
+  /// **'Активность за месяц'**
   String get progressActivityMonth;
 
   /// Название текущего месяца рядом с графиком активности.
@@ -1266,31 +1266,31 @@ abstract class AppLocalizations {
   /// Неактивная карточка на главном, когда дневная квота новых слов исчерпана (F13).
   ///
   /// In ru, this message translates to:
-  /// **'Лимит новых на сегодня'**
+  /// **'Лимит новых на сегодня'**
   String get homeLimitReachedTitle;
 
   /// Подсказка под «Лимит новых на сегодня» — свободная тренировка не тратит квоту.
   ///
   /// In ru, this message translates to:
-  /// **'Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.'**
+  /// **'Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.'**
   String get homeLimitReachedHint;
 
   /// Тихий офлайн-баннер на главной (кадр 9c).
   ///
   /// In ru, this message translates to:
-  /// **'Нет сети. Повторения идут как обычно — синхронизируем, когда связь вернётся.'**
+  /// **'Нет сети. Повторения идут как обычно — синхронизируем, когда связь вернётся.'**
   String get homeOfflineBanner;
 
   /// Заголовок карточки на главной, когда дня нет: сохранённого плана не осталось, а последний синк не прошёл (BUG-1).
   ///
   /// In ru, this message translates to:
-  /// **'Сервер не отвечает'**
+  /// **'Сервер не отвечает'**
   String get homeUnreachableTitle;
 
   /// Пояснение под homeUnreachableTitle: выход — pull-to-refresh, данные не потеряны (BUG-1).
   ///
   /// In ru, this message translates to:
-  /// **'День загрузить не удалось. Потяни вниз, чтобы попробовать снова — всё сохранённое на месте.'**
+  /// **'День загрузить не удалось. Потяни вниз, чтобы попробовать снова — всё сохранённое на месте.'**
   String get homeUnreachableBody;
 
   /// Заголовок экрана профиля (кадр 11a).
@@ -1338,31 +1338,31 @@ abstract class AppLocalizations {
   /// Инструкция под промптом, сборка фразы из СЛОВЕСНЫХ фишек (кадр 12b).
   ///
   /// In ru, this message translates to:
-  /// **'собери из слов'**
+  /// **'собери из слов'**
   String get sessionInstrAssemble;
 
   /// То же для одиночного слова: с BUGFIX-2 Ч.2б D2 оно собирается буквенными фишками, и инструкция обязана называть то, что лежит на экране.
   ///
   /// In ru, this message translates to:
-  /// **'собери из букв'**
+  /// **'собери из букв'**
   String get sessionInstrAssembleLetters;
 
   /// Плейсхолдер в пустой строке сборки (фраза в word_bank и scramble) — куда кладутся слова.
   ///
   /// In ru, this message translates to:
-  /// **'Собери из слов ниже'**
+  /// **'Собери из слов ниже'**
   String get sessionAssemblyEmptyHint;
 
   /// Тот же плейсхолдер для одиночного слова, которое собирается по буквам.
   ///
   /// In ru, this message translates to:
-  /// **'Собери из букв ниже'**
+  /// **'Собери из букв ниже'**
   String get sessionAssemblyEmptyHintLetters;
 
   /// Инструкция под промптом, сборка предложения-примера из чипов (scramble).
   ///
   /// In ru, this message translates to:
-  /// **'собери предложение из слов'**
+  /// **'собери предложение из слов'**
   String get sessionInstrAssembleSentence;
 
   /// Инструкция под промптом, ввод с клавиатуры (кадр 12c). {lang} — наречие изучаемой стороны карточки («по-итальянски»), languageAdverbFor.
@@ -1374,19 +1374,19 @@ abstract class AppLocalizations {
   /// Инструкция аудирования-узнавания (кадр 12g).
   ///
   /// In ru, this message translates to:
-  /// **'прослушай и выбери перевод · можно повторить'**
+  /// **'прослушай и выбери перевод · можно повторить'**
   String get sessionInstrListenChoose;
 
   /// Инструкция аудирования-воспроизведения (кадр 12h). {lang} — наречие изучаемой стороны карточки («по-итальянски»), languageAdverbFor.
   ///
   /// In ru, this message translates to:
-  /// **'прослушай и напиши {lang}'**
+  /// **'прослушай и напиши {lang}'**
   String sessionInstrListenType(String lang);
 
   /// Инструкция диктанта: звучит предложение-пример целиком (dictation).
   ///
   /// In ru, this message translates to:
-  /// **'прослушай и запиши предложение'**
+  /// **'прослушай и запиши предложение'**
   String get sessionInstrDictation;
 
   /// Инструкция pick_correct: три предложения, одно верное.
@@ -1398,7 +1398,7 @@ abstract class AppLocalizations {
   /// Инструкция description_match: описание на изучаемом языке, четыре слова.
   ///
   /// In ru, this message translates to:
-  /// **'выбери слово по описанию'**
+  /// **'выбери слово по описанию'**
   String get sessionInstrDescriptionMatch;
 
   /// Под неверным выбором в pick_correct: чем должен был быть подчёркнутый фрагмент.
@@ -1416,7 +1416,7 @@ abstract class AppLocalizations {
   /// Подсказка под строкой сборки (кадр 12b).
   ///
   /// In ru, this message translates to:
-  /// **'Тап по слову в строке возвращает его вниз'**
+  /// **'Тап по слову в строке возвращает его вниз'**
   String get sessionChipReturnHint;
 
   /// Кнопка подсказки первой буквы в ввод/аудирование/пропуск (кадры 12c, 12h, 12i).
@@ -1428,13 +1428,13 @@ abstract class AppLocalizations {
   /// Кнопка честного провала — показывает ответ, слово вернётся (кадры 12c, 12h, 12i).
   ///
   /// In ru, this message translates to:
-  /// **'Не помню'**
+  /// **'Не помню'**
   String get sessionDontRemember;
 
   /// Тихая подсказка под полем ввода: ответ целиком набран алфавитом, которым язык карточки не пишется. Ничего не засчитано, попытка не потрачена — поэтому это подсказка, а не вердикт.
   ///
   /// In ru, this message translates to:
-  /// **'Похоже, раскладка не та — переключи клавиатуру и введи ещё раз'**
+  /// **'Похоже, раскладка не та — переключи клавиатуру и введи ещё раз'**
   String get sessionWrongKeyboard;
 
   /// Кнопка проверки собранного ответа (word_bank) — сабмит, до фидбека.
@@ -1488,7 +1488,7 @@ abstract class AppLocalizations {
   /// Мягкая ошибка канала: распознавание вернулось пустым. Не является провалом ответа.
   ///
   /// In ru, this message translates to:
-  /// **'Не расслышал. Попробуй ещё раз — ближе к микрофону.'**
+  /// **'Не расслышал. Попробуй ещё раз — ближе к микрофону.'**
   String get sessionSpeakNotHeard;
 
   /// Распознавание не запустилось: нет разрешения или движка. Тоже сбой канала, не ответа.
@@ -1506,7 +1506,7 @@ abstract class AppLocalizations {
   /// Сборка собрана мимо scripts/build_ios.sh — версии у неё нет, и экран говорит это, а не выдумывает SHA.
   ///
   /// In ru, this message translates to:
-  /// **'без метки'**
+  /// **'без метки'**
   String get buildStampUnstamped;
 
   /// Сервер ещё не ответил про свою сборку.
@@ -1536,25 +1536,25 @@ abstract class AppLocalizations {
   /// Отправка отчёта не удалась — сеть или закрытая дверь.
   ///
   /// In ru, this message translates to:
-  /// **'Жалоба не ушла'**
+  /// **'Жалоба не ушла'**
   String get qaReportFailed;
 
   /// Отказано в NSSpeechRecognition (DAY-GATE-1, Ч.0.2). iOS спрашивает один раз за установку, поэтому «нажми ещё раз» не выход — только Настройки.
   ///
   /// In ru, this message translates to:
-  /// **'Распознавание речи выключено. Разреши распознавание речи в настройках — без него телефон слышит, но не понимает.'**
+  /// **'Распознавание речи выключено. Разреши распознавание речи в настройках — без него телефон слышит, но не понимает.'**
   String get speechPermissionRecognitionDenied;
 
   /// Отказано в NSMicrophone (DAY-GATE-1, Ч.0.2).
   ///
   /// In ru, this message translates to:
-  /// **'Микрофон выключен. Разреши доступ к микрофону в настройках.'**
+  /// **'Микрофон выключен. Разреши доступ к микрофону в настройках.'**
   String get speechPermissionMicDenied;
 
   /// Не хватает обоих разрешений сразу (DAY-GATE-1, Ч.0.2): называем оба, иначе второй заход в Настройки человек уже не сделает.
   ///
   /// In ru, this message translates to:
-  /// **'Разреши в настройках микрофон и распознавание речи — нужны оба.'**
+  /// **'Разреши в настройках микрофон и распознавание речи — нужны оба.'**
   String get speechPermissionBothDenied;
 
   /// Кнопка под строкой об отказанном разрешении — ведёт на страницу приложения в Настройках iOS.
@@ -1566,7 +1566,7 @@ abstract class AppLocalizations {
   /// Обрыв на полуслове (DAY-FIX-3, Ч.1.4): человек начал говорить, канал не дослушал. Не ошибка, журнал не пишется, вторая попытка.
   ///
   /// In ru, this message translates to:
-  /// **'Не расслышали до конца — скажи ещё раз.'**
+  /// **'Не расслышали до конца — скажи ещё раз.'**
   String get sessionSpeakCutOff;
 
   /// Пропуск карточки говорения — с первой же неудачи микрофона, вместе с сообщением о ней (QA-OBS-7): ничего не записывается, слово вернётся своим чередом.
@@ -1578,13 +1578,13 @@ abstract class AppLocalizations {
   /// Пояснение под кнопкой пропуска — пропуск не пишет ни ревью, ни оценку.
   ///
   /// In ru, this message translates to:
-  /// **'Пропуск ничего не испортит: слово вернётся своим чередом.'**
+  /// **'Пропуск ничего не испортит: слово вернётся своим чередом.'**
   String get sessionSpeakSkipHint;
 
   /// Подпись под кнопкой микрофона, когда собеседник договорил, а запись ещё не идёт (SPEECH-2, Ч.1.1). Состояние без таймаута.
   ///
   /// In ru, this message translates to:
-  /// **'Твоя очередь — нажми и говори'**
+  /// **'Твоя очередь — нажми и говори'**
   String get sessionSpeakYourTurn;
 
   /// Подпись под кнопкой микрофона, пока звучит реплика роли: кнопка ещё не зовёт и не нажимается.
@@ -1596,7 +1596,7 @@ abstract class AppLocalizations {
   /// Подпись под кнопкой микрофона во время записи (SPEECH-2, Ч.1.1).
   ///
   /// In ru, this message translates to:
-  /// **'Пишу — скажи и нажми «Готово»'**
+  /// **'Пишу — скажи и нажми «Готово»'**
   String get sessionSpeakRecording;
 
   /// Вердикт сказанной реплики: сказано достаточно (SPEECH-2, Ч.3.5).
@@ -1608,25 +1608,25 @@ abstract class AppLocalizations {
   /// Вердикт сказанной реплики: реплика узнана, но часть слов не прозвучала. Не зачёт (SPEECH-2, Ч.3.5).
   ///
   /// In ru, this message translates to:
-  /// **'Почти — не хватило: {words}'**
+  /// **'Почти — не хватило: {words}'**
   String sessionSpeakVerdictAlmost(String words);
 
   /// Вердикт сказанной реплики: сказано не это (SPEECH-2, Ч.3.5).
   ///
   /// In ru, this message translates to:
-  /// **'Не то'**
+  /// **'Не то'**
   String get sessionSpeakVerdictWrong;
 
   /// Рамка тренажёра говорения: это не оценка акцента (показывается на карточке).
   ///
   /// In ru, this message translates to:
-  /// **'Проверяем, вспомнил ли ты слово, а не произношение.'**
+  /// **'Проверяем, вспомнил ли ты слово, а не произношение.'**
   String get sessionSpeakHint;
 
   /// Подпись говорения у реплики плана: карточка проверяет только ключ — слово в дырке каркаса, — и остальную фразу ученик читает с экрана.
   ///
   /// In ru, this message translates to:
-  /// **'Скажи фразу, главное — «{key}».'**
+  /// **'Скажи фразу, главное — «{key}».'**
   String sessionSpeakHintKey(String key);
 
   /// Подпись говорения у фразы без ключа: спрашивается вся реплика.
@@ -1704,7 +1704,7 @@ abstract class AppLocalizations {
   /// СЛОВАРЬ СТАТУСОВ: слово в очереди тренажёра — само возвращается на тренировках. Заменил «Знакомое».
   ///
   /// In ru, this message translates to:
-  /// **'В работе'**
+  /// **'В работе'**
   String get statusInWork;
 
   /// СЛОВАРЬ СТАТУСОВ: слово прошло все ступени. Заменил «Подтверждено».
@@ -1722,7 +1722,7 @@ abstract class AppLocalizations {
   /// СЛОВАРЬ СТАТУСОВ: где слово внутри очереди. Ступеней пять — два узнавания (прямое и обратное) читаются как одна, потому что счёт идёт про пройденный путь, а не про направление вопроса.
   ///
   /// In ru, this message translates to:
-  /// **'Ступень {step} из {total}: {rung}'**
+  /// **'Ступень {step} из {total}: {rung}'**
   String statusLadderStep(int step, int total, String rung);
 
   /// Заголовок шита-легенды, который открывается тапом по пяти точкам в «Моих словах» (Ч.4).
@@ -1734,7 +1734,7 @@ abstract class AppLocalizations {
   /// Строка легенды про прочерк вместо точек: слово вне лестницы, а не в её начале.
   ///
   /// In ru, this message translates to:
-  /// **'Слово помечено «знаю» — по лестнице оно не шло.'**
+  /// **'Слово помечено «знаю» — по лестнице оно не шло.'**
   String get poolKnownLegend;
 
   /// Подпись вместо точек для слова, помеченного «знаю» в триаже — строка вне лестницы (кадр 16d).
@@ -1776,13 +1776,13 @@ abstract class AppLocalizations {
   /// Вердикт фидбека — ошибка на вводимом/собираемом ответе: правильная форма стоит ниже, в самом фидбеке (кадр 12d).
   ///
   /// In ru, this message translates to:
-  /// **'Не то — правильная форма ниже'**
+  /// **'Не то — правильная форма ниже'**
   String get sessionFeedbackWrong;
 
   /// Вердикт фидбека — ошибка на карточке узнавания: верный вариант подсвечен ВЫШЕ в списке вариантов, а ниже лишь напоминание термина (QA-8).
   ///
   /// In ru, this message translates to:
-  /// **'Не то — верный ответ отмечен выше'**
+  /// **'Не то — верный ответ отмечен выше'**
   String get sessionFeedbackWrongAbove;
 
   /// Относительный срок — сегодня (итог/фидбек).
@@ -1860,7 +1860,7 @@ abstract class AppLocalizations {
   /// Строка стрика в блоке дневной цели (кадр 12e).
   ///
   /// In ru, this message translates to:
-  /// **'{days, plural, one{Стрик — {days} день} few{Стрик — {days} дня} many{Стрик — {days} дней} other{Стрик — {days} дней}}'**
+  /// **'{days, plural, one{Стрик — {days} день} few{Стрик — {days} дня} many{Стрик — {days} дней} other{Стрик — {days} дней}}'**
   String sessionStreak(int days);
 
   /// Лейбл списка слов в итоге (кадр 12e).
@@ -1878,7 +1878,7 @@ abstract class AppLocalizations {
   /// Пояснение блока проседающего слова (кадр 12e).
   ///
   /// In ru, this message translates to:
-  /// **'Даётся тяжело. Можно собрать другой пример — иногда дело в контексте, а не в слове.'**
+  /// **'Даётся тяжело. Можно собрать другой пример — иногда дело в контексте, а не в слове.'**
   String get sessionStrugglingBody;
 
   /// Кнопка перегенерации примера в итоге (кадр 12e, B6).
@@ -1890,13 +1890,13 @@ abstract class AppLocalizations {
   /// Сообщение при 429 на «Новый пример» (квота исчерпана).
   ///
   /// In ru, this message translates to:
-  /// **'Лимит примеров на сегодня исчерпан'**
+  /// **'Лимит примеров на сегодня исчерпан'**
   String get sessionNewExampleExhausted;
 
   /// Тихая плашка сверху в тренировочной сессии (кадр 12f).
   ///
   /// In ru, this message translates to:
-  /// **'Свободная тренировка — прогресс не меняется'**
+  /// **'Свободная тренировка — прогресс не меняется'**
   String get sessionPracticeBanner;
 
   /// Заголовок алерта выхода из сессии (кадр 12k).
@@ -1908,7 +1908,7 @@ abstract class AppLocalizations {
   /// Тело алерта выхода из сессии (кадр 12k).
   ///
   /// In ru, this message translates to:
-  /// **'Отвеченные слова сохранятся — вернуться можно в любой момент.'**
+  /// **'Отвеченные слова сохранятся — вернуться можно в любой момент.'**
   String get sessionExitBody;
 
   /// Кнопка подтверждения выхода (кадр 12k, терракотовый текст).
@@ -1962,7 +1962,7 @@ abstract class AppLocalizations {
   /// Подстрока кнопки разговора.
   ///
   /// In ru, this message translates to:
-  /// **'Голосовая практика с ИИ'**
+  /// **'Голосовая практика с ИИ'**
   String get practiceDialogEntrySubtitle;
 
   /// Подсказка на неактивной кнопке разговора в офлайне.
@@ -1974,19 +1974,19 @@ abstract class AppLocalizations {
   /// Заголовок пре-стартового листа разговора.
   ///
   /// In ru, this message translates to:
-  /// **'Разговор с ИИ'**
+  /// **'Разговор с ИИ'**
   String get practiceDialogPrestartTitle;
 
   /// Пояснение на пре-старте: язык разговора = язык коллекции.
   ///
   /// In ru, this message translates to:
-  /// **'ИИ будет говорить с тобой на языке коллекции — {lang}. Отвечай вслух и старайся использовать эти слова.'**
+  /// **'ИИ будет говорить с тобой на языке коллекции — {lang}. Отвечай вслух и старайся использовать эти слова.'**
   String practiceDialogPrestartBody(String lang);
 
   /// Лейбл над полосой target_words на пре-старте.
   ///
   /// In ru, this message translates to:
-  /// **'Слова для разговора'**
+  /// **'Слова для разговора'**
   String get practiceDialogPrestartWordsLabel;
 
   /// Кнопка старта разговора на пре-стартовом листе.
@@ -2028,7 +2028,7 @@ abstract class AppLocalizations {
   /// Пояснение в алерте выхода из разговора.
   ///
   /// In ru, this message translates to:
-  /// **'Разговор закончится, и ты увидишь итог.'**
+  /// **'Разговор закончится, и ты увидишь итог.'**
   String get practiceDialogExitMessage;
 
   /// Кнопка подтверждения выхода из разговора.
@@ -2052,7 +2052,7 @@ abstract class AppLocalizations {
   /// Итог разговора: сколько target-слов прозвучало.
   ///
   /// In ru, this message translates to:
-  /// **'Слов прозвучало: {used} из {total}'**
+  /// **'Слов прозвучало: {used} из {total}'**
   String practiceDialogFinaleWords(int used, int total);
 
   /// Кнопка закрытия итога разговора.
@@ -2064,31 +2064,31 @@ abstract class AppLocalizations {
   /// Ошибка: разговор недоступен без Premium (403).
   ///
   /// In ru, this message translates to:
-  /// **'Разговоры доступны в Premium.'**
+  /// **'Разговоры доступны в Premium.'**
   String get practiceDialogErrorSubscription;
 
   /// Ошибка: исчерпан дневной лимит разговоров (429), время сброса в локальном времени.
   ///
   /// In ru, this message translates to:
-  /// **'На сегодня разговоры закончились. Новые — после {time}.'**
+  /// **'На сегодня разговоры закончились. Новые — после {time}.'**
   String practiceDialogErrorRateLimited(String time);
 
   /// Ошибка лимита разговоров без известного времени сброса.
   ///
   /// In ru, this message translates to:
-  /// **'На сегодня разговоры закончились. Попробуй завтра.'**
+  /// **'На сегодня разговоры закончились. Попробуй завтра.'**
   String get practiceDialogErrorRateLimitedNoTime;
 
   /// Ошибка: нет сети для старта разговора.
   ///
   /// In ru, this message translates to:
-  /// **'Нет сети. Для разговора нужен интернет.'**
+  /// **'Нет сети. Для разговора нужен интернет.'**
   String get practiceDialogErrorOffline;
 
   /// Общая ошибка старта разговора.
   ///
   /// In ru, this message translates to:
-  /// **'Не удалось начать разговор. Попробуй ещё раз.'**
+  /// **'Не удалось начать разговор. Попробуй ещё раз.'**
   String get practiceDialogErrorGeneric;
 
   /// Кнопка закрытия экрана разговора при ошибке.
@@ -2106,7 +2106,7 @@ abstract class AppLocalizations {
   /// Строка результата последнего разговора на экране коллекции.
   ///
   /// In ru, this message translates to:
-  /// **'слов: {used} из {total}'**
+  /// **'слов: {used} из {total}'**
   String practiceDialogResultWords(int used, int total);
 
   /// Сегмент таба «Коллекции»: свои коллекции (кадр 2.8).
@@ -2130,19 +2130,19 @@ abstract class AppLocalizations {
   /// Бейдж на карточке стора: набор уже добавлен (кадр 2.8).
   ///
   /// In ru, this message translates to:
-  /// **'В моих'**
+  /// **'В моих'**
   String get storeInLibrary;
 
   /// Кнопка добавления бесплатного набора из стора (кадр 8c).
   ///
   /// In ru, this message translates to:
-  /// **'Добавить в мои'**
+  /// **'Добавить в мои'**
   String get storeAddToMine;
 
   /// Кнопка премиум-набора в сторе — ведёт на пейволл (кадр 15d).
   ///
   /// In ru, this message translates to:
-  /// **'Доступно с Premium'**
+  /// **'Доступно с Premium'**
   String get storeAvailableWithPremium;
 
   /// Подпись под кнопкой премиум-набора: подписка открывает все наборы сразу (кадр 15d).
@@ -2160,7 +2160,7 @@ abstract class AppLocalizations {
   /// Строка под превью-списком: сколько слов ещё в наборе (кадр 8c).
   ///
   /// In ru, this message translates to:
-  /// **'и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  /// **'и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String storeMoreWords(int count);
 
   /// Заголовок шита выбора языковой пары стора (кадр 2.8).
@@ -2178,19 +2178,19 @@ abstract class AppLocalizations {
   /// Подпись пустого стора.
   ///
   /// In ru, this message translates to:
-  /// **'Готовые коллекции по ситуациям добавим в ближайшее время.'**
+  /// **'Готовые коллекции по ситуациям добавим в ближайшее время.'**
   String get storeEmptyBody;
 
   /// Тост после добавления бесплатного набора из стора.
   ///
   /// In ru, this message translates to:
-  /// **'Набор добавлен в «Мои»'**
+  /// **'Набор добавлен в «Мои»'**
   String get storePreviewAdded;
 
   /// Ошибка подписки на набор стора.
   ///
   /// In ru, this message translates to:
-  /// **'Не удалось добавить набор. Попробуйте ещё раз.'**
+  /// **'Не удалось добавить набор. Попробуйте ещё раз.'**
   String get storeSubscribeError;
 
   /// Кнопка-крестик закрытия пейволла (кадр 2.13).
@@ -2202,31 +2202,31 @@ abstract class AppLocalizations {
   /// Заголовок пейволла при входе из исчерпанной квоты (кадр 14a).
   ///
   /// In ru, this message translates to:
-  /// **'Больше коллекций за один вечер'**
+  /// **'Больше коллекций за один вечер'**
   String get paywallTitleQuota;
 
   /// Заголовок пейволла при входе из профиля.
   ///
   /// In ru, this message translates to:
-  /// **'Premium без ограничений'**
+  /// **'Premium без ограничений'**
   String get paywallTitleGeneric;
 
   /// Заголовок пейволла при входе из премиум-набора: имя набора + остальные (кадр 14b).
   ///
   /// In ru, this message translates to:
-  /// **'{title} и ещё {count} наборов'**
+  /// **'{title} и ещё {count} наборов'**
   String paywallTitleStore(String title, int count);
 
   /// Строка ценности пейволла для входа из квоты (кадр 14a).
   ///
   /// In ru, this message translates to:
-  /// **'Premium поднимает дневной лимит до двадцати генераций.'**
+  /// **'Premium поднимает дневной лимит до двадцати генераций.'**
   String get paywallSubtitleQuota;
 
   /// Строка ценности пейволла для входа из стора (кадр 14b).
   ///
   /// In ru, this message translates to:
-  /// **'Премиум-коллекции собраны редакцией и открываются все сразу — по одной их не продаём.'**
+  /// **'Премиум-коллекции собраны редакцией и открываются все сразу — по одной их не продаём.'**
   String get paywallSubtitleStore;
 
   /// Строка ценности пейволла для входа из профиля.
@@ -2238,13 +2238,13 @@ abstract class AppLocalizations {
   /// Пункт Premium: лимит генераций (кадр 14a).
   ///
   /// In ru, this message translates to:
-  /// **'До 20 генераций в день'**
+  /// **'До 20 генераций в день'**
   String get paywallBenefitGenerations;
 
   /// Пункт Premium: премиум-наборы стора (кадр 14a).
   ///
   /// In ru, this message translates to:
-  /// **'Все премиум-коллекции в сторе'**
+  /// **'Все премиум-коллекции в сторе'**
   String get paywallBenefitStore;
 
   /// Пункт Premium: будущие режимы (кадр 14a).
@@ -2256,7 +2256,7 @@ abstract class AppLocalizations {
   /// Строка «бесплатно всегда» на пейволле (кадр 14a, правило 22).
   ///
   /// In ru, this message translates to:
-  /// **'Повторения, разбор и офлайн — бесплатно всегда.'**
+  /// **'Повторения, разбор и офлайн — бесплатно всегда.'**
   String get paywallFreeForever;
 
   /// Ценовая карточка: годовой период (кадр 4ж).
@@ -2286,13 +2286,13 @@ abstract class AppLocalizations {
   /// Подстрока годовой карточки: цена за месяц (плейсхолдер, кадр 4ж).
   ///
   /// In ru, this message translates to:
-  /// **'\$2.50 в месяц'**
+  /// **'\$2.50 в месяц'**
   String get paywallYearPerMonth;
 
   /// Подстрока месячной карточки (кадр 4ж).
   ///
   /// In ru, this message translates to:
-  /// **'в месяц'**
+  /// **'в месяц'**
   String get paywallPerMonth;
 
   /// Бейдж скидки на годовой карточке (кадр 4ж).
@@ -2310,13 +2310,13 @@ abstract class AppLocalizations {
   /// Юридическая строка авто-продления для годового периода (кадр 14a).
   ///
   /// In ru, this message translates to:
-  /// **'Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
+  /// **'Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
   String paywallLegalYear(String price);
 
   /// Юридическая строка авто-продления для месячного периода (кадр 14b).
   ///
   /// In ru, this message translates to:
-  /// **'Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
+  /// **'Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
   String paywallLegalMonth(String price);
 
   /// Ссылка восстановления покупок на пейволле (кадр 14a).
@@ -2376,13 +2376,13 @@ abstract class AppLocalizations {
   /// Переключатель записи на экране монитора.
   ///
   /// In ru, this message translates to:
-  /// **'Записывать подвисания, кадры и тапы'**
+  /// **'Записывать подвисания, кадры и тапы'**
   String get perfMonitorToggle;
 
   /// Подпись под переключателем записи.
   ///
   /// In ru, this message translates to:
-  /// **'По умолчанию выключено — пока выключено, ничего не стоит'**
+  /// **'По умолчанию выключено — пока выключено, ничего не стоит'**
   String get perfMonitorToggleHint;
 
   /// Пустой журнал монитора.
@@ -2394,7 +2394,7 @@ abstract class AppLocalizations {
   /// Главная кнопка монитора: копия журнала + дамп в файл.
   ///
   /// In ru, this message translates to:
-  /// **'Скопировать в буфер'**
+  /// **'Скопировать в буфер'**
   String get perfMonitorCopy;
 
   /// Тихая кнопка монитора: очистить журнал.
@@ -2418,13 +2418,13 @@ abstract class AppLocalizations {
   /// Прочие ошибки построения сессии. Текст исключения уходит только в лог, не на экран.
   ///
   /// In ru, this message translates to:
-  /// **'Не удалось загрузить сессию'**
+  /// **'Не удалось загрузить сессию'**
   String get sessionLoadFailed;
 
   /// Очередь ответов упёрлась в потолок и содержит неотправленные ответы, влияющие на прогресс. Показывается вместо тихой потери данных (F20-r2).
   ///
   /// In ru, this message translates to:
-  /// **'Ответы не уходят на сервер — проверь соединение'**
+  /// **'Ответы не уходят на сервер — проверь соединение'**
   String get syncStuckBanner;
 
   /// Последний синк не прошёл (SyncState.offline). Показывается и при живом Wi-Fi: канальный офлайн и молчащий сервер — разные вещи, а выглядели одинаково (BUG-1).
@@ -2442,25 +2442,25 @@ abstract class AppLocalizations {
   /// Пояснение под кнопкой «Учить это слово»: что именно произойдёт (16e).
   ///
   /// In ru, this message translates to:
-  /// **'Слово встанет в очередь и начнёт приходить на тренировках.'**
+  /// **'Слово встанет в очередь и начнёт приходить на тренировках.'**
   String get poolEnrollNote;
 
   /// Тихая кнопка карточки слова: пауза — слово перестаёт приходить (16e).
   ///
   /// In ru, this message translates to:
-  /// **'Убрать из изучения'**
+  /// **'Убрать из изучения'**
   String get poolUnenrollAction;
 
   /// Заголовок подтверждения паузы слова.
   ///
   /// In ru, this message translates to:
-  /// **'Убрать «{term}» из изучения?'**
+  /// **'Убрать «{term}» из изучения?'**
   String poolUnenrollTitle(String term);
 
   /// Текст подтверждения: это пауза, а не удаление.
   ///
   /// In ru, this message translates to:
-  /// **'Слово перестанет приходить на тренировках. Прогресс и история сохранятся — слово можно вернуть в любой момент.'**
+  /// **'Слово перестанет приходить на тренировках. Прогресс и история сохранятся — слово можно вернуть в любой момент.'**
   String get poolUnenrollMessage;
 
   /// Подтверждающая кнопка паузы слова.
@@ -2484,7 +2484,7 @@ abstract class AppLocalizations {
   /// Плейсхолдер поля поиска на экране «Мои слова».
   ///
   /// In ru, this message translates to:
-  /// **'Поиск по словам'**
+  /// **'Поиск по словам'**
   String get myWordsSearchHint;
 
   /// Фильтр фазы на экране «Мои слова»: без фильтра.
@@ -2520,7 +2520,7 @@ abstract class AppLocalizations {
   /// Фильтр по источнику: слова, чья коллекция удалена или отписана — из пула они не уходят.
   ///
   /// In ru, this message translates to:
-  /// **'Без коллекции'**
+  /// **'Без коллекции'**
   String get myWordsSourceNone;
 
   /// Пустое состояние экрана «Мои слова».
@@ -2532,13 +2532,13 @@ abstract class AppLocalizations {
   /// Пустое состояние объясняет два способа зачисления в пул.
   ///
   /// In ru, this message translates to:
-  /// **'Слова попадают сюда, когда ты разбираешь коллекцию свайпами «не знаю» и «не уверен» — или нажимаешь «Учить это слово» на карточке слова.'**
+  /// **'Слова попадают сюда, когда ты разбираешь коллекцию свайпами «не знаю» и «не уверен» — или нажимаешь «Учить это слово» на карточке слова.'**
   String get myWordsEmptyMessage;
 
   /// Пустое состояние экрана «Мои слова» под активным поиском или фильтром.
   ///
   /// In ru, this message translates to:
-  /// **'Ничего не нашлось'**
+  /// **'Ничего не нашлось'**
   String get myWordsNothingFound;
 
   /// Бейдж стрика в шапке главной (кадр 17a).
@@ -2574,19 +2574,19 @@ abstract class AppLocalizations {
   /// Раскрытый ответ (кадры 19-4б/в): термин и перевод через тире.
   ///
   /// In ru, this message translates to:
-  /// **'{term} — {translation}'**
+  /// **'{term} — {translation}'**
   String challengeAnswer(String term, String translation);
 
   /// Пример употребления с переводом (кадры 19-4б/в).
   ///
   /// In ru, this message translates to:
-  /// **'{sentence} — {translation}'**
+  /// **'{sentence} — {translation}'**
   String challengeExample(String sentence, String translation);
 
   /// Разбор ошибки (кадр 19-4в): чем на самом деле является выбранный вариант. Рисуется только когда неверный вариант — перевод известного термина.
   ///
   /// In ru, this message translates to:
-  /// **'Вы выбрали «{chosen}» — это {term}'**
+  /// **'Вы выбрали «{chosen}» — это {term}'**
   String challengeMistake(String chosen, String term);
 
   /// Кнопка: слово уходит в очередь тем же путём, что «Учить это слово» (кадр 19-4).
@@ -2610,7 +2610,7 @@ abstract class AppLocalizations {
   /// Состояние кнопки «Учить» после нажатия: акт совершён, слово зачислено.
   ///
   /// In ru, this message translates to:
-  /// **'Слово в очереди'**
+  /// **'Слово в очереди'**
   String get challengeLearning;
 
   /// Бейдж брасом справа сверху на тёмной плите (кадр 19-1). Короче прежнего «Сессия на сегодня»: заголовок ушёл, вместо него метка.
@@ -2688,7 +2688,7 @@ abstract class AppLocalizations {
   /// Итог дня в СЛОВАХ (кадр 19-2). Единица обязательна: «52 из 52» без неё — счёт карточек в форме счёта слов, и 52 не было числом слов ни у кого. Карточки и минуты идут подписью следом.
   ///
   /// In ru, this message translates to:
-  /// **'{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}'**
+  /// **'{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}'**
   String homeDoneOfWords(int done, int total);
 
   /// Вторая единица итога дня (кадр 19-2) — сколько карточек стоили эти слова.
@@ -2706,7 +2706,7 @@ abstract class AppLocalizations {
   /// Внутренний прогресс одного слова, когда день дошёл до него одного: «1 слово · карточка 2 из 3». Пока слово в цепочке — строка живёт; цепочка кончилась — слово ушло из плана, и строки нет.
   ///
   /// In ru, this message translates to:
-  /// **'{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}'**
+  /// **'{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}'**
   String homeChainProgress(int position, int total);
 
   /// Сколько заняла сессия, «6 мин 40 с».
@@ -2736,13 +2736,13 @@ abstract class AppLocalizations {
   /// Пояснение под «Всё повторено» (кадр 17d).
   ///
   /// In ru, this message translates to:
-  /// **'Новые слова на сегодня не взяты — очередь стоит.'**
+  /// **'Новые слова на сегодня не взяты — очередь стоит.'**
   String get homeIdleQueueStalled;
 
   /// Когда и сколько ждёт следующий повтор (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}'**
+  /// **'{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}'**
   String homeNextReviewLine(String when, int count);
 
   /// Подстановка «когда» для следующего повтора — завтра.
@@ -2754,7 +2754,7 @@ abstract class AppLocalizations {
   /// Предложение добрать слова из недоразобранной коллекции (кадр 17b).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}'**
+  /// **'{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}'**
   String homeExtraFromCollection(int count, String title);
 
   /// Предложение на закрытом дне (кадр 19-2): слова, УЖЕ взятые в очередь, которые сегодняшняя квота ещё позволяет раздать. Идут прежде свайп-прохода — эти уже выбраны, а разбор это предложение выбрать ещё.
@@ -2772,7 +2772,7 @@ abstract class AppLocalizations {
   /// Тихая строка входа в магазин под генерацией (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}'**
+  /// **'{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}'**
   String homeStoreLink(int count);
 
   /// Подпись первого числа плиты статистики (кадр 19-1). Значение приходит из /stats.learned.
@@ -2784,13 +2784,13 @@ abstract class AppLocalizations {
   /// Подпись второго числа плиты статистики (кадр 19-1) — слов, дошедших до «выучено» за семь дней.
   ///
   /// In ru, this message translates to:
-  /// **'За неделю'**
+  /// **'За неделю'**
   String get homeStatWeek;
 
   /// Подпись третьего числа плиты статистики (кадр 19-1) — размер пула.
   ///
   /// In ru, this message translates to:
-  /// **'В работе'**
+  /// **'В работе'**
   String get homeStatInWork;
 
   /// Строка «завтра» (кадры 19-1, 19-2), тап ведёт в «Мои слова». Заменила список «На грани забывания»: три слова с датами отвечали на вопрос, которого никто не задавал, а «сколько будет завтра» — на тот, который задают. Нуля не бывает: при нуле строки нет.
@@ -2808,7 +2808,7 @@ abstract class AppLocalizations {
   /// Вторая половина строки-награды (кадр 19-2): слово, дошедшее дальше всех, и имя его новой ступени — из тех же ladderStep*, что и карточка слова.
   ///
   /// In ru, this message translates to:
-  /// **'{term} дошло до «{rung}»'**
+  /// **'{term} дошло до «{rung}»'**
   String homeAwardExample(String term, String rung);
 
   /// Заголовок карточки генерации (кадры 19-1, 19-2, 19-3). Тап открывает экран генерации — поля на главной больше нет: форма на главной была зрительным центром экрана, чей центр — день.
@@ -2820,7 +2820,7 @@ abstract class AppLocalizations {
   /// Подзаголовок карточки генерации (кадры 19-1, 19-2, 19-3).
   ///
   /// In ru, this message translates to:
-  /// **'Опишите ситуацию — соберём набор под неё'**
+  /// **'Опишите ситуацию — соберём набор под неё'**
   String get homeGenerateCardHint;
 
   /// Заголовок витрины обложек (кадры 19-2, 19-3).
@@ -2838,7 +2838,7 @@ abstract class AppLocalizations {
   /// Строка-обещание в подвале первого дня (кадр 19-3). Единственная цифра на экране, где статистики ещё нет.
   ///
   /// In ru, this message translates to:
-  /// **'5 минут в день — 20 слов в неделю'**
+  /// **'5 минут в день — 20 слов в неделю'**
   String get homeFirstDayPromise;
 
   /// Чип-пример темы под карточкой генерации первого дня (кадр 19-3).
@@ -2856,13 +2856,13 @@ abstract class AppLocalizations {
   /// Приветствие первого дня (кадр 17c).
   ///
   /// In ru, this message translates to:
-  /// **'Начнём с первого набора'**
+  /// **'Начнём с первого набора'**
   String get homeFirstDayTitle;
 
   /// Предложение свайп-прохода, когда день закрыт (кадры 17b/17d).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}'**
+  /// **'{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}'**
   String homeSortOffer(int count, String title);
 
   /// Кнопка свайп-прохода в состоянии Б (кадр 17d).
@@ -2880,13 +2880,13 @@ abstract class AppLocalizations {
   /// Заголовок подтверждения смены родного языка.
   ///
   /// In ru, this message translates to:
-  /// **'Переводы на «{language}»?'**
+  /// **'Переводы на «{language}»?'**
   String profileNativeLangConfirmTitle(String language);
 
   /// Тело подтверждения смены родного языка.
   ///
   /// In ru, this message translates to:
-  /// **'Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.'**
+  /// **'Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.'**
   String get profileNativeLangConfirmBody;
 
   /// Таб-бар: план подготовки (центральная, акцентная вкладка).
@@ -2916,7 +2916,7 @@ abstract class AppLocalizations {
   /// Пояснение под заголовком дев-экрана голосов.
   ///
   /// In ru, this message translates to:
-  /// **'Одни и те же пять реплик qa-плана, прочитанные каждым кандидатом одним темпом. Слушайте на телефоне, а не в файлах: динамик и наушники решают больше, чем спектрограмма.'**
+  /// **'Одни и те же пять реплик qa-плана, прочитанные каждым кандидатом одним темпом. Слушайте на телефоне, а не в файлах: динамик и наушники решают больше, чем спектрограмма.'**
   String get devVoicesLead;
 
   /// Заголовок последнего блока — то, чем приложение читает сейчас.
@@ -2928,13 +2928,13 @@ abstract class AppLocalizations {
   /// Подпись под системным голосом: он не файл, а живой синтез.
   ///
   /// In ru, this message translates to:
-  /// **'Играется вживую, темпом реплик. Голос — тот, что стоит в Настройках iOS; enhanced-голос надо скачать там же.'**
+  /// **'Играется вживую, темпом реплик. Голос — тот, что стоит в Настройках iOS; enhanced-голос надо скачать там же.'**
   String get devVoicesSystemNote;
 
   /// Цена озвучки всего плана этим голосом.
   ///
   /// In ru, this message translates to:
-  /// **'≈ {price} за план'**
+  /// **'≈ {price} за план'**
   String devVoicesPrice(String price);
 
   /// Кнопка «проиграть все пять реплик подряд».
@@ -2964,43 +2964,43 @@ abstract class AppLocalizations {
   /// Заголовок витрины, Literata 30 — обещание результата, а не вопрос (кадр 21-1, plan.empty.title).
   ///
   /// In ru, this message translates to:
-  /// **'Разговор, к которому готовишься'**
+  /// **'Разговор, к которому готовишься'**
   String get planEmptyTitle;
 
   /// Подпись витрины в ОДНУ строку (кадр 21-1, plan.empty.sub).
   ///
   /// In ru, this message translates to:
-  /// **'сцена в день · 20 минут · репетиция вслух'**
+  /// **'сцена в день · 20 минут · репетиция вслух'**
   String get planEmptySub;
 
   /// Первое правило плана — витрина 21-1 и лист 21-8 (plan.rule.situation).
   ///
   /// In ru, this message translates to:
-  /// **'Каждый день — одна ситуация. Дни открываются по одному'**
+  /// **'Каждый день — одна ситуация. Дни открываются по одному'**
   String get planRuleSituation;
 
   /// Второе правило плана; в листе 21-8 под ним стоит ряд пяти значков этапов (plan.rule.stages).
   ///
   /// In ru, this message translates to:
-  /// **'Шесть этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам → разговор'**
+  /// **'Шесть этапов по порядку: слова → фразы → диалог → слушаю и отвечаю → говорю сам → разговор'**
   String get planRuleStages;
 
   /// Третье правило плана — витрина 21-1 и лист 21-8 (plan.rule.return).
   ///
   /// In ru, this message translates to:
-  /// **'То, что не получилось, вернётся в следующий день. Ничего не потеряется'**
+  /// **'То, что не получилось, вернётся в следующий день. Ничего не потеряется'**
   String get planRuleReturn;
 
   /// Витрина 21-1, лента примеров: заголовок карточки «Приём у врача» (Literata 20). Статический пример клиента, тексты из кадра.
   ///
   /// In ru, this message translates to:
-  /// **'Приём у врача'**
+  /// **'Приём у врача'**
   String get planExampleDoctorTitle;
 
   /// Витрина 21-1, пример «Приём у врача»: название дня 1 — идёт после «День 1 · ».
   ///
   /// In ru, this message translates to:
-  /// **'Запись к врачу'**
+  /// **'Запись к врачу'**
   String get planExampleDoctorDay1;
 
   /// Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки.
@@ -3012,7 +3012,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки.
   ///
   /// In ru, this message translates to:
-  /// **'договориться о приёме'**
+  /// **'договориться о приёме'**
   String get planExampleDoctorGoal12;
 
   /// Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки.
@@ -3024,7 +3024,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Приём у врача»: название дня 2 — идёт после «День 2 · ».
   ///
   /// In ru, this message translates to:
-  /// **'Приём у врача'**
+  /// **'Приём у врача'**
   String get planExampleDoctorDay2;
 
   /// Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки.
@@ -3036,7 +3036,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки.
   ///
   /// In ru, this message translates to:
-  /// **'ответить про лекарства'**
+  /// **'ответить про лекарства'**
   String get planExampleDoctorGoal22;
 
   /// Витрина 21-1, пример «Приём у врача», день 2: что человек скажет после дня — строка у латунной точки.
@@ -3084,7 +3084,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки.
   ///
   /// In ru, this message translates to:
-  /// **'рассказать о себе'**
+  /// **'рассказать о себе'**
   String get planExampleInterviewGoal11;
 
   /// Витрина 21-1, пример «Собеседование», день 1: что человек скажет после дня — строка у латунной точки.
@@ -3102,7 +3102,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Собеседование»: название дня 2 — идёт после «День 2 · ».
   ///
   /// In ru, this message translates to:
-  /// **'Вопросы о работе'**
+  /// **'Вопросы о работе'**
   String get planExampleInterviewDay2;
 
   /// Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки.
@@ -3114,7 +3114,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки.
   ///
   /// In ru, this message translates to:
-  /// **'ответить про сроки'**
+  /// **'ответить про сроки'**
   String get planExampleInterviewGoal22;
 
   /// Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки.
@@ -3138,7 +3138,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки.
   ///
   /// In ru, this message translates to:
-  /// **'спросить про бонусы'**
+  /// **'спросить про бонусы'**
   String get planExampleInterviewGoal32;
 
   /// Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки.
@@ -3156,7 +3156,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Звонок арендодателю»: название дня 1 — идёт после «День 1 · ».
   ///
   /// In ru, this message translates to:
-  /// **'Про залог'**
+  /// **'Про залог'**
   String get planExampleLandlordDay1;
 
   /// Витрина 21-1, пример «Звонок арендодателю», день 1: что человек скажет после дня — строка у латунной точки.
@@ -3180,7 +3180,7 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Звонок арендодателю»: название дня 2 — идёт после «День 2 · ».
   ///
   /// In ru, this message translates to:
-  /// **'Про ремонт'**
+  /// **'Про ремонт'**
   String get planExampleLandlordDay2;
 
   /// Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки.
@@ -3198,25 +3198,25 @@ abstract class AppLocalizations {
   /// Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки.
   ///
   /// In ru, this message translates to:
-  /// **'договориться о времени'**
+  /// **'договориться о времени'**
   String get planExampleLandlordGoal23;
 
   /// Витрина 21-1, пример «Звонок арендодателю»: название дня 3 — идёт после «День 3 · ».
   ///
   /// In ru, this message translates to:
-  /// **'Про договор'**
+  /// **'Про договор'**
   String get planExampleLandlordDay3;
 
   /// Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки.
   ///
   /// In ru, this message translates to:
-  /// **'спросить про срок'**
+  /// **'спросить про срок'**
   String get planExampleLandlordGoal31;
 
   /// Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки.
   ///
   /// In ru, this message translates to:
-  /// **'уточнить про питомцев'**
+  /// **'уточнить про питомцев'**
   String get planExampleLandlordGoal32;
 
   /// Витрина 21-1, пример «Звонок арендодателю», день 3: что человек скажет после дня — строка у латунной точки.
@@ -3264,7 +3264,7 @@ abstract class AppLocalizations {
   /// Бровь шапки плана, 11/700 caps (кадр 21-2, plan.header.brow).
   ///
   /// In ru, this message translates to:
-  /// **'План · день {n} из {total}'**
+  /// **'План · день {n} из {total}'**
   String planHeaderBrow(int n, int total);
 
   /// Плита дня, лейбл латунью (plan.plate.label); окно дня — бровь «ДЕНЬ 2» светлой латунью на плите (23-0a…0c).
@@ -3306,7 +3306,7 @@ abstract class AppLocalizations {
   /// Плита дня, этап (plan.plate.stage.listen); окно дня — ряд этапа на плите (23-0a…0c).
   ///
   /// In ru, this message translates to:
-  /// **'Слушаю и отвечаю'**
+  /// **'Слушаю и отвечаю'**
   String get planPlateStageListen;
 
   /// Плита дня, этап (plan.plate.stage.speak); окно дня — ряд этапа на плите (23-0a…0c).
@@ -3348,7 +3348,7 @@ abstract class AppLocalizations {
   /// Плита дня, вторая строка брошенного этапа (plan.plate.stage.sub.unfinished); cards — planCardsCount. Оценки минут в контракте нет — часть «≈ N мин» не рисуется, как и вся строка plan.plate.meta «{n} карточек · ≈ {min} минут» (вопрос архитектору).
   ///
   /// In ru, this message translates to:
-  /// **'не закончен · {cards}'**
+  /// **'не закончен · {cards}'**
   String planPlateStageSubUnfinished(String cards);
 
   /// Плита дня, кнопка (plan.plate.cta.start); окно дня — одна кнопка внизу у не начатого дня (allowed_action = start, 23-0a).
@@ -3420,19 +3420,19 @@ abstract class AppLocalizations {
   /// Вторая строка подвала закрытого дня, терракотой (кадр 21-4, plan.closed.return).
   ///
   /// In ru, this message translates to:
-  /// **'{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}'**
+  /// **'{k, plural, one{{k} карточка вернётся в день {n} →} few{{k} карточки вернутся в день {n} →} many{{k} карточек вернутся в день {n} →} other{{k} карточки вернутся в день {n} →}}'**
   String planClosedReturn(int n, int k);
 
   /// Строка маршрута (plan.route.day.repeat.sub).
   ///
   /// In ru, this message translates to:
-  /// **'слова и фразы дней {a}–{b}'**
+  /// **'слова и фразы дней {a}–{b}'**
   String planRouteDayRepeatSub(int a, int b);
 
   /// Строка маршрута, когда повторению предшествует один день ситуации (день 1 → повторение день 2).
   ///
   /// In ru, this message translates to:
-  /// **'слова и фразы дня {a}'**
+  /// **'слова и фразы дня {a}'**
   String planRouteDayRepeatSubOne(int a);
 
   /// Заголовок дня на маршруте (кадры 21-2b, 22-4b): номер дня и название; мета стоит строкой ниже. Окно дня — строка компактной шапки 56 «День 2 · Приём у врача» (23-0a…0d, прокручено).
@@ -3516,7 +3516,7 @@ abstract class AppLocalizations {
   /// Кадр 21-7 (plan.done.collection); name — сервер.
   ///
   /// In ru, this message translates to:
-  /// **'Слова и фразы плана остались в коллекции «{name}» — они будут приходить на повторение'**
+  /// **'Слова и фразы плана остались в коллекции «{name}» — они будут приходить на повторение'**
   String planDoneCollection(String name);
 
   /// Кадр 21-7 (plan.done.cta).
@@ -3588,7 +3588,7 @@ abstract class AppLocalizations {
   /// Кадры 21-10, 22-3b (plan.date.option.other.sub, entry.date.option.other.sub).
   ///
   /// In ru, this message translates to:
-  /// **'выбрать в календаре'**
+  /// **'выбрать в календаре'**
   String get planDateOptionOtherSub;
 
   /// Кадр 21-10 (plan.date.cta).
@@ -3606,7 +3606,7 @@ abstract class AppLocalizations {
   /// Кадр 21-10, план с датой: снять дату (event_date: null). Строки в таблице нет — добавлена нарядом PLAN-UI по контракту PATCH /schedule.
   ///
   /// In ru, this message translates to:
-  /// **'Без даты'**
+  /// **'Без даты'**
   String get planDateRemove;
 
   /// Кадр 21-11 (plan.new.title).
@@ -3618,7 +3618,7 @@ abstract class AppLocalizations {
   /// Кадр 21-11 (plan.new.body); name — сервер.
   ///
   /// In ru, this message translates to:
-  /// **'Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение'**
+  /// **'Этот план завершится на дне {n} из {total}. Всё, что уже в работе, останется в коллекции «{name}» и будет приходить на повторение'**
   String planNewBody(int n, int total, String name);
 
   /// Кадр 21-11 (plan.new.cta).
@@ -3642,13 +3642,13 @@ abstract class AppLocalizations {
   /// Кадр 21-12 (plan.delete.body); name — сервер.
   ///
   /// In ru, this message translates to:
-  /// **'План исчезнет из истории. Коллекция «{name}» и её слова останутся'**
+  /// **'План исчезнет из истории. Коллекция «{name}» и её слова останутся'**
   String planDeleteBody(String name);
 
   /// Кадр 21-12 у плана, у которого коллекции ещё нет (ни один день не закрыт).
   ///
   /// In ru, this message translates to:
-  /// **'План исчезнет из истории'**
+  /// **'План исчезнет из истории'**
   String get planDeleteBodyNoCollection;
 
   /// Кадр 21-12, терракота (plan.delete.confirm).
@@ -3660,7 +3660,7 @@ abstract class AppLocalizations {
   /// Кадр 21-14 (plan.overdue.meta): «Пройдено 4 дня из 7»; days — planDaysCount. Части «фраз и слов в работе» в контракте нет.
   ///
   /// In ru, this message translates to:
-  /// **'Пройдено {days} из {total}'**
+  /// **'Пройдено {days} из {total}'**
   String planOverdueMeta(String days, int total);
 
   /// Кадр 21-14 (plan.overdue.finish).
@@ -3678,7 +3678,7 @@ abstract class AppLocalizations {
   /// Кадр 21-2c (plan.hint.first.start). stage — имя первого ряда плиты дня из stages[] сервера: «Слова» у дня-сцены, «Повторение» у повторения, «Вспомнить» у репетиции (приёмка CLIENT-CONV-1c 22.09).
   ///
   /// In ru, this message translates to:
-  /// **'Начни с этапа «{stage}». Остальные откроются по порядку'**
+  /// **'Начни с этапа «{stage}». Остальные откроются по порядку'**
   String planHintFirstStart(String stage);
 
   /// Подсказка первого плана под заголовком маршрута, один раз (кадр 21-2c, plan.hint.first.route).
@@ -3696,7 +3696,7 @@ abstract class AppLocalizations {
   /// Кадр 21-4c (plan.hint.first.return).
   ///
   /// In ru, this message translates to:
-  /// **'Эти карточки придут в следующий день ещё раз — так они и запоминаются'**
+  /// **'Эти карточки придут в следующий день ещё раз — так они и запоминаются'**
   String get planHintFirstReturn;
 
   /// Кадр 21-8 (plan.sheet.title).
@@ -3720,7 +3720,7 @@ abstract class AppLocalizations {
   /// Таб без кэша, когда сервер не ответил (§6: состояние с «Повторить»). Строки в таблице нет — добавлена нарядом PLAN-UI.
   ///
   /// In ru, this message translates to:
-  /// **'Не получилось загрузить план'**
+  /// **'Не получилось загрузить план'**
   String get planTabLoadFailedTitle;
 
   /// Кнопка «Повторить» на табе и на плите (entry.day.failed.retry).
@@ -3738,32 +3738,38 @@ abstract class AppLocalizations {
   /// Вопрос шага цели, Literata 26 (кадр 22-1, entry.goal.title).
   ///
   /// In ru, this message translates to:
-  /// **'К чему готовишься?'**
+  /// **'К чему готовишься?'**
   String get planEntryGoalTitle;
 
   /// Подпись под вопросом цели (кадр 22-1, entry.goal.sub).
   ///
   /// In ru, this message translates to:
-  /// **'Расскажи ситуацию своими словами: что будет, с кем говоришь, чего боишься'**
+  /// **'Расскажи ситуацию своими словами: что будет, с кем говоришь, чего боишься'**
   String get planEntryGoalSub;
 
-  /// Печатающийся плейсхолдер поля цели, кадр 1 — примеры НЕ те, что в списке историй (кадр 22-1, entry.goal.typing.1).
+  /// Пример-подсказка в пустом поле цели, 1 из 4 — с деталями о себе: профессия, опыт (наряд CLIENT-22-1 §1b). Сменяются плавно раз в 4 с, пока поле пустое и не идёт диктовка; первый символ останавливает (кадр 22-1).
   ///
   /// In ru, this message translates to:
-  /// **'Собеседование в пятницу, боюсь…'**
-  String get planEntryGoalTyping1;
+  /// **'Собеседование на повара в пятницу. Работал три года в ресторане'**
+  String get planEntryGoalExample1;
 
-  /// Печатающийся плейсхолдер поля цели, кадр 2 (кадр 22-1, entry.goal.typing.2).
+  /// Пример-подсказка в пустом поле цели, 2 из 4 — город, что болит, что нужно (кадр 22-1, CLIENT-22-1 §1b).
   ///
   /// In ru, this message translates to:
-  /// **'Звоню в банк, не понимаю по телефону…'**
-  String get planEntryGoalTyping2;
+  /// **'Приём у врача в Берлине — болит спина, нужен рецепт'**
+  String get planEntryGoalExample2;
 
-  /// Печатающийся плейсхолдер поля цели, кадр 3 (кадр 22-1, entry.goal.typing.3).
+  /// Пример-подсказка в пустом поле цели, 3 из 4 — город, срок, с кем (кадр 22-1, CLIENT-22-1 §1b).
   ///
   /// In ru, this message translates to:
-  /// **'Иду к врачу…'**
-  String get planEntryGoalTyping3;
+  /// **'Снять квартиру в Лиссабоне на год, с собакой'**
+  String get planEntryGoalExample3;
+
+  /// Пример-подсказка в пустом поле цели, 4 из 4 — что случилось и кто ты для банка (кадр 22-1, CLIENT-22-1 §1b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Звонок в банк: заблокировали карту, я не резидент'**
+  String get planEntryGoalExample4;
 
   /// Метка списка историй под полем цели (кадр 22-1, entry.goal.stories.title).
   ///
@@ -3774,26 +3780,32 @@ abstract class AppLocalizations {
   /// История «так пишут другие» — тап подставляет её в поле (кадр 22-1, entry.goal.story.1).
   ///
   /// In ru, this message translates to:
-  /// **'Собеседование в пятницу, боюсь вопросов про опыт'**
+  /// **'Собеседование в пятницу, боюсь вопросов про опыт'**
   String get planEntryGoalStory1;
 
   /// История «так пишут другие» (кадр 22-1, entry.goal.story.2).
   ///
   /// In ru, this message translates to:
-  /// **'К врачу с ребёнком, первый раз в местной клинике'**
+  /// **'К врачу с ребёнком, первый раз в местной клинике'**
   String get planEntryGoalStory2;
 
   /// История «так пишут другие» (кадр 22-1, entry.goal.story.3).
   ///
   /// In ru, this message translates to:
-  /// **'Звонок арендодателю про залог'**
+  /// **'Звонок арендодателю про залог'**
   String get planEntryGoalStory3;
 
-  /// Подсказка под коротким ответом; НЕ блокирует «Далее» (кадр 22-1c, entry.goal.short.hint).
+  /// Спутник под полем цели — всегда виден, Inter 13 tertiary: подсказывает написать о себе, чтобы план собрался под ученика (наряд CLIENT-22-1 §1a, кадр 22-1).
   ///
   /// In ru, this message translates to:
-  /// **'Добавь, с кем и что важно — план будет точнее'**
-  String get planEntryGoalShortHint;
+  /// **'Кто ты и что важно — профессия, опыт, город. План соберётся под это.'**
+  String get planEntryGoalCompanion;
+
+  /// Спутник под полем цели при короткой цели — меньше четырёх слов после ввода или диктовки; «Далее» НЕ блокирует. Четыре слова и больше — снова обычный спутник (наряд CLIENT-22-1 §1c, кадр 22-1c).
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавь пару слов о себе: профессия, опыт — и план будет про тебя'**
+  String get planEntryGoalCompanionShort;
 
   /// Подпись у микрофона в покое (кадр 22-1, entry.goal.dictate).
   ///
@@ -3810,7 +3822,7 @@ abstract class AppLocalizations {
   /// Таймер и приглашение над волной записи (кадр 22-1, entry.goal.listening).
   ///
   /// In ru, this message translates to:
-  /// **'{time} · говори, я слушаю'**
+  /// **'{time} · говори, я слушаю'**
   String planEntryGoalListening(String time);
 
   /// Лента ответов (entry.tape.goal).
@@ -3840,7 +3852,7 @@ abstract class AppLocalizations {
   /// Вопрос шага языка (кадр 22-2, entry.language.title).
   ///
   /// In ru, this message translates to:
-  /// **'На каком языке говорить?'**
+  /// **'На каком языке говорить?'**
   String get planEntryLanguageTitle;
 
   /// Метка зоны языков (кадр 22-2, entry.language.label).
@@ -3876,13 +3888,13 @@ abstract class AppLocalizations {
   /// Уровень описан тем, что человек умеет (кадр 22-2, entry.level.intermediate.sub).
   ///
   /// In ru, this message translates to:
-  /// **'понимаю простую речь, говорю с ошибками'**
+  /// **'понимаю простую речь, говорю с ошибками'**
   String get planEntryLevelIntermediateSub;
 
   /// Вопрос шага длины плана (кадр 22-3a, entry.days.title).
   ///
   /// In ru, this message translates to:
-  /// **'Сколько дней до разговора?'**
+  /// **'Сколько дней до разговора?'**
   String get planEntryDaysTitle;
 
   /// Состав длины плана — ситуации (кадр 22-3a, entry.days.scenes).
@@ -3930,7 +3942,7 @@ abstract class AppLocalizations {
   /// Подпись варианта без даты (кадр 22-3b, entry.date.unknown.sub).
   ///
   /// In ru, this message translates to:
-  /// **'план без даты, дни идут подряд'**
+  /// **'план без даты, дни идут подряд'**
   String get planEntryDateUnknownSub;
 
   /// Третий вариант выбора даты (кадр 22-3b, entry.date.other).
@@ -3942,13 +3954,13 @@ abstract class AppLocalizations {
   /// Подпись варианта «Другая дата» (кадр 22-3b, entry.date.other.sub).
   ///
   /// In ru, this message translates to:
-  /// **'выбрать в календаре'**
+  /// **'выбрать в календаре'**
   String get planEntryDateOtherSub;
 
   /// Строка следствия под выбором даты (кадр 22-3b, entry.date.rehearsal.on).
   ///
   /// In ru, this message translates to:
-  /// **'Репетиция встанет на {date} — день перед разговором'**
+  /// **'Репетиция встанет на {date} — день перед разговором'**
   String planEntryDateRehearsalOn(String date);
 
   /// Кнопка шага даты — называет результат, а не «Готово» (кадр 22-3b, entry.date.cta).
@@ -3978,19 +3990,19 @@ abstract class AppLocalizations {
   /// Прелоадер 22-4a и 22-5a: первая строка статуса по кругу (om-pre-line1).
   ///
   /// In ru, this message translates to:
-  /// **'Подбираю ситуации под твой разговор'**
+  /// **'Подбираю ситуации под твой разговор'**
   String get planEntryPreviewLine1;
 
   /// Прелоадер 22-4a и 22-5a: вторая строка статуса (om-pre-line2).
   ///
   /// In ru, this message translates to:
-  /// **'Раскладываю их по дням'**
+  /// **'Раскладываю их по дням'**
   String get planEntryPreviewLine2;
 
   /// Прелоадер 22-4a и 22-5a: третья строка статуса (om-pre-line3).
   ///
   /// In ru, this message translates to:
-  /// **'Собираю слова и фразы'**
+  /// **'Собираю слова и фразы'**
   String get planEntryPreviewLine3;
 
   /// Превью 22-4b: метка плиты с пересказом плана (summary сервера).
@@ -4014,19 +4026,19 @@ abstract class AppLocalizations {
   /// Заголовок неудачной сборки (кадр 22-4c, entry.preview.error.title).
   ///
   /// In ru, this message translates to:
-  /// **'План не собрался'**
+  /// **'План не собрался'**
   String get planEntryPreviewErrorTitle;
 
   /// Что случилось при неудачной сборке (кадр 22-4c, entry.preview.error.what).
   ///
   /// In ru, this message translates to:
-  /// **'Сеть пропала на середине'**
+  /// **'Сеть пропала на середине'**
   String get planEntryPreviewErrorWhat;
 
   /// Что уцелело при неудачной сборке (кадр 22-4c, entry.preview.error.sub).
   ///
   /// In ru, this message translates to:
-  /// **'Ответы сохранены — попробуй ещё раз, заново рассказывать не придётся'**
+  /// **'Ответы сохранены — попробуй ещё раз, заново рассказывать не придётся'**
   String get planEntryPreviewErrorSub;
 
   /// Кнопка неудачной сборки; повтор не уводит на первый шаг (кадр 22-4c, entry.preview.error.retry).
@@ -4044,19 +4056,19 @@ abstract class AppLocalizations {
   /// Цитата ответа человека в кадре «цель непонятна» (кадр 22-4d, entry.preview.unclear.quote).
   ///
   /// In ru, this message translates to:
-  /// **'«{goal}» — это про что?'**
+  /// **'«{goal}» — это про что?'**
   String planEntryPreviewUnclearQuote(String goal);
 
   /// Три примера того, чего не хватает (кадр 22-4d, entry.preview.unclear.sub).
   ///
   /// In ru, this message translates to:
-  /// **'Напиши, где будешь говорить и с кем: приём у врача, звонок в банк, разговор с соседом'**
+  /// **'Напиши, где будешь говорить и с кем: приём у врача, звонок в банк, разговор с соседом'**
   String get planEntryPreviewUnclearSub;
 
   /// Кнопка возврата к полю цели с сохранённым текстом (кадр 22-4d, entry.preview.unclear.cta).
   ///
   /// In ru, this message translates to:
-  /// **'К цели'**
+  /// **'К цели'**
   String get planEntryPreviewUnclearCta;
 
   /// Кадр 22-6 (entry.push.title).
@@ -4068,13 +4080,13 @@ abstract class AppLocalizations {
   /// Тело уведомления «План готов»: срок до события и первый день (кадр 22-6, entry.push.body).
   ///
   /// In ru, this message translates to:
-  /// **'{until}. День 1 — «{dayTitle}»'**
+  /// **'{until}. День 1 — «{dayTitle}»'**
   String planEntryPushBody(String until, String dayTitle);
 
   /// Тело уведомления у плана без даты события (кадр 22-6, entry.push.body.nodate).
   ///
   /// In ru, this message translates to:
-  /// **'{days}. День 1 — «{dayTitle}»'**
+  /// **'{days}. День 1 — «{dayTitle}»'**
   String planEntryPushBodyNoDate(String days, String dayTitle);
 
   /// Уведомление «день собран» (кадр 22-6 — эталон вида); без push — баннер в приложении при возврате.
@@ -4086,7 +4098,7 @@ abstract class AppLocalizations {
   /// Тело уведомления «день собран».
   ///
   /// In ru, this message translates to:
-  /// **'«{title}» — можно начинать'**
+  /// **'«{title}» — можно начинать'**
   String planNotifyDayReadyBody(String title);
 
   /// Ежедневное напоминание в час обычного захода (локальное уведомление, не чаще раза в сутки).
@@ -4098,7 +4110,7 @@ abstract class AppLocalizations {
   /// Тело ежедневного напоминания.
   ///
   /// In ru, this message translates to:
-  /// **'«{title}» — начни с того места, где остановился'**
+  /// **'«{title}» — начни с того места, где остановился'**
   String planNotifyReminderBody(String title);
 
   /// Уведомление в день события: «Сегодня приём»; event — слово события сервера строчными.
@@ -4116,19 +4128,19 @@ abstract class AppLocalizations {
   /// Тело уведомления в день события.
   ///
   /// In ru, this message translates to:
-  /// **'Скажи сам перед разговором — прогони его вслух'**
+  /// **'Скажи сам перед разговором — прогони его вслух'**
   String get planNotifyEventTodayBody;
 
   /// Локальное уведомление «дни пропущены»: наутро после даты дня, который не пройден.
   ///
   /// In ru, this message translates to:
-  /// **'День {n} ждёт со вчера'**
+  /// **'День {n} ждёт со вчера'**
   String planNotifySkippedTitle(int n);
 
   /// Тело уведомления «дни пропущены» — говорит, что сделала система, без укора.
   ///
   /// In ru, this message translates to:
-  /// **'Маршрут сдвинулся: следующие дни пойдут от сегодня'**
+  /// **'Маршрут сдвинулся: следующие дни пойдут от сегодня'**
   String get planNotifySkippedBody;
 
   /// Баннер уведомления в приложении (вид кадра 22-6): время справа от заголовка.
@@ -4146,7 +4158,7 @@ abstract class AppLocalizations {
   /// Вход офлайн (§6): нельзя начать сборку. Строки в таблице нет — добавлена нарядом PLAN-UI.
   ///
   /// In ru, this message translates to:
-  /// **'Без сети план не собрать'**
+  /// **'Без сети план не собрать'**
   String get planEntryOffline;
 
   /// Окно дня (23-0a…0c): подпись стрелки назад на плите для читалки экрана.
@@ -4158,7 +4170,7 @@ abstract class AppLocalizations {
   /// Окно дня, плита (23-0a): слово состояния дня под названием — «не начат · ≈ 20 минут».
   ///
   /// In ru, this message translates to:
-  /// **'не начат'**
+  /// **'не начат'**
   String get planWindowStateNotStarted;
 
   /// Окно дня, плита (23-0b): слово состояния дня под названием — «идёт · ≈ 12 мин».
@@ -4230,25 +4242,25 @@ abstract class AppLocalizations {
   /// Окно дня, предложение целей (23-0a…0c): последняя цель через «и» — «… и спросить про ограничения».
   ///
   /// In ru, this message translates to:
-  /// **'{head} и {last}'**
+  /// **'{head} и {last}'**
   String planWindowGoalsJoinLast(String head, String last);
 
   /// Шит слова (23-0e): лейбл caps над репликой дня, где звучит слово (usage сервера), слово в реплике латунью.
   ///
   /// In ru, this message translates to:
-  /// **'В разговоре'**
+  /// **'В разговоре'**
   String get planWindowSheetTalk;
 
   /// Шит слова (23-0e): строка состояния слова, которое ещё не проходили (state = pending) — форма среднего рода от «не начат».
   ///
   /// In ru, this message translates to:
-  /// **'не начато'**
+  /// **'не начато'**
   String get planWindowSheetNotStarted;
 
   /// Шит слова (23-0e): часть строки состояния слова, проваленного дважды — «пройдено · вернётся в день 3»; n — returns_day сервера.
   ///
   /// In ru, this message translates to:
-  /// **'вернётся в день {n}'**
+  /// **'вернётся в день {n}'**
   String planWindowSheetReturnsOn(int n);
 
   /// Шит слова (23-0e): часть строки состояния, когда сервер не назвал день возврата (returns_day = null).
@@ -4290,49 +4302,49 @@ abstract class AppLocalizations {
   /// Сессия, вход в этап «Слова» (30-1): описание под названием; число — единицы этапа.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух'**
+  /// **'{n, plural, one{{n} слово дня} few{{n} слова дня} many{{n} слов дня} other{{n} слова дня}} — посмотри, послушай и скажи вслух'**
   String planSessionDescWords(int n);
 
   /// Сессия, вход в этап «Фразы» (30-1): описание под названием; число — каркасы этапа.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся'**
+  /// **'{n, plural, one{{n} фраза дня} few{{n} фразы дня} many{{n} фраз дня} other{{n} фразы дня}} — одно окно меняется, фраза остаётся'**
   String planSessionDescPhrases(int n);
 
   /// Сессия, вход в этап «Диалог» (30-1): описание.
   ///
   /// In ru, this message translates to:
-  /// **'Разговор по шагам: пойми реплику и ответь фразами дня'**
+  /// **'Разговор по шагам: пойми реплику и ответь фразами дня'**
   String get planSessionDescDialogue;
 
   /// Сессия, вход в этап «Слушаю и отвечаю» (30-1): описание.
   ///
   /// In ru, this message translates to:
-  /// **'Весь разговор на слух, потом вопросы о нём'**
+  /// **'Весь разговор на слух, потом вопросы о нём'**
   String get planSessionDescListen;
 
   /// Сессия, вход в этап «Говорю сам» (30-1): описание по кадру 30-1b; роль без склонения — «собеседник».
   ///
   /// In ru, this message translates to:
-  /// **'Собеседник спрашивает — отвечай про себя, своими словами. Каркасы ты знаешь, окно — твоё'**
+  /// **'Собеседник спрашивает — отвечай про себя, своими словами. Каркасы ты знаешь, окно — твоё'**
   String get planSessionDescSpeak;
 
   /// Сессия, вход в этап (30-1): переключатель; хранится на телефоне на план.
   ///
   /// In ru, this message translates to:
-  /// **'Без подсказок'**
+  /// **'Без подсказок'**
   String get planSessionNoHints;
 
   /// Сессия, вход в этап (30-1): подпись под переключателем «Без подсказок».
   ///
   /// In ru, this message translates to:
-  /// **'Диалог и «Говорю сам» — сразу голосом'**
+  /// **'Диалог и «Говорю сам» — сразу голосом'**
   String get planSessionNoHintsSub;
 
   /// Вход в день-репетицию (30-1, наряд FIX-3 §8): подпись тумблера — про разговор; «Диалог» и «Говорю сам» в этом дне не идут.
   ///
   /// In ru, this message translates to:
-  /// **'В разговоре — без подсказок, текст собеседника закрыт'**
+  /// **'В разговоре — без подсказок, текст собеседника закрыт'**
   String get planSessionNoHintsTalk;
 
   /// Сессия, вход в этап (30-1): кнопка.
@@ -4386,7 +4398,7 @@ abstract class AppLocalizations {
   /// Сессия, «Повтори слово» (31-2): голос спутника под заданием; роль собеседника в именительном со строчной.
   ///
   /// In ru, this message translates to:
-  /// **'Скажи, как слышишь — {role} поймёт'**
+  /// **'Скажи, как слышишь — {role} поймёт'**
   String planSessionCompanionSayWord(String role);
 
   /// Сессия, выбор слово → перевод (31-3) и обратный перевод фразы (32-3): задание.
@@ -4410,19 +4422,19 @@ abstract class AppLocalizations {
   /// Сессия, сборка слова из плиток (31-6): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Собери из частей'**
+  /// **'Собери из частей'**
   String get planSessionTaskAssembleParts;
 
   /// Сессия, слово в окне (31-7): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Вставь слово в окно'**
+  /// **'Вставь слово в окно'**
   String get planSessionTaskInsertWord;
 
   /// Сессия, знакомство с каркасом (32-1): задание (наряд SESSION-1b′).
   ///
   /// In ru, this message translates to:
-  /// **'Посмотри и послушай'**
+  /// **'Посмотри и послушай'**
   String get planSessionTaskLookListen;
 
   /// Сессия, перевод → сборка (32-2): задание.
@@ -4434,7 +4446,7 @@ abstract class AppLocalizations {
   /// Сессия, окно · вставь наполнение (32-4): задание.
   ///
   /// In ru, this message translates to:
-  /// **'Вставь в окно'**
+  /// **'Вставь в окно'**
   String get planSessionTaskInsert;
 
   /// Сессия, «Повтори вслух» (32-6): задание.
@@ -4446,13 +4458,13 @@ abstract class AppLocalizations {
   /// Сессия, «Скажи целиком» (32-7): задание — фраза говорится с каждым значением окна по очереди (наряд FIX-1 §6).
   ///
   /// In ru, this message translates to:
-  /// **'Скажи фразу с каждым значением'**
+  /// **'Скажи фразу с каждым значением'**
   String get planSessionTaskSayEachMeaning;
 
   /// Сессия, «Скажи целиком» (32-7): подпись под заданием в последнем круге — значение в окне своё (наряд FIX-1 §6).
   ///
   /// In ru, this message translates to:
-  /// **'а теперь со своим словом'**
+  /// **'а теперь со своим словом'**
   String get planSessionOwnWordNow;
 
   /// Сессия в режиме повтора («Ещё раз» с итога дня): состояние этапа в списке на входе (наряд FIX-1 §5).
@@ -4464,7 +4476,7 @@ abstract class AppLocalizations {
   /// Сессия, комбинация (32-8): задание над тремя целыми предложениями-ответами (наряд SESSION-1b′).
   ///
   /// In ru, this message translates to:
-  /// **'Что ты ответишь?'**
+  /// **'Что ты ответишь?'**
   String get planSessionTaskWhatAnswer;
 
   /// Сессия, лист вопроса (30-9, 31-3): бровь над словом.
@@ -4482,7 +4494,7 @@ abstract class AppLocalizations {
   /// Сессия, лист вопроса «На слух» (31-5, 32-5): бровь.
   ///
   /// In ru, this message translates to:
-  /// **'На слух'**
+  /// **'На слух'**
   String get planSessionBrowByEar;
 
   /// Сессия, лист вопроса (31-7): бровь над строкой с окном.
@@ -4518,7 +4530,7 @@ abstract class AppLocalizations {
   /// Сессия, «На слух» (31-5): текст вопроса в листе.
   ///
   /// In ru, this message translates to:
-  /// **'Что ты услышал?'**
+  /// **'Что ты услышал?'**
   String get planSessionWhatHeard;
 
   /// Сессия, знакомство со словом (31-1) и каркасом (32-1): кнопка.
@@ -4542,19 +4554,19 @@ abstract class AppLocalizations {
   /// Сессия, сборка слова (31-6): подпись справа от перевода.
   ///
   /// In ru, this message translates to:
-  /// **'по частям'**
+  /// **'по частям'**
   String get planSessionByParts;
 
   /// Сессия, микрофон (30-3) в покое: подпись над кнопкой.
   ///
   /// In ru, this message translates to:
-  /// **'тап — говорить'**
+  /// **'тап — говорить'**
   String get planSessionMicTap;
 
   /// Сессия, микрофон (30-3) «слушаю · пусто»: подпись.
   ///
   /// In ru, this message translates to:
-  /// **'говори, я слушаю'**
+  /// **'говори, я слушаю'**
   String get planSessionMicListening;
 
   /// Сессия, микрофон (30-3) «услышал»: подпись над кнопкой-галкой.
@@ -4572,13 +4584,13 @@ abstract class AppLocalizations {
   /// Сессия, микрофон (30-3) «не расслышал»: подпись.
   ///
   /// In ru, this message translates to:
-  /// **'не расслышал, ещё раз'**
+  /// **'не расслышал, ещё раз'**
   String get planSessionMicMissed;
 
   /// Сессия, «Повтори слово» (31-2c): подпись эха под услышанным словом.
   ///
   /// In ru, this message translates to:
-  /// **'услышал — так же, как в записи'**
+  /// **'услышал — так же, как в записи'**
   String get planSessionEcho;
 
   /// Сессия, микрофон (30-3) и «Нужен микрофон»: текст над кнопкой — карточка закрывается «пропущено».
@@ -4602,7 +4614,7 @@ abstract class AppLocalizations {
   /// Сессия, «нет разрешения · экран» (30-3): текст под заголовком.
   ///
   /// In ru, this message translates to:
-  /// **'Без него этапы «Слушаю и отвечаю» и «Говорю сам» не пройти. Слова и фразы можно делать выбором и плитками.'**
+  /// **'Без него этапы «Слушаю и отвечаю» и «Говорю сам» не пройти. Слова и фразы можно делать выбором и плитками.'**
   String get planSessionNoMicBody;
 
   /// Сессия, «нет разрешения · экран» (30-3): кнопка — спросить систему или открыть настройки.
@@ -4632,7 +4644,7 @@ abstract class AppLocalizations {
   /// Сессия, шит выхода (30-8): одно предложение; кадровое «вернёшься к пятой» требует порядкового числительного в падеже — заменено «с того же места».
   ///
   /// In ru, this message translates to:
-  /// **'Сделанные карточки этапа «{stage}» останутся закрытыми — продолжишь с того же места.'**
+  /// **'Сделанные карточки этапа «{stage}» останутся закрытыми — продолжишь с того же места.'**
   String planSessionExitBody(String stage);
 
   /// Сессия, шит выхода (30-8): остаться в этапе, текст латунью.
@@ -4650,13 +4662,13 @@ abstract class AppLocalizations {
   /// Сессия: баннер под шапкой, пока ответ ждёт отправки (очередь отложенных ответов).
   ///
   /// In ru, this message translates to:
-  /// **'нет связи — ответ отправится, как только сеть вернётся'**
+  /// **'нет связи — ответ отправится, как только сеть вернётся'**
   String get planSessionOffline;
 
   /// Сессия: вход, когда сервер не ответил.
   ///
   /// In ru, this message translates to:
-  /// **'День не загрузился'**
+  /// **'День не загрузился'**
   String get planSessionLoadFailed;
 
   /// Сессия, шапка (30-2) этапов «Диалог» и «Говорю сам»: сколько обменов ещё не закрыто.
@@ -4710,19 +4722,19 @@ abstract class AppLocalizations {
   /// Сессия, строка задания 33-6: «Не понял» в пузыре собеседника и медленный повтор. Канва — «Слушай назначение»: текста задания контракт не отдаёт.
   ///
   /// In ru, this message translates to:
-  /// **'Не понял — переспроси'**
+  /// **'Не понял — переспроси'**
   String get planSessionTaskRescue;
 
   /// Сессия, 33-2: подпись под чипами наполнений — верен любой.
   ///
   /// In ru, this message translates to:
-  /// **'любое — твой ответ'**
+  /// **'любое — твой ответ'**
   String get planSessionAnyChip;
 
   /// Сессия, 33-6: кнопка 44 в пузыре собеседника — переспросить.
   ///
   /// In ru, this message translates to:
-  /// **'Не понял'**
+  /// **'Не понял'**
   String get planSessionNotUnderstood;
 
   /// Сессия: подпись волны медленного повтора (33-6) и кнопка «медленно» 44 в листе 34-6.
@@ -4740,7 +4752,7 @@ abstract class AppLocalizations {
   /// Сессия, 34-1: текст над кнопкой — пауза после каждого обмена.
   ///
   /// In ru, this message translates to:
-  /// **'По частям'**
+  /// **'По частям'**
   String get planSessionByPartsAction;
 
   /// Сессия, 34-1: кнопка на паузе «по частям» — следующий обмен.
@@ -4776,7 +4788,7 @@ abstract class AppLocalizations {
   /// Сессия, 34-1: подпись пары кружков — кто говорит в разговоре.
   ///
   /// In ru, this message translates to:
-  /// **'{role} и ты'**
+  /// **'{role} и ты'**
   String planSessionPlayerRoles(String role);
 
   /// Сессия, 34-1: визит проигран до конца.
@@ -4794,7 +4806,7 @@ abstract class AppLocalizations {
   /// Сессия, строка задания 34-2: вопрос о визите по памяти.
   ///
   /// In ru, this message translates to:
-  /// **'Что ты понял?'**
+  /// **'Что ты понял?'**
   String get planSessionTaskWhatUnderstood;
 
   /// Сессия, бровь листа вопроса (34-2, 34-7).
@@ -4806,7 +4818,7 @@ abstract class AppLocalizations {
   /// Сессия, 34-2: подпись под вопросом — переслушать нельзя.
   ///
   /// In ru, this message translates to:
-  /// **'по памяти · звука нет'**
+  /// **'по памяти · звука нет'**
   String get planSessionFromMemory;
 
   /// Сессия, строка задания 34-3: разбор визита с подсветкой ответов.
@@ -4818,7 +4830,7 @@ abstract class AppLocalizations {
   /// Сессия, строка задания 34-5: три озвучки без текста (наряд SESSION-2b §3).
   ///
   /// In ru, this message translates to:
-  /// **'Послушай и выбери ответ'**
+  /// **'Послушай и выбери ответ'**
   String get planSessionTaskListenChoose;
 
   /// Сессия, 34-5: кнопка — отмеченная озвучка и есть ответ; активна только когда лист отмечен и прослушан.
@@ -4830,7 +4842,7 @@ abstract class AppLocalizations {
   /// Сессия, строка задания 34-6.
   ///
   /// In ru, this message translates to:
-  /// **'А теперь в обычном темпе'**
+  /// **'А теперь в обычном темпе'**
   String get planSessionTaskNormalPace;
 
   /// Сессия, 34-6: бровь листа на медленном темпе, rate — темп из карточки («0.75»).
@@ -4842,7 +4854,7 @@ abstract class AppLocalizations {
   /// Сессия, 34-6: бровь листа на обычном темпе.
   ///
   /// In ru, this message translates to:
-  /// **'В обычном темпе'**
+  /// **'В обычном темпе'**
   String get planSessionBrowNormalPace;
 
   /// Сессия, мета листа: текст реплики виден (34-6).
@@ -4926,7 +4938,7 @@ abstract class AppLocalizations {
   /// Сессия, 35-5: отказ судьи, когда сервер не прислал своей причины.
   ///
   /// In ru, this message translates to:
-  /// **'не то — попробуем ещё'**
+  /// **'не то — попробуем ещё'**
   String get planSessionNotThat;
 
   /// Сессия, 35-5: второй из трёх выходов — открыть каркас. Разговор (37-7c): кнопка справа от микрофона только в режиме «Без подсказок» — по тапу встаёт плашка подсказки на этот ход.
@@ -4980,25 +4992,25 @@ abstract class AppLocalizations {
   /// Сессия, 30-7: последняя пара перечисления.
   ///
   /// In ru, this message translates to:
-  /// **'{a} и {b}'**
+  /// **'{a} и {b}'**
   String planSessionAnd(String a, String b);
 
   /// Сессия, 30-7: следующий день плана, урок которого ещё пишется (или встанет в очередь при закрытии).
   ///
   /// In ru, this message translates to:
-  /// **'День {n} — собираю'**
+  /// **'День {n} — собираю'**
   String planSessionNextDayBuilding(int n);
 
   /// Сессия, 30-7: следующий день плана, урок которого уже написан.
   ///
   /// In ru, this message translates to:
-  /// **'День {n} — готов'**
+  /// **'День {n} — готов'**
   String planSessionNextDayReady(int n);
 
   /// Сессия, 30-7: POST закрытия дня не дошёл; кнопка остаётся.
   ///
   /// In ru, this message translates to:
-  /// **'День не закрылся — нет связи'**
+  /// **'День не закрылся — нет связи'**
   String get planSessionCloseFailed;
 
   /// Имя шестого этапа дня (наряд CONV-1): плита таба 21-2, ряд окна 23-0a, узел маршрута, вход 30-1, итог дня 30-7, шапка экрана разговора 37-6.
@@ -5040,7 +5052,7 @@ abstract class AppLocalizations {
   /// Вход в разговор (37-5): вторая строка правил. Пример «скажи „Sorry?“» из кадра снят: он на английском, а язык цели бывает любым. Род — тот же, что у первой строки (доработка CLIENT-START п. 2): female — роль первой сцены женщина (window.sources[].partner_gender, «Регистратор начнёт первой» → «она повторит»); male — роль мужчина; other — роли нет, строка «Собеседник начнёт первым» (→ «он»).
   ///
   /// In ru, this message translates to:
-  /// **'Не понял — нажми «Не понял», и {gender, select, female{она} other{он}} повторит проще.'**
+  /// **'Не понял — нажми «Не понял», и {gender, select, female{она повторит} other{он повторит}} проще.'**
   String planTalkEntryRuleRescue(String gender);
 
   /// Вход в разговор (37-5): третья строка правил.
@@ -5058,7 +5070,7 @@ abstract class AppLocalizations {
   /// Экран разговора (37-6…37-10): кнопка слева от микрофона, во всех состояниях твоей очереди — ход kind=rescue, ход сцены не тратит.
   ///
   /// In ru, this message translates to:
-  /// **'Не понял'**
+  /// **'Не понял'**
   String get planTalkRescueAction;
 
   /// «Ответь своими словами» (35-2): чип подсказки — префикс печатает клиент; task_native карточки — предложение, его в придаточное переводит зеркало IntentClause. В разговоре рамки больше нет: подсказка — целая фраза hints.sentence (наряд CLIENT-FIX-4 §3).
@@ -5082,37 +5094,37 @@ abstract class AppLocalizations {
   /// Экран разговора (37-7, 37-9): подпись под живой строкой, пока идёт запись.
   ///
   /// In ru, this message translates to:
-  /// **'тишина — конец'**
+  /// **'тишина — конец'**
   String get planTalkSilenceEnds;
 
   /// Экран разговора (37-10): запись вышла пустой. Ход на сервер не уходит.
   ///
   /// In ru, this message translates to:
-  /// **'не расслышал — скажи ещё раз'**
+  /// **'не расслышал — скажи ещё раз'**
   String get planTalkUnheard;
 
   /// Экран разговора (37-10): ход не дошёл. «Повторить» перечитывает разговор и повторяет ход, если он всё ещё твой.
   ///
   /// In ru, this message translates to:
-  /// **'Связь пропала — разговор продолжится отсюда'**
+  /// **'Связь пропала — разговор продолжится отсюда'**
   String get planTalkOffline;
 
   /// Экран разговора (37-10): 503 plan_conversation_unavailable — в журнале не осталось ничего, ход повторяется один в один. Роль без склонения.
   ///
   /// In ru, this message translates to:
-  /// **'Собеседник не отвечает — попробуй ещё раз'**
+  /// **'Собеседник не отвечает — попробуй ещё раз'**
   String get planTalkSilent;
 
   /// Экран разговора: старт не прошёл (нет связи, роль не ответила).
   ///
   /// In ru, this message translates to:
-  /// **'Разговор не начался — попробуй ещё раз'**
+  /// **'Разговор не начался — попробуй ещё раз'**
   String get planTalkOpenFailed;
 
   /// Экран разговора: 422 plan_conversation_not_in_day — день роздан без шестого этапа.
   ///
   /// In ru, this message translates to:
-  /// **'В этом дне разговора нет'**
+  /// **'В этом дне разговора нет'**
   String get planTalkNotInDay;
 
   /// Конец разговора (37-11): заголовок листа.
@@ -5142,7 +5154,7 @@ abstract class AppLocalizations {
   /// Итог разговора (37-12): not_understood > 0.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{Понял вопросы, кроме одного — вернётся} other{Понял вопросы, кроме {n} — вернутся}}'**
+  /// **'{n, plural, one{Понял вопросы, кроме одного — вернётся} other{Понял вопросы, кроме {n} — вернутся}}'**
   String planTalkUnderstoodExcept(int n);
 
   /// Итог разговора (37-12): вторая часть строки понимания, всегда нейтральная.
@@ -5154,7 +5166,7 @@ abstract class AppLocalizations {
   /// Итог разговора репетиции (37-12b): заголовок вместо счёта реплик. Канва — «Ты готов к приёму», но событие плана в дательном сервер не шлёт (есть только event_native в именительном), а склонять клиент не вправе, поэтому готов — к разговору, для любого плана (решение архитектора при приёмке CLIENT-FIX-4 25.09; «к событию» снято). Сборка (20) печатала «к приёму» любому плану, в том числе залу.
   ///
   /// In ru, this message translates to:
-  /// **'Ты готов к разговору'**
+  /// **'Ты готов к разговору'**
   String get planTalkReady;
 
   /// Итог дня (30-7): бровь блока готовых строк сервера (window.highlights).
@@ -5166,13 +5178,13 @@ abstract class AppLocalizations {
   /// «Что прозвучит в ответ?» (34-5): подпись задания под шапкой.
   ///
   /// In ru, this message translates to:
-  /// **'Слушай целиком — ответ один'**
+  /// **'Слушай целиком — ответ один'**
   String get planSessionListenWholeOne;
 
   /// Знакомство с каркасом (32-1), третье состояние: у фразы одно значение, окна нет.
   ///
   /// In ru, this message translates to:
-  /// **'Эту фразу говорят целиком — в ней ничего не меняется'**
+  /// **'Эту фразу говорят целиком — в ней ничего не меняется'**
   String get planSessionFrameWhole;
 
   /// Знакомство с каркасом (32-1): подпись над плашками значений.
@@ -5184,7 +5196,7 @@ abstract class AppLocalizations {
   /// Знакомство с каркасом (32-1), третье состояние: бровь блока с репликой дня, в которой фраза звучит.
   ///
   /// In ru, this message translates to:
-  /// **'В разговоре'**
+  /// **'В разговоре'**
   String get planSessionInTalk;
 
   /// «Скажи целиком» (32-7): последняя плашка ряда значений — круг своего слова.
@@ -5196,13 +5208,13 @@ abstract class AppLocalizations {
   /// Экран разговора: микрофон не пишет (нет разрешения или распознавания на устройстве). Рядом «Разрешить» — спросить систему ещё раз или открыть настройки, как на «Нужен микрофон» (30-3). Вместо «тап — говорить» над кнопкой, которая ничего не делает (пойман живым прогоном).
   ///
   /// In ru, this message translates to:
-  /// **'Нужен микрофон — без него разговор не пройти'**
+  /// **'Нужен микрофон — без него разговор не пройти'**
   String get planTalkNoMic;
 
   /// Вход в этап «Вспомнить» (30-1, день репетиции): описание этапа — обзор своих реплик по сценам (37-3), потом пять-шесть из них вслух (35-4).
   ///
   /// In ru, this message translates to:
-  /// **'Свои реплики всех сцен — посмотри, послушай и скажи вслух'**
+  /// **'Свои реплики всех сцен — посмотри, послушай и скажи вслух'**
   String get planSessionDescRecall;
 
   /// Обзор «Вспомнить» (37-3): строка задания над репликами сцены.
@@ -5214,7 +5226,7 @@ abstract class AppLocalizations {
   /// Обзор «Вспомнить» (37-3): кнопка на последней сцене — за ней пять-шесть своих реплик вслух (35-4).
   ///
   /// In ru, this message translates to:
-  /// **'Дальше — повтори вслух'**
+  /// **'Дальше — повтори вслух'**
   String get planSessionRecallLast;
 
   /// Окно дня репетиции (37-1): начало строки статуса — «перед событием · в четверг · не начат».
@@ -5226,7 +5238,7 @@ abstract class AppLocalizations {
   /// Окно дня репетиции (37-1): в какой день недели стоит этот день плана — «в четверг». «Сегодня» и «завтра» приходят с сервера готовыми (slot.label_native).
   ///
   /// In ru, this message translates to:
-  /// **'{weekday, select, mon{в понедельник} tue{во вторник} wed{в среду} thu{в четверг} fri{в пятницу} sat{в субботу} sun{в воскресенье} other{}}'**
+  /// **'{weekday, select, mon{в понедельник} tue{во вторник} wed{в среду} thu{в четверг} fri{в пятницу} sat{в субботу} sun{в воскресенье} other{}}'**
   String planWindowOnWeekday(String weekday);
 
   /// Окно дня повторения (37-2): название на плите.
@@ -5238,25 +5250,25 @@ abstract class AppLocalizations {
   /// Окно дня репетиции (37-1): строка под статусом. Роли в творительном контракт не отдаёт — «с собеседником», как «Поговори с собеседником» на 37-5.
   ///
   /// In ru, this message translates to:
-  /// **'Проговоришь весь разговор с собеседником'**
+  /// **'Проговоришь весь разговор с собеседником'**
   String get planWindowRehearsalLead;
 
   /// Окно дня повторения (37-2): строка под статусом; роль — «с собеседником», как на 37-5.
   ///
   /// In ru, this message translates to:
-  /// **'Вернёшь фразы прошлых дней и поговоришь с собеседником'**
+  /// **'Вернёшь фразы прошлых дней и поговоришь с собеседником'**
   String get planWindowReviewLead;
 
   /// Окно дня репетиции (37-1): бровь списка сцен под плитой.
   ///
   /// In ru, this message translates to:
-  /// **'Из каких сцен'**
+  /// **'Из каких сцен'**
   String get planWindowFromScenes;
 
   /// Окно дня повторения (37-2): бровь списка дней под плитой.
   ///
   /// In ru, this message translates to:
-  /// **'Из каких дней'**
+  /// **'Из каких дней'**
   String get planWindowFromDays;
 
   /// Проверка понимания (33-1, 33-5): подпись над репликой — одна и та же на обоих кадрах (наряд FIX-3 §1).
@@ -5298,7 +5310,7 @@ abstract class AppLocalizations {
   /// Итог этапа (30-6): заголовок «Слушаю и отвечаю» — к нему через « · » минуты этапа (решение архитектора 22.09).
   ///
   /// In ru, this message translates to:
-  /// **'Слушаю и отвечаю — пройдено'**
+  /// **'Слушаю и отвечаю — пройдено'**
   String get planSessionPassedListen;
 
   /// Итог этапа (30-6): заголовок «Говорю сам» — к нему через « · » минуты этапа (решение архитектора 22.09).
@@ -5328,37 +5340,37 @@ abstract class AppLocalizations {
   /// Итог этапа «Слова» (30-6), первая строка: сколько слов в этапе и сколько из них зачтено с первой попытки без подсказки — по карточкам сервера.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} слово, {first} с первого раза} few{{n} слова, {first} с первого раза} many{{n} слов, {first} с первого раза} other{{n} слова, {first} с первого раза}}'**
   String planSessionFirstTryWords(int n, int first);
 
   /// Итог этапа «Фразы» (30-6), первая строка: фразы этапа и зачтённые с первой попытки без подсказки.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} фраза, {first} с первого раза} few{{n} фразы, {first} с первого раза} many{{n} фраз, {first} с первого раза} other{{n} фразы, {first} с первого раза}}'**
   String planSessionFirstTryPhrases(int n, int first);
 
   /// Итог этапа «Диалог» и «Говорю сам» (30-6, кадр «8 реплик, 6 с первого раза»), первая строка: реплики этапа и зачтённые с первой попытки без подсказки.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} реплика, {first} с первого раза} few{{n} реплики, {first} с первого раза} many{{n} реплик, {first} с первого раза} other{{n} реплики, {first} с первого раза}}'**
   String planSessionFirstTryLines(int n, int first);
 
   /// Итог этапа «Слушаю и отвечаю» (30-6), первая строка: вопросы слушания и отвеченные верно с первого раза.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} вопрос, {first} с первого раза} few{{n} вопроса, {first} с первого раза} many{{n} вопросов, {first} с первого раза} other{{n} вопроса, {first} с первого раза}}'**
   String planSessionFirstTryQuestions(int n, int first);
 
   /// Итог этапа «Повторение» (30-6), первая строка: карточки этапа и зачтённые с первой попытки без подсказки.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}'**
+  /// **'{n, plural, one{{n} карточка, {first} с первого раза} few{{n} карточки, {first} с первого раза} many{{n} карточек, {first} с первого раза} other{{n} карточки, {first} с первого раза}}'**
   String planSessionFirstTryCards(int n, int first);
 
   /// Итог этапа «Вспомнить» (30-6), первая строка: «6 реплик из 2 сцен» — свои реплики, сказанные вслух, и из скольких сцен.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}'**
+  /// **'{n, plural, one{{n} реплика} few{{n} реплики} many{{n} реплик} other{{n} реплики}} из {scenes, plural, one{{scenes} сцены} few{{scenes} сцен} many{{scenes} сцен} other{{scenes} сцены}}'**
   String planSessionRecallLinesOfScenes(int n, int scenes);
 
   /// Итог этапа (30-6), вторая строка: сколько единиц этапа вернётся завтра — по возвратам сервера.
@@ -5370,7 +5382,7 @@ abstract class AppLocalizations {
   /// Итог этапа (30-6), вторая строка, когда у этапа возвратов нет.
   ///
   /// In ru, this message translates to:
-  /// **'завтра ничего не вернётся'**
+  /// **'завтра ничего не вернётся'**
   String get planSessionStageNoReturns;
 
   /// Итог этапа «Диалог» (30-6, кадр «сказал вслух 5 своих реплик»), вторая строка: свои реплики диалога, зачтённые голосом.
@@ -5382,37 +5394,37 @@ abstract class AppLocalizations {
   /// Итог этапа «Диалог» (30-6, кадр «дважды переспросил — врач повторил медленнее»), третья строка: пройденные обмены «Не понял» диалога; role — роль собеседника сцены строчной.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}'**
+  /// **'{n, plural, =1{переспросил — {role} повторил медленнее} =2{дважды переспросил — {role} повторил медленнее} few{{n} раза переспросил — {role} повторил медленнее} many{{n} раз переспросил — {role} повторил медленнее} other{{n} раза переспросил — {role} повторил медленнее}}'**
   String planSessionRescuedSlower(int n, String role);
 
   /// Итог этапа «Слова» (30-6), третья строка — тёплая, одна на этап (решение архитектора 22.09).
   ///
   /// In ru, this message translates to:
-  /// **'Эти слова ты теперь узнаёшь — дальше они встретятся во фразах'**
+  /// **'Эти слова ты теперь узнаёшь — дальше они встретятся во фразах'**
   String get planSessionWarmWords;
 
   /// Итог этапа «Фразы» (30-6), третья строка — тёплая, одна на этап.
   ///
   /// In ru, this message translates to:
-  /// **'Фразы собраны и сказаны вслух — в диалоге они пригодятся'**
+  /// **'Фразы собраны и сказаны вслух — в диалоге они пригодятся'**
   String get planSessionWarmPhrases;
 
   /// Итог этапа «Слушаю и отвечаю» (30-6), третья строка — тёплая, одна на этап.
   ///
   /// In ru, this message translates to:
-  /// **'Реплики собеседника ты понимаешь на слух'**
+  /// **'Реплики собеседника ты понимаешь на слух'**
   String get planSessionWarmListen;
 
   /// Итог этапа «Говорю сам» (30-6), третья строка — тёплая, одна на этап.
   ///
   /// In ru, this message translates to:
-  /// **'Свои реплики ты сказал сам — дальше живой разговор'**
+  /// **'Свои реплики ты сказал сам — дальше живой разговор'**
   String get planSessionWarmSpeak;
 
   /// Итог этапа «Вспомнить» (30-6), третья строка — тёплая, одна на этап.
   ///
   /// In ru, this message translates to:
-  /// **'Реплики на месте — дальше разговор целиком'**
+  /// **'Реплики на месте — дальше разговор целиком'**
   String get planSessionWarmRecall;
 
   /// Итог этапа «Повторение» (30-6), третья строка — тёплая, одна на этап.
@@ -5424,7 +5436,7 @@ abstract class AppLocalizations {
   /// Вход в разговор (37-5, SESSION-DES-4): бровь списка фраз, ради которых разговор (targets ряда разговора окна).
   ///
   /// In ru, this message translates to:
-  /// **'Скажи в разговоре'**
+  /// **'Скажи в разговоре'**
   String get planTalkEntrySay;
 
   /// Лист голоса (38-1, наряд FIX-3 §6): спрашивается один раз перед первым планом, пока пол в профиле не сказан.
@@ -5442,7 +5454,7 @@ abstract class AppLocalizations {
   /// Лист голоса (38-1): подпись мужской плашки.
   ///
   /// In ru, this message translates to:
-  /// **'ниже и спокойнее'**
+  /// **'ниже и спокойнее'**
   String get planVoiceMaleHint;
 
   /// Лист голоса (38-1): плашка женского голоса.
@@ -5454,25 +5466,25 @@ abstract class AppLocalizations {
   /// Лист голоса (38-1): подпись женской плашки.
   ///
   /// In ru, this message translates to:
-  /// **'выше и мягче'**
+  /// **'выше и мягче'**
   String get planVoiceFemaleHint;
 
   /// Лист голоса (38-1): строка под плашками — выбор не навсегда.
   ///
   /// In ru, this message translates to:
-  /// **'Можно поменять в профиле'**
+  /// **'Можно поменять в профиле'**
   String get planVoiceInProfile;
 
   /// Итог разговора (37-12, 37-12b): надпись над карточками конструкций; лист по тапу на ряд над микрофоном (37-8d): заголовок листа. Счётчика рядом нет — наряд FIX-3 §3 снял «N из M».
   ///
   /// In ru, this message translates to:
-  /// **'Конструкции в разговоре'**
+  /// **'Конструкции в разговоре'**
   String get planTalkConstructions;
 
   /// Итог разговора (37-12) и лист конструкций (37-8d): серая строка под закрашенной карточкой — каркас со значением ученика (value_target).
   ///
   /// In ru, this message translates to:
-  /// **'ты сказал: {said}'**
+  /// **'ты сказал: {said}'**
   String planTalkYouSaid(String said);
 
   /// Итог репетиции и повтора (37-12b): серая строка под незакрашенной карточкой — завтра событие, а не новый день. «Разговором» — то же слово, что в заголовке planTalkReady: склонённой формы события сервер не шлёт (приёмка CLIENT-FIX-4 25.09, отчёт §7).
@@ -5484,19 +5496,19 @@ abstract class AppLocalizations {
   /// Лист конструкций (37-8d): серая строка под плашкой, сказанной «почти» (targets[].state = almost) — строка урока на языке цели (каркас со значением урока).
   ///
   /// In ru, this message translates to:
-  /// **'почти — скажи целиком: {line}'**
+  /// **'почти — скажи целиком: {line}'**
   String planTalkAlmostLine(String line);
 
   /// Лист конструкций (37-8d): серая строка под несказанной плашкой — строка урока на языке цели (каркас со значением урока).
   ///
   /// In ru, this message translates to:
-  /// **'из урока: {line}'**
+  /// **'из урока: {line}'**
   String planTalkFromLessonLine(String line);
 
   /// Лента разговора (37-8e): строка судьи чернилами под своим пузырём — ход сказал цель «почти» (одно слово мимо), цель ещё ждёт.
   ///
   /// In ru, this message translates to:
-  /// **'Почти — скажи целиком'**
+  /// **'Почти — скажи целиком'**
   String get planTalkAlmostJudge;
 
   /// Итог разговора (37-12, 37-12b): бровь группы каркасов сцены, сказанных сверх целей (summary.extra_said). Нет таких — группы нет.
@@ -5508,13 +5520,13 @@ abstract class AppLocalizations {
   /// Итог разговора (37-12): серая строка над плашками, когда разговор кончил лимит (summary.ended_by_limit) и несказанное вернётся завтра (returns_tomorrow).
   ///
   /// In ru, this message translates to:
-  /// **'Разговор закончился по времени — несказанное вернётся'**
+  /// **'Разговор закончился по времени — несказанное вернётся'**
   String get planTalkEndedByTime;
 
   /// Итог разговора репетиции и повтора (37-12b): та же строка про лимит, когда завтра ничего не вернётся (returns_tomorrow = false) — обещания «вернётся» нет. Строки нет в канве, её вариант назван в отчёте CLIENT-FIX-4.
   ///
   /// In ru, this message translates to:
-  /// **'Разговор закончился по времени'**
+  /// **'Разговор закончился по времени'**
   String get planTalkEndedByTimeOnly;
 
   /// Разговор по нескольким сценам: первая часть разделителя сцен в ленте (39-1b, «Сцена 2 · Приём у врача · врач») и заголовка группы на входе (37-5b).
@@ -5526,7 +5538,7 @@ abstract class AppLocalizations {
   /// Карточка перехода между сценами (39-1): капитель над названием следующей сцены.
   ///
   /// In ru, this message translates to:
-  /// **'Сцена {n} из {total}'**
+  /// **'Сцена {n} из {total}'**
   String planTalkSceneOf(int n, int total);
 
   /// Карточка перехода между сценами (39-1): единственная кнопка — карточка сжимается в разделитель, здоровается роль следующей сцены.
@@ -5544,13 +5556,13 @@ abstract class AppLocalizations {
   /// Вход в разговор по нескольким сценам (37-5b): серая строка между группами конструкций сцен.
   ///
   /// In ru, this message translates to:
-  /// **'Разговор идёт сцена за сценой'**
+  /// **'Разговор идёт сцена за сценой'**
   String get planTalkEntrySceneByScene;
 
   /// Окно дня, вкладка программы (23-0d · вернулось): заголовок группы единиц, вернувшихся из прошлого дня — items[].source = returned, номер дня из items[].scene.day_number.
   ///
   /// In ru, this message translates to:
-  /// **'Вернулось из дня {n}'**
+  /// **'Вернулось из дня {n}'**
   String planWindowReturnedFromDay(int n);
 
   /// То же, когда у сцены-источника нет своего дня (items[].scene.day_number = null).
@@ -5568,7 +5580,7 @@ abstract class AppLocalizations {
   /// Ряд разговора пройденного дня, когда повторы суток исчерпаны (30-1e): stages[].again = false.
   ///
   /// In ru, this message translates to:
-  /// **'лимит на сегодня'**
+  /// **'лимит на сегодня'**
   String get planWindowTalkLimitToday;
 
   /// Кнопка пройденного дня (23-0c): ведёт на итог дня 30-7; повтора дня целиком нет.
@@ -5586,7 +5598,7 @@ abstract class AppLocalizations {
   /// Окно пройденного дня: шит на 409 plan_conversation_replay_limit — повтор разговора на сегодня исчерпан.
   ///
   /// In ru, this message translates to:
-  /// **'Разговор сегодня уже повторяли — вернись завтра'**
+  /// **'Разговор сегодня уже повторяли — вернись завтра'**
   String get planWindowTalkReplayLimit;
 
   /// Заставка (41-1c) и вход на ней (41-4): слоган под словомарком Ritora. Inter 15 серым.
@@ -5616,7 +5628,7 @@ abstract class AppLocalizations {
   /// Вход (41-4): юрстрока под кнопками, 13 серым; {terms} и {privacy} — ссылки латунью (startLegalTerms, startLegalPrivacy).
   ///
   /// In ru, this message translates to:
-  /// **'Продолжая, ты принимаешь {terms} и {privacy}'**
+  /// **'Продолжая, ты принимаешь {terms} и {privacy}'**
   String startLegal(String terms, String privacy);
 
   /// Ссылка «Правила» в юрстроке входа (41-4) и строка профиля (42-1).
@@ -5646,19 +5658,19 @@ abstract class AppLocalizations {
   /// Лист a (41-2a): заголовок Literata 30, три строки ручным переносом; точки латунью.
   ///
   /// In ru, this message translates to:
-  /// **'Скоро важный\nразговор.\nТы будешь готов.'**
+  /// **'Скоро важный\nразговор.\nТы будешь готов.'**
   String get introATitle;
 
   /// Лист a (41-2a): мысль под заголовком, Inter 15 серым.
   ///
   /// In ru, this message translates to:
-  /// **'Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.'**
+  /// **'Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.'**
   String get introAThought;
 
   /// Лист a (41-2a): перевод реплики «I’d like to make an appointment.» под ней, 13 серым. В английском интерфейсе пусто — строки нет.
   ///
   /// In ru, this message translates to:
-  /// **'Я хочу записаться на приём.'**
+  /// **'Я хочу записаться на приём.'**
   String get introALineNative;
 
   /// Лист a (41-2a): капитель на карточке сцены (печатается прописными).
@@ -5694,13 +5706,13 @@ abstract class AppLocalizations {
   /// Лист b (41-2b): заголовок, две строки; точка латунью.
   ///
   /// In ru, this message translates to:
-  /// **'Язык —\nпод каждый разговор.'**
+  /// **'Язык —\nпод каждый разговор.'**
   String get introBTitle;
 
   /// Лист b (41-2b): мысль — семь языков дословно по реестру канвы.
   ///
   /// In ru, this message translates to:
-  /// **'Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.'**
+  /// **'Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.'**
   String get introBThought;
 
   /// Лист c (41-2c): бровь капителью над маршрутом (печатается прописными).
@@ -5772,7 +5784,7 @@ abstract class AppLocalizations {
   /// Лист c (41-2c): мысль под заголовком.
   ///
   /// In ru, this message translates to:
-  /// **'Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.'**
+  /// **'Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.'**
   String get introCThought;
 
   /// Лист d (41-2d): перевод реплики роли в её пузыре, 15 серым. В английском интерфейсе пусто — строки нет.
@@ -5790,19 +5802,19 @@ abstract class AppLocalizations {
   /// Лист d (41-2d): заголовок, две строки; точка латунью. Тире — в конце первой строки, перенос после него жёсткий: вторая строка с тире не начинается (доработка CLIENT-START п. 1).
   ///
   /// In ru, this message translates to:
-  /// **'Живой разговор с ИИ —\nне по сценарию.'**
+  /// **'Живой разговор с ИИ —\nне по сценарию.'**
   String get introDTitle;
 
   /// Лист d (41-2d): мысль под заголовком.
   ///
   /// In ru, this message translates to:
-  /// **'Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.'**
+  /// **'Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.'**
   String get introDThought;
 
   /// Лист e (41-2e): подпись 13 серым над заголовком.
   ///
   /// In ru, this message translates to:
-  /// **'три подборки из стора · свои слова из планов'**
+  /// **'три подборки из стора · свои слова из планов'**
   String get introECaption;
 
   /// Лист e (41-2e): название обложки подборки стора, Literata 17.
@@ -6048,13 +6060,13 @@ abstract class AppLocalizations {
   /// Шит удаления (42-3): что исчезнет, с названием текущего плана.
   ///
   /// In ru, this message translates to:
-  /// **'Исчезнут план «{plan}», пройденные дни и настройки. Восстановить их будет нельзя.'**
+  /// **'Исчезнут план «{plan}», пройденные дни и настройки. Восстановить их будет нельзя.'**
   String accountDeleteBodyPlan(String plan);
 
   /// Шит удаления (42-3): то же, когда плана нет.
   ///
   /// In ru, this message translates to:
-  /// **'Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.'**
+  /// **'Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.'**
   String get accountDeleteBody;
 
   /// Шит удаления (42-3): строка 13 серым под текстом.
@@ -6084,7 +6096,7 @@ abstract class AppLocalizations {
   /// Шит напоминаний (42-4): строка под колесом.
   ///
   /// In ru, this message translates to:
-  /// **'Мы напоминаем раз в день, когда ждёт следующий день плана'**
+  /// **'Мы напоминаем раз в день, когда ждёт следующий день плана'**
   String get accountRemindersNote;
 
   /// Шит напоминаний (42-4): вместо колеса, когда iOS запретила уведомления; тап — Настройки.
@@ -6096,13 +6108,13 @@ abstract class AppLocalizations {
   /// Пред-запрос уведомлений (43-1): после итога дня 1 (и дня 2 после «Не сейчас»); день — следующий, время — своё из профиля или час сервера.
   ///
   /// In ru, this message translates to:
-  /// **'Напомнить про день {day} завтра в {time}?'**
+  /// **'Напомнить про день {day} завтра в {time}?'**
   String notifyAskTitle(int day, String time);
 
   /// Пред-запрос уведомлений (43-1): строка под вопросом.
   ///
   /// In ru, this message translates to:
-  /// **'Раз в день, без лишнего'**
+  /// **'Раз в день, без лишнего'**
   String get notifyAskBody;
 
   /// Пред-запрос уведомлений (43-1): латунью; после дня 1 — ещё раз после дня 2, потом не спрашивать.
@@ -6120,7 +6132,7 @@ abstract class AppLocalizations {
   /// Пред-запрос микрофона (41-3): на первой карточке с микрофоном.
   ///
   /// In ru, this message translates to:
-  /// **'Ritora слушает, как ты говоришь'**
+  /// **'Ritora слушает, как ты говоришь'**
   String get micAskTitle;
 
   /// Пред-запрос микрофона (41-3): строка без обещаний.
@@ -6150,7 +6162,7 @@ abstract class AppLocalizations {
   /// Плита дня, запертого подпиской (21-3 / 23-0a «по подписке»): начало строки под названием — «по подписке · 75 карточек».
   ///
   /// In ru, this message translates to:
-  /// **'по подписке'**
+  /// **'по подписке'**
   String get planPlateBySubscription;
 
   /// Плита дня, запертого подпиской (21-3 / 23-0a): 13 серым вместо кнопки «Начать».
@@ -6174,7 +6186,7 @@ abstract class AppLocalizations {
   /// Маршрут (22-5a / 21-3 «по подписке»): мета следующих дней, запертых подпиской.
   ///
   /// In ru, this message translates to:
-  /// **'по подписке'**
+  /// **'по подписке'**
   String get planRouteMetaBySubscription;
 
   /// Таб «План» (21-2b): карточка спасательного набора под маршрутом — rescue_kit плана (LANG-1b §2).
@@ -6186,7 +6198,7 @@ abstract class AppLocalizations {
   /// Карточка набора (21-2b): строка под названием — сколько фраз.
   ///
   /// In ru, this message translates to:
-  /// **'{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}'**
+  /// **'{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}'**
   String planKitSub(int n);
 
   /// Карточка набора (21-2b): раскрыть все фразы на месте.
@@ -6204,7 +6216,7 @@ abstract class AppLocalizations {
   /// Вход в план: POST /plans ответил 402 plan_subscription_required — экран-заглушка до пейволла PAY-1, кнопка «Подписка» → профиль.
   ///
   /// In ru, this message translates to:
-  /// **'Второй план — по подписке'**
+  /// **'Второй план — по подписке'**
   String get planEntrySubscriptionTitle;
 
   /// Вход в план: POST /plans ответил 409 plan_active_limit — три плана уже в работе.

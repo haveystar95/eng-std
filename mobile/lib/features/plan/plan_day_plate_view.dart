@@ -50,7 +50,7 @@ class PlanDayPlateView extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     final scene = plan.sceneOf(day);
-    final title = day.titleNative ?? scene?.titleNative ?? plan.displayTitle;
+    final title = context.nativeText(day.titleNative ?? scene?.titleNative ?? plan.displayTitle);
     // Тот же кроп, что у узла маршрута (52 и 56 при любой плотности берут один размер): фото,
     // скачанное для маршрута, встаёт на плите без второй загрузки.
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;

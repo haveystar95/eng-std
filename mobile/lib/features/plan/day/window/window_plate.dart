@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/day_window.dart';
 import '../../../../data/plan/plan_models.dart';
@@ -62,7 +63,8 @@ class WindowPlate extends StatelessWidget {
     const shape = BorderRadius.vertical(bottom: Radius.circular(radius));
     final system = this.system;
     final passed = day.status == WindowDayStatus.passed && system == null;
-    final goals = system == null ? WindowTexts.goalsList(l, day.goals) : '';
+    final native = NativeTypesetter.of(context);
+    final goals = system == null ? WindowTexts.goalsList(l, native, day.goals) : '';
 
     final content = Padding(
       padding: EdgeInsets.fromLTRB(24, top, 24, system == null ? 2 * pillOverlap : systemBottom),
@@ -81,7 +83,7 @@ class WindowPlate extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          WindowTitle(text: system?.title ?? WindowTexts.title(l, day)),
+          WindowTitle(text: system?.title ?? WindowTexts.title(l, native, day)),
           if (system != null) ...[
             const SizedBox(height: 4),
             Text(system.status, key: const ValueKey('window-system-status'), style: AppTextWindow.status),

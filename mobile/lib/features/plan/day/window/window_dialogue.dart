@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/day_window.dart';
 import '../../../../data/plan/plan_models.dart';
@@ -140,7 +141,7 @@ class _Bubble extends StatelessWidget {
           Text(line.text, style: text),
           if (line.translation.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(line.translation, style: translation),
+            Text(context.nativeText(line.translation), style: translation),
           ],
         ],
       ),

@@ -101,7 +101,7 @@ class _PlanRescueKitCardState extends ConsumerState<PlanRescueKitCard> {
                       Text(p.textTarget, style: AppTextStart.kitLine),
                       if (p.textNative.trim().isNotEmpty) ...[
                         const SizedBox(height: 3),
-                        Text(p.textNative, style: AppTextStart.kitNative),
+                        Text(context.nativeText(p.textNative), style: AppTextStart.kitNative),
                       ],
                     ],
                   ),

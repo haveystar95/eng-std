@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../data/app_settings.dart';
 import '../../data/deep_links.dart';
@@ -127,29 +128,31 @@ class _PlanNotificationsHostState extends ConsumerState<PlanNotificationsHost> w
     _scheduledFor = signature;
     if (!mounted) return;
     final l = AppLocalizations.of(context);
+    final native = NativeTypesetter.of(context);
     final count = await PlanReminderScheduler(ref.read(planNotificationsProvider)).apply(
       plan: plan,
       pushEnabled: pushEnabled,
       now: DateTime.now(),
       zone: await deviceTimezone(),
       channel: l.planTitle,
-      text: (plan, n) => (title: _title(l, plan, n), body: _body(l, plan, n)),
+      text: (plan, n) => (title: _title(l, native, plan, n), body: _body(l, native, plan, n)),
       enabled: enabled,
       at: at,
     );
     debugPrint('[plan-notify] push_enabled=$pushEnabled enabled=$enabled local=$count at ${at ?? '${plan?.reminderHour}:00'}');
   }
 
-  static String _title(AppLocalizations l, Plan plan, PlanNotice n) => switch (n.kind) {
+  // The event and the day's title are the server's, in the learner's language — set by its typography (CLIENT-22-1 §2).
+  static String _title(AppLocalizations l, NativeTypesetter native, Plan plan, PlanNotice n) => switch (n.kind) {
     PlanNoticeKind.reminder => l.planNotifyReminderTitle(n.dayNumber),
     PlanNoticeKind.skipped => l.planNotifySkippedTitle(n.dayNumber),
     PlanNoticeKind.eventToday => (plan.eventNative ?? '').trim().isEmpty
         ? l.planNotifyEventTodayTitleNoName
-        : l.planNotifyEventTodayTitle(_lowerFirst(plan.eventNative!.trim())),
+        : l.planNotifyEventTodayTitle(native(_lowerFirst(plan.eventNative!.trim()))),
   };
 
-  static String _body(AppLocalizations l, Plan plan, PlanNotice n) => switch (n.kind) {
-    PlanNoticeKind.reminder => l.planNotifyReminderBody(n.dayTitle ?? plan.displayTitle),
+  static String _body(AppLocalizations l, NativeTypesetter native, Plan plan, PlanNotice n) => switch (n.kind) {
+    PlanNoticeKind.reminder => l.planNotifyReminderBody(native(n.dayTitle ?? plan.displayTitle)),
     PlanNoticeKind.skipped => l.planNotifySkippedBody,
     PlanNoticeKind.eventToday => l.planNotifyEventTodayBody,
   };
@@ -200,13 +203,14 @@ class _PlanNotificationsHostState extends ConsumerState<PlanNotificationsHost> w
     if (before == null || after == null || before.id != after.id) return;
     if (resumed == null || DateTime.now().difference(resumed) > _returnWindow) return;
     final l = AppLocalizations.of(context);
+    final native = NativeTypesetter.of(context);
     for (final d in after.days) {
       final was = before.days.where((b) => b.number == d.number).firstOrNull;
       if (was == null || !was.lessonBuilding || d.lessonBuilding || d.lessonFailed) continue;
-      final title = d.titleNative ?? after.sceneOf(d)?.titleNative ?? after.displayTitle;
+      final title = native(d.titleNative ?? after.sceneOf(d)?.titleNative ?? after.displayTitle);
       setState(
         () => _banner = d.number == 1
-            ? PlanBannerData(title: l.planEntryPushTitle, body: _readyBody(l, after, title), dayNumber: 1)
+            ? PlanBannerData(title: l.planEntryPushTitle, body: _readyBody(l, native, after, title), dayNumber: 1)
             : PlanBannerData(title: l.planNotifyDayReadyTitle(d.number), body: l.planNotifyDayReadyBody(title), dayNumber: d.number),
       );
 
@@ -215,8 +219,8 @@ class _PlanNotificationsHostState extends ConsumerState<PlanNotificationsHost> w
   }
 
   /// «7 дней до приёма 17 сентября. День 1 — «Запись к врачу»» (22-6): срок строкой сервера.
-  static String _readyBody(AppLocalizations l, Plan plan, String dayTitle) {
-    final until = (plan.untilPhrase ?? '').trim();
+  static String _readyBody(AppLocalizations l, NativeTypesetter native, Plan plan, String dayTitle) {
+    final until = native.composed((plan.untilPhrase ?? '').trim());
 
     return until.isEmpty
         ? l.planEntryPushBodyNoDate(l.planDaysCount(plan.daysTotal), dayTitle)

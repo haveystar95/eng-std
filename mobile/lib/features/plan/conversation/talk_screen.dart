@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../data/api_client.dart' show problemCodeOf;
 import '../../../data/plan/conversation/conversation_models.dart';
@@ -334,8 +335,9 @@ class _TalkViewState extends State<TalkView> {
   Widget _boundary(AppLocalizations l, PlanConversation talk, String? sceneId, {required TalkTurn? cardFor}) {
     final scene = talk.sceneOf(sceneId);
     final number = talk.sceneNumberOf(sceneId);
-    final title = scene?.titleNative.trim() ?? '';
-    final role = SessionTexts.roleInline(scene?.roleNative.trim() ?? '');
+    // The scene's name and its role are the server's, in the learner's language (CLIENT-22-1 §2).
+    final title = context.nativeText(scene?.titleNative.trim() ?? '');
+    final role = SessionTexts.roleInline(context.nativeText(scene?.roleNative.trim() ?? ''));
     final Widget child = cardFor == null
         ? TalkSceneDivider(key: ValueKey('talk-scene-divider-$sceneId'), label: talkSceneLabel(l, number: number, title: title, role: role))
         : TalkSceneCard(

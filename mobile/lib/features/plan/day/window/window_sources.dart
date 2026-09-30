@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/local/cached_image_provider.dart';
 import '../../../../data/plan/day_window.dart';
@@ -177,7 +178,8 @@ class _SourceCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(source.title, style: AppTextSession.text15)),
+          // The scene's name is the server's, in the learner's language (CLIENT-22-1 §2); «День 1 · …» — ours.
+          Expanded(child: Text(context.nativeText(source.title), style: AppTextSession.text15)),
         ],
       ),
     );

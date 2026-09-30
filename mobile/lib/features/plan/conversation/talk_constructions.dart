@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../data/plan/conversation/conversation_models.dart';
 import '../plan_stage_text.dart' show PlanDot;
@@ -60,8 +61,9 @@ class TalkConstructionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    // The target line: the frame said with the lesson's value («lower back»); the native: the lesson's line as it is.
-    final native = target.lineNative;
+    // The target line: the frame said with the lesson's value («lower back») — as it came; the native: the lesson's
+    // line, set by the learner's typography (CLIENT-22-1 §2) — only that half of the joined line.
+    final native = context.nativeTextOrNull(target.lineNative);
     final example = switch ((target.exampleTarget, native)) {
       (null, null) => null,
       (null, final String n) => n,

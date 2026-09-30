@@ -259,6 +259,19 @@ abstract final class AppMotion {
   /// (решение архитектора при приёмке CLIENT-FIX-4, 25.09).
   static const talkSummaryArm = Duration(milliseconds: 600);
 
+  // ── The goal step (22-1): its examples and its companion (наряд CLIENT-22-1 §1). The work order names the period;
+  // the fades are opacity only, so they stay under «Уменьшить движение».
+
+  /// «Ротация плавным сменом раз в 4 с» — the example in the empty goal field changes every 4 s (not an animation: the
+  /// time an example stands).
+  static const goalExampleEvery = Duration(seconds: 4);
+
+  /// The change itself: the old example fades out while the next fades in.
+  static const goalExampleFade = Duration(milliseconds: 400);
+
+  /// The companion under the field turning to its short-goal text and back.
+  static const goalCompanionFade = Duration(milliseconds: 200);
+
   /// Ни одна анимация не длиннее этого.
   static const maxDuration = Duration(milliseconds: 420);
 

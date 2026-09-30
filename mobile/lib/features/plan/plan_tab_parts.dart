@@ -196,7 +196,7 @@ class PlanHeader extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final reduce = MediaQuery.of(context).disableAnimations;
     final value = total == 0 ? 0.0 : (closed / total).clamp(0.0, 1.0);
-    final named = (shortTitle ?? '').trim();
+    final named = context.nativeText((shortTitle ?? '').trim());
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -237,7 +237,7 @@ class PlanHeader extends StatelessWidget {
                       )
                     else
                       Text(
-                        goal,
+                        context.nativeText(goal),
                         maxLines: 3,
                         // Без троеточия — канва режет четвёртую строку рамкой, а не многоточием.
                         overflow: TextOverflow.clip,
@@ -298,7 +298,8 @@ class PlanHeader extends StatelessWidget {
 }
 
 /// «До приёма · 5 дней» — the countdown over the route, READY from the server (`until_phrase`).
-/// The part before « · » is the header's bold word, the rest its secondary number.
+/// The part before « · » is the header's bold word, the rest its secondary number. Composed by the server from its
+/// packs — set as such, part by part after the split (наряд CLIENT-22-1 §2).
 class PlanRouteHeader extends StatelessWidget {
   const PlanRouteHeader({super.key, required this.phrase});
 
@@ -307,8 +308,8 @@ class PlanRouteHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final parts = phrase.split(' · ');
-    final head = parts.first;
-    final tail = parts.length > 1 ? parts.sublist(1).join(' · ') : null;
+    final head = context.composedText(parts.first);
+    final tail = parts.length > 1 ? context.composedText(parts.sublist(1).join(' · ')) : null;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(2, 0, 2, 2),
@@ -421,7 +422,7 @@ class PlanFinishedList extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            rows[i].title,
+                            context.nativeText(rows[i].title),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -497,7 +498,10 @@ class PlanDoneCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(top: 14),
             decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.dividerFaint))),
-            child: _CollectionLine(text: l.planDoneCollection(plan.displayTitle), name: plan.displayTitle),
+            child: _CollectionLine(
+              text: l.planDoneCollection(context.nativeText(plan.displayTitle)),
+              name: context.nativeText(plan.displayTitle),
+            ),
           ),
           const SizedBox(height: 16),
           if (readOnly)
@@ -555,7 +559,7 @@ class PlanOverdueCard extends StatelessWidget {
                 ),
               ),
             ),
-            title: plan.overdueNative ?? '',
+            title: context.nativeText(plan.overdueNative ?? ''),
           ),
           const SizedBox(height: 8),
           Text(

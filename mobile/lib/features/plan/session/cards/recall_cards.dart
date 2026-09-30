@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
@@ -193,7 +194,7 @@ class _ScenePage extends StatelessWidget {
                     children: [
                       Text(line.textTarget, style: AppTextSession.target22),
                       const SizedBox(height: 2),
-                      Text(line.textNative, style: AppTextSession.body),
+                      Text(context.nativeText(line.textNative), style: AppTextSession.body),
                     ],
                   ),
                 ),
