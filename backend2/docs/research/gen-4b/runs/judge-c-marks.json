@@ -1,0 +1,166 @@
+{
+    "about": "Разметка глазами 41 реплики-ответа канона GEN-4c (§12): называет — значение дословно, в другой форме или по смыслу; родовое слово и слово вопроса — нет. Записана в GEN-4c-2 из итога §12: названные v1.2 без двух промахов и четыре пропуска.",
+    "marks": {
+        "days/gpt54/02": {
+            "a6": {
+                "names": false
+            },
+            "a7": {
+                "names": true
+            }
+        },
+        "days/gpt54/03": {
+            "a1": {
+                "names": true
+            },
+            "a2": {
+                "names": true
+            },
+            "a3": {
+                "names": true
+            },
+            "a4": {
+                "names": false
+            },
+            "a5": {
+                "names": true
+            }
+        },
+        "days/gpt54/04": {
+            "a4": {
+                "names": true
+            },
+            "a5": {
+                "names": false
+            },
+            "a6": {
+                "names": true
+            }
+        },
+        "days/gpt54/06": {
+            "a5": {
+                "names": true
+            },
+            "a6": {
+                "names": false
+            },
+            "a7": {
+                "names": true
+            }
+        },
+        "days/gpt54/07": {
+            "a2": {
+                "names": true
+            },
+            "a3": {
+                "names": true
+            },
+            "a6": {
+                "names": true
+            }
+        },
+        "days/gpt54/08": {
+            "a6": {
+                "names": true
+            },
+            "a7": {
+                "names": false
+            }
+        },
+        "days/gpt54/09": {
+            "a6": {
+                "names": true
+            },
+            "a7": {
+                "names": true,
+                "note": "«nie jeść» — значение «jeść» дословно"
+            }
+        },
+        "days/gpt54/11": {
+            "a1": {
+                "names": false
+            },
+            "a3": {
+                "names": true,
+                "note": "«dos dormitorios» — значение «dormitorios» дословно"
+            },
+            "a4": {
+                "names": true
+            },
+            "a5": {
+                "names": false
+            }
+        },
+        "days/gpt54/12": {
+            "a5": {
+                "names": true
+            }
+        },
+        "days/gpt54/13": {
+            "a1": {
+                "names": true
+            },
+            "a2": {
+                "names": true
+            },
+            "a3": {
+                "names": true
+            },
+            "a4": {
+                "names": true
+            }
+        },
+        "days/gpt54/14": {
+            "a5": {
+                "names": false,
+                "note": "спорно: «casa de marcat» — место кассира, не «un casier»"
+            }
+        },
+        "days/gpt54/15": {
+            "a5": {
+                "names": false
+            },
+            "a6": {
+                "names": false
+            },
+            "a7": {
+                "names": true,
+                "note": "«Hunde» — «Haustieren» по смыслу"
+            },
+            "a8": {
+                "names": true
+            }
+        },
+        "days/gpt54/16": {
+            "a3": {
+                "names": false,
+                "note": "родовое слово: «the treatment» к «this medicine», «the cream»"
+            },
+            "a4": {
+                "names": false
+            }
+        },
+        "days/gpt54-b/02": {
+            "a5": {
+                "names": true
+            },
+            "a6": {
+                "names": false
+            },
+            "a7": {
+                "names": true,
+                "note": "«Avoid sports» — «play sports» по смыслу"
+            }
+        },
+        "days/gpt54-b/14": {
+            "a5": {
+                "names": true
+            }
+        },
+        "e2e/e2e-b": {
+            "a6": {
+                "names": true
+            }
+        }
+    }
+}

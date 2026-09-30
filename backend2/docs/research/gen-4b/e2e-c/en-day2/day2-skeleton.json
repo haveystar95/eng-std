@@ -1,0 +1,419 @@
+{
+    "topic": {
+        "title_native": "Опыт и условия",
+        "title_target": "Experience and conditions",
+        "description_native": "Рассказать о кулинарном опыте, спросить об обязанностях, оплате и возможном начале работы.",
+        "description_target": "Talk about your cooking experience, ask about duties, pay, and possible start time."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "салаты",
+                        "target": "salads",
+                        "in_dialogue": false,
+                        "pronunciation_native": "сэлэдз"
+                    },
+                    {
+                        "native": "супы",
+                        "target": "soups",
+                        "in_dialogue": false,
+                        "pronunciation_native": "супс"
+                    },
+                    {
+                        "native": "горячие блюда",
+                        "target": "hot dishes",
+                        "in_dialogue": true,
+                        "pronunciation_native": "хот дишиз"
+                    }
+                ],
+                "hint_native": "что вы готовили или делали"
+            },
+            "must_say": [
+                1
+            ],
+            "frame_native": "Я готовил ___",
+            "frame_target": "I prepared ___",
+            "pronunciation_native": "ай припэрд ___"
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "на гриле",
+                        "target": "the grill",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ гриль"
+                    },
+                    {
+                        "native": "на салатной станции",
+                        "target": "the salad station",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ сэлэд стэйшн"
+                    },
+                    {
+                        "native": "на кондитерской станции",
+                        "target": "the pastry station",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ пэйстри стэйшн"
+                    }
+                ],
+                "hint_native": "на какой станции"
+            },
+            "must_say": [
+                2
+            ],
+            "frame_native": "Я работал на ___",
+            "frame_target": "I worked on ___",
+            "pronunciation_native": "ай уёркт он ___"
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "пасту",
+                        "target": "pasta",
+                        "in_dialogue": false,
+                        "pronunciation_native": "паста"
+                    },
+                    {
+                        "native": "супы",
+                        "target": "soups",
+                        "in_dialogue": false,
+                        "pronunciation_native": "супс"
+                    },
+                    {
+                        "native": "мясные блюда",
+                        "target": "meat dishes",
+                        "in_dialogue": true,
+                        "pronunciation_native": "мит дишиз"
+                    }
+                ],
+                "hint_native": "какие блюда вы умеете готовить"
+            },
+            "must_say": [
+                3
+            ],
+            "frame_native": "Я могу готовить ___",
+            "frame_target": "I can make ___",
+            "pronunciation_native": "ай кэн мэйк ___"
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "по вечерам",
+                        "target": "evenings",
+                        "in_dialogue": true,
+                        "pronunciation_native": "ивнингз"
+                    },
+                    {
+                        "native": "по выходным",
+                        "target": "weekends",
+                        "in_dialogue": false,
+                        "pronunciation_native": "уикэндз"
+                    },
+                    {
+                        "native": "в ночные смены",
+                        "target": "night shifts",
+                        "in_dialogue": false,
+                        "pronunciation_native": "найт шифтс"
+                    }
+                ],
+                "hint_native": "какую смену"
+            },
+            "must_say": [
+                4
+            ],
+            "frame_native": "Я могу работать ___",
+            "frame_target": "I can work ___",
+            "pronunciation_native": "ай кэн уёрк ___"
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "slot": null,
+            "must_say": [
+                5
+            ],
+            "frame_native": "Какие основные обязанности?",
+            "frame_target": "What are the main duties?",
+            "pronunciation_native": "уот ар зэ мэйн дьютиз"
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "месяц",
+                        "target": "month",
+                        "in_dialogue": true,
+                        "pronunciation_native": "манс"
+                    },
+                    {
+                        "native": "неделю",
+                        "target": "week",
+                        "in_dialogue": false,
+                        "pronunciation_native": "уик"
+                    }
+                ],
+                "hint_native": "за какой период"
+            },
+            "must_say": [
+                6
+            ],
+            "frame_native": "Какая оплата за ___?",
+            "frame_target": "What is the pay per ___?",
+            "pronunciation_native": "уот из зэ пэй пёр ___"
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "на следующей неделе",
+                        "target": "next week",
+                        "in_dialogue": true,
+                        "pronunciation_native": "нэкст уик"
+                    },
+                    {
+                        "native": "в понедельник",
+                        "target": "on Monday",
+                        "in_dialogue": false,
+                        "pronunciation_native": "он мандэй"
+                    },
+                    {
+                        "native": "в эти выходные",
+                        "target": "this weekend",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зис уикэнд"
+                    }
+                ],
+                "hint_native": "когда вы можете начать"
+            },
+            "must_say": [
+                7
+            ],
+            "frame_native": "Я могу начать ___?",
+            "frame_target": "Can I start ___?",
+            "pronunciation_native": "кэн ай старт ___"
+        }
+    ],
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p1",
+                "a6"
+            ],
+            "term_target": "to prepare",
+            "image_prompt": "a cook preparing ingredients on a kitchen counter",
+            "definition_target": "to make food ready",
+            "translation_native": "готовить",
+            "pronunciation_native": "ту припэр"
+        },
+        {
+            "id": "v2",
+            "kind": "chunk",
+            "used_in": [
+                "a6"
+            ],
+            "term_target": "food prep",
+            "image_prompt": "a cook chopping vegetables and preparing ingredients on a kitchen counter",
+            "definition_target": "preparing food before cooking",
+            "translation_native": "подготовка продуктов",
+            "pronunciation_native": "фуд преп"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "p2",
+                "a2"
+            ],
+            "term_target": "station",
+            "image_prompt": "a cook working at a labeled kitchen station",
+            "definition_target": "one work area in a kitchen",
+            "translation_native": "станция",
+            "pronunciation_native": "стэйшн"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "p3",
+                "a3"
+            ],
+            "term_target": "dish",
+            "image_prompt": "a plated cooked dish in a restaurant kitchen",
+            "definition_target": "prepared food served as one item",
+            "translation_native": "блюдо",
+            "pronunciation_native": "диш"
+        },
+        {
+            "id": "v5",
+            "kind": "word",
+            "used_in": [
+                "p4",
+                "a4"
+            ],
+            "term_target": "evening",
+            "image_prompt": "restaurant kitchen staff working in the evening",
+            "definition_target": "the time late in the day",
+            "translation_native": "вечер",
+            "pronunciation_native": "ивнинг"
+        },
+        {
+            "id": "v6",
+            "kind": "word",
+            "used_in": [
+                "p4",
+                "a5",
+                "p7"
+            ],
+            "term_target": "weekend",
+            "image_prompt": "a restaurant open on a busy weekend evening",
+            "definition_target": "Saturday and Sunday",
+            "translation_native": "выходные",
+            "pronunciation_native": "уикэнд"
+        },
+        {
+            "id": "v7",
+            "kind": "chunk",
+            "used_in": [
+                "p5",
+                "a6"
+            ],
+            "term_target": "main duties",
+            "image_prompt": null,
+            "definition_target": "the most important tasks in a job",
+            "translation_native": "основные обязанности",
+            "pronunciation_native": "мэйн дьютиз"
+        },
+        {
+            "id": "v8",
+            "kind": "word",
+            "used_in": [
+                "p6",
+                "a7"
+            ],
+            "term_target": "pay",
+            "image_prompt": "a payslip on a table in an office",
+            "definition_target": "money you get for your work",
+            "translation_native": "оплата",
+            "pronunciation_native": "пэй"
+        },
+        {
+            "id": "v9",
+            "kind": "word",
+            "used_in": [
+                "p7",
+                "a8"
+            ],
+            "term_target": "to start",
+            "image_prompt": "a new cook entering a professional kitchen for the first day",
+            "definition_target": "to begin work",
+            "translation_native": "начинать",
+            "pronunciation_native": "ту старт"
+        }
+    ],
+    "role_gender": "male",
+    "learner_role": {
+        "role_native": "Повар",
+        "role_target": "Cook"
+    },
+    "partner_lines": [
+        {
+            "id": "a1",
+            "kind": "question",
+            "pairs_with": [
+                1
+            ],
+            "text_native": "Какие обязанности у вас были на прошлой работе?",
+            "text_target": "What duties did you have in your last job?",
+            "must_understand": 1
+        },
+        {
+            "id": "a2",
+            "kind": "question",
+            "pairs_with": [
+                2
+            ],
+            "text_native": "На какой станции вы работали?",
+            "text_target": "Which station did you work on?",
+            "must_understand": 2
+        },
+        {
+            "id": "a3",
+            "kind": "question",
+            "pairs_with": [
+                3
+            ],
+            "text_native": "Какие блюда вы умеете готовить?",
+            "text_target": "What dishes can you cook?",
+            "must_understand": 2
+        },
+        {
+            "id": "a4",
+            "kind": "question",
+            "pairs_with": [
+                4
+            ],
+            "text_native": "Вы можете работать по вечерам?",
+            "text_target": "Can you work evenings?",
+            "must_understand": 3
+        },
+        {
+            "id": "a5",
+            "kind": "question",
+            "pairs_with": [
+                4
+            ],
+            "text_native": "Вы можете работать по выходным?",
+            "text_target": "Can you work weekends?",
+            "must_understand": 3
+        },
+        {
+            "id": "a6",
+            "kind": "statement",
+            "pairs_with": [
+                5
+            ],
+            "text_native": "Основные обязанности — подготовка продуктов и поддержание чистоты на кухне.",
+            "text_target": "The main duties are food prep and keeping the kitchen clean.",
+            "must_understand": 4
+        },
+        {
+            "id": "a7",
+            "kind": "statement",
+            "pairs_with": [
+                6
+            ],
+            "text_native": "Оплату переводят в конце каждого расчётного периода.",
+            "text_target": "The pay is transferred at the end of each pay period.",
+            "must_understand": 5
+        },
+        {
+            "id": "a8",
+            "kind": "statement",
+            "pairs_with": [
+                7
+            ],
+            "text_native": "Да. Новые сотрудники проходят обучение в течение первой недели.",
+            "text_target": "Yes. New staff receive training during the first week.",
+            "must_understand": 5
+        }
+    ]
+}

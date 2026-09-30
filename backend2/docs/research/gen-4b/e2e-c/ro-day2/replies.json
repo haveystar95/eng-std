@@ -1,0 +1,69 @@
+{
+    "day": 2,
+    "replies": [
+        {
+            "id": "a5",
+            "frame": "p5",
+            "question": "Postul include ___?",
+            "values": [
+                "lucrul cu clienții",
+                "munca la calculator",
+                "pregătirea coletelor"
+            ],
+            "asks_for": "yes_no",
+            "line_kind": "statement",
+            "attempt_1": {
+                "reply": "Postul are lucru cu clienții și documente zilnic.",
+                "opens_with": null,
+                "question": "Postul include ___?",
+                "frame": "p5",
+                "findings": [
+                    "partner.yes_no_missing"
+                ]
+            },
+            "attempt_2": {
+                "reply": "Da. Postul are contact zilnic cu oamenii și lucru în echipă.",
+                "opens_with": "da",
+                "question": "Postul include ___?",
+                "frame": "p5",
+                "findings": []
+            },
+            "judge": [
+                {
+                    "reply": "Da. Postul are contact zilnic cu oamenii și lucru în echipă.",
+                    "names_a_value": true
+                },
+                {
+                    "reply": "Da. Veți lucra în echipă în prima săptămână.",
+                    "names_a_value": true
+                }
+            ],
+            "repairs": [
+                {
+                    "stage": "skeleton",
+                    "address": "a5",
+                    "kind": "partner_line",
+                    "sent_for": [
+                        "partner.names_filler_meaning"
+                    ],
+                    "status": "repaired",
+                    "kept": true,
+                    "broke": [],
+                    "left": [
+                        "partner.names_filler_meaning"
+                    ],
+                    "helped": false,
+                    "note": ""
+                }
+            ],
+            "final": {
+                "reply": "Da. Veți lucra în echipă în prima săptămână.",
+                "native": "Да. В первую неделю вы будете работать в команде.",
+                "opens_with": "da"
+            },
+            "left": [
+                "partner.names_filler_meaning"
+            ]
+        }
+    ]
+}

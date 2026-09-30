@@ -1,0 +1,1118 @@
+{
+    "plan": "01M3QFD3EBGZM6ZNKV6T9PDBBN",
+    "day": 2,
+    "scene": "01M3QFDEY9FZVPVB20VBVEBZ9K",
+    "status": "ready",
+    "fail_reason": null,
+    "same_skeleton_as_stored": true,
+    "calls_replayed": {
+        "skeleton": 2,
+        "dialogue": 2,
+        "repair": 8,
+        "seam_judge": 2
+    },
+    "calls_recorded": {
+        "skeleton": 2,
+        "dialogue": 2,
+        "repair": 8,
+        "seam_judge": 2
+    },
+    "judge": "live",
+    "repairs_asked": [
+        {
+            "address": "p2",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "filler.repeats_frame",
+                    "detail": "p2.f1: «на гриле» repeats «на», the frame's word at the slot of «Я работал на ___»"
+                },
+                {
+                    "code": "filler.repeats_frame",
+                    "detail": "p2.f2: «на салатной станции» repeats «на», the frame's word at the slot of «Я работал на ___»"
+                },
+                {
+                    "code": "filler.repeats_frame",
+                    "detail": "p2.f3: «на кондитерской станции» repeats «на», the frame's word at the slot of «Я работал на ___»"
+                },
+                {
+                    "code": "filler.native_seam",
+                    "detail": "p2.f1: «Я работал на на гриле» («Я работал на ___» with «на гриле») does not read as Russian, the seam judge says"
+                },
+                {
+                    "code": "filler.native_seam",
+                    "detail": "p2.f2: «Я работал на на салатной станции» («Я работал на ___» with «на салатной станции») does not read as Russian, the seam judge says"
+                },
+                {
+                    "code": "filler.native_seam",
+                    "detail": "p2.f3: «Я работал на на кондитерской станции» («Я работал на ___» with «на кондитерской станции») does not read as Russian, the seam judge says"
+                },
+                {
+                    "code": "vocab.carried",
+                    "detail": "p2: not a finding: this card alone says the words of the day «grill» (v2) — keep each of them in the card you write, or the day loses it"
+                }
+            ]
+        },
+        {
+            "address": "a7",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "partner.names_filler",
+                    "detail": "a7: the line names «month», a filler of p6"
+                },
+                {
+                    "code": "partner.names_filler_meaning",
+                    "detail": "a7: the reply names or paraphrases a filler of the frame: one general fact about the matter of the scene instead, true whatever was asked («The pay is per month.» to «What is the pay per ___?» with «month», «week», the seam judge says)"
+                }
+            ]
+        },
+        {
+            "address": "a8",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "partner.yes_no_missing",
+                    "detail": "a8: a yes-or-no question: start with Yes. or No., then one general fact (the reply to p7 «Can I start ___?»)"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "detail": "a8: the line names «next week», a filler of p7"
+                },
+                {
+                    "code": "partner.names_filler_meaning",
+                    "detail": "a8: the reply names or paraphrases a filler of the frame: one general fact about the matter of the scene instead, true whatever was asked («You can start next week if we choose you.» to «Can I start ___?» with «next week», «on Monday», «this weekend», the seam judge says)"
+                }
+            ]
+        },
+        {
+            "address": "v2",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "vocab.from_placeholder",
+                    "detail": "v2: a placeholder word: replace with a word from a frame or a partner line of this day («grill» is said only through the filler p2.f1 «the grill», no detail of the learner's)"
+                }
+            ]
+        },
+        {
+            "address": "x1.check",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "detail": "x1.check: the right option «Ваши задачи на прошлой кухонной работе» repeats «на прошлой» of A's «Какие обязанности у вас были на прошлой работе?»"
+                }
+            ]
+        },
+        {
+            "address": "x2.check",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "detail": "x2.check: the right option «На каком участке кухни вы работали» repeats «вы работали» of A's «На какой станции вы работали?»"
+                }
+            ]
+        },
+        {
+            "address": "x3.check",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "detail": "x3.check: the right option «Какие виды блюд вы умеете готовить» repeats «вы умеете» of A's «Какие блюда вы умеете готовить?»"
+                }
+            ]
+        },
+        {
+            "address": "x6.check",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "detail": "x6.check: the right option «Подготовка продуктов» repeats «подготовка продуктов» of A's «Основные обязанности — подготовка продуктов и поддержание чистоты на кухне.»"
+                }
+            ]
+        }
+    ],
+    "judge_answers": [
+        {
+            "prompt": "lesson_seam_judge.v1.3",
+            "replies": [
+                "a7",
+                "a8"
+            ],
+            "answer": {
+                "verdicts": [
+                    {
+                        "id": "p1.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f1",
+                        "reads": false
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": false
+                    },
+                    {
+                        "id": "p2.f3",
+                        "reads": false
+                    },
+                    {
+                        "id": "p3.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f3",
+                        "reads": true
+                    }
+                ],
+                "replies": [
+                    {
+                        "id": "a7",
+                        "names_a_value": true
+                    },
+                    {
+                        "id": "a8",
+                        "names_a_value": true
+                    }
+                ]
+            },
+            "cost_usd": "0.001511"
+        },
+        {
+            "prompt": "lesson_seam_judge.v1.3",
+            "replies": [
+                "a7",
+                "a8"
+            ],
+            "answer": {
+                "verdicts": [],
+                "replies": [
+                    {
+                        "id": "a7",
+                        "names_a_value": false
+                    },
+                    {
+                        "id": "a8",
+                        "names_a_value": false
+                    }
+                ]
+            },
+            "cost_usd": "0.001057"
+        }
+    ],
+    "attempts": [
+        {
+            "stage": "skeleton",
+            "attempt": 1,
+            "findings": [
+                {
+                    "code": "frame.known_repeat",
+                    "address": "p2",
+                    "detail": "«I worked at ___.» is the frame «I worked at ___.» of day 1"
+                },
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v2",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («prep work» is said only through the filler p1.f3 «prep work», no detail of the learner's)"
+                },
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v4",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («grill» is said only through the filler p1.f2 «grill», p2.f1 «the grill», p3.f3 «grilled fish», no detail of the learner's)"
+                },
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v6",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («grilled fish» is said only through the filler p3.f3 «grilled fish», no detail of the learner's)"
+                },
+                {
+                    "code": "partner.yes_no_missing",
+                    "address": "a8",
+                    "detail": "a yes-or-no question: start with Yes. or No., then one general fact (the reply to p7 «Can I start ___.»)"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a4",
+                    "detail": "the line names «evenings», a filler of p4"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a5",
+                    "detail": "the line names «weekends», a filler of p4"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a7",
+                    "detail": "the line names «hour», a filler of p6"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a8",
+                    "detail": "the line names «next week», a filler of p7"
+                },
+                {
+                    "code": "vocab.stop_word",
+                    "address": "v7",
+                    "detail": "«evening» is a word of the stop list («evening»)"
+                },
+                {
+                    "code": "vocab.used_in_wrong",
+                    "address": "v5",
+                    "detail": "«dish» is not in p3"
+                },
+                {
+                    "code": "filler.repeats_frame",
+                    "address": "p2.f1",
+                    "detail": "«на гриле» repeats «на», the frame's word at the slot of «Я работал на ___.»"
+                },
+                {
+                    "code": "filler.repeats_frame",
+                    "address": "p2.f2",
+                    "detail": "«на салатной станции» repeats «на», the frame's word at the slot of «Я работал на ___.»"
+                },
+                {
+                    "code": "filler.repeats_frame",
+                    "address": "p2.f3",
+                    "detail": "«на кондитерской станции» repeats «на», the frame's word at the slot of «Я работал на ___.»"
+                }
+            ],
+            "fatal": [
+                "frame.known_repeat"
+            ],
+            "off_schema": null
+        },
+        {
+            "stage": "skeleton",
+            "attempt": 2,
+            "findings": [
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v2",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («grill» is said only through the filler p2.f1 «the grill», no detail of the learner's)"
+                },
+                {
+                    "code": "partner.yes_no_missing",
+                    "address": "a8",
+                    "detail": "a yes-or-no question: start with Yes. or No., then one general fact (the reply to p7 «Can I start ___?»)"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a4",
+                    "detail": "the line names «evenings», a filler of p4"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a5",
+                    "detail": "the line names «weekends», a filler of p4"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a7",
+                    "detail": "the line names «month», a filler of p6"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a8",
+                    "detail": "the line names «next week», a filler of p7"
+                },
+                {
+                    "code": "vocab.stop_word",
+                    "address": "v5",
+                    "detail": "«evening» is a word of the stop list («evening»)"
+                },
+                {
+                    "code": "filler.repeats_frame",
+                    "address": "p2.f1",
+                    "detail": "«на гриле» repeats «на», the frame's word at the slot of «Я работал на ___»"
+                },
+                {
+                    "code": "filler.repeats_frame",
+                    "address": "p2.f2",
+                    "detail": "«на салатной станции» repeats «на», the frame's word at the slot of «Я работал на ___»"
+                },
+                {
+                    "code": "filler.repeats_frame",
+                    "address": "p2.f3",
+                    "detail": "«на кондитерской станции» repeats «на», the frame's word at the slot of «Я работал на ___»"
+                }
+            ],
+            "fatal": [],
+            "off_schema": null
+        },
+        {
+            "stage": "dialogue",
+            "attempt": 1,
+            "findings": [
+                {
+                    "code": "line.ne_frame",
+                    "address": "B2",
+                    "detail": "the native line «Я работал на гриле» is not «Я работал на на гриле» (p2 with «the grill»)"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x3.check",
+                    "detail": "the right option «Какие блюда вы умеете готовить» repeats «какие блюда» of A's «Какие блюда вы умеете готовить?»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x6.check",
+                    "detail": "the right option «Подготовка продуктов» repeats «подготовка продуктов» of A's «Основные обязанности — подготовка продуктов и поддержание чистоты на кухне.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x7.check",
+                    "detail": "the right option «Чистая кухня» repeats «чистая кухня» of A's «Подготовка продуктов и чистая кухня.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x8.check",
+                    "detail": "the right option «At the end of each pay cycle» repeats «at the» of A's «The pay is transferred at the end of each pay period.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x9.check",
+                    "detail": "the right option «Они проходят обучение» repeats «проходят обучение» of A's «Да. Новые сотрудники проходят обучение в течение первой недели.»"
+                }
+            ],
+            "fatal": [
+                "line.ne_frame"
+            ],
+            "off_schema": null
+        },
+        {
+            "stage": "dialogue",
+            "attempt": 2,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "address": "x1.check",
+                    "detail": "the right option «Ваши задачи на прошлой кухонной работе» repeats «на прошлой» of A's «Какие обязанности у вас были на прошлой работе?»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x2.check",
+                    "detail": "the right option «На каком участке кухни вы работали» repeats «вы работали» of A's «На какой станции вы работали?»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x3.check",
+                    "detail": "the right option «Какие виды блюд вы умеете готовить» repeats «вы умеете» of A's «Какие блюда вы умеете готовить?»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x6.check",
+                    "detail": "the right option «Подготовка продуктов» repeats «подготовка продуктов» of A's «Основные обязанности — подготовка продуктов и поддержание чистоты на кухне.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x8.check",
+                    "detail": "the right option «At the close of each payment cycle» repeats «at the» of A's «The pay is transferred at the end of each pay period.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x9.check",
+                    "detail": "the right option «Они проходят обучение в первую неделю» repeats «проходят обучение» of A's «Да. Новые сотрудники проходят обучение в течение первой недели.»"
+                }
+            ],
+            "fatal": [],
+            "off_schema": null
+        }
+    ],
+    "repairs": [
+        {
+            "stage": "skeleton",
+            "address": "p2",
+            "kind": "frame",
+            "sent_for": [
+                "filler.repeats_frame",
+                "filler.repeats_frame",
+                "filler.repeats_frame",
+                "filler.native_seam",
+                "filler.native_seam",
+                "filler.native_seam"
+            ],
+            "status": "repaired",
+            "kept": false,
+            "broke": [
+                "frame.known_repeat"
+            ],
+            "left": [
+                "filler.repeats_frame",
+                "filler.repeats_frame",
+                "filler.repeats_frame",
+                "filler.native_seam",
+                "filler.native_seam",
+                "filler.native_seam"
+            ],
+            "helped": false,
+            "note": "the repair brings a fatal finding"
+        },
+        {
+            "stage": "skeleton",
+            "address": "a7",
+            "kind": "partner_line",
+            "sent_for": [
+                "partner.names_filler",
+                "partner.names_filler_meaning"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "skeleton",
+            "address": "a8",
+            "kind": "partner_line",
+            "sent_for": [
+                "partner.yes_no_missing",
+                "partner.names_filler",
+                "partner.names_filler_meaning"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "skeleton",
+            "address": "v2",
+            "kind": "term",
+            "sent_for": [
+                "vocab.from_placeholder"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "dialogue",
+            "address": "x1.check",
+            "kind": "check",
+            "sent_for": [
+                "check.verbatim"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "dialogue",
+            "address": "x2.check",
+            "kind": "check",
+            "sent_for": [
+                "check.verbatim"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "dialogue",
+            "address": "x3.check",
+            "kind": "check",
+            "sent_for": [
+                "check.verbatim"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "dialogue",
+            "address": "x6.check",
+            "kind": "check",
+            "sent_for": [
+                "check.verbatim"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        }
+    ],
+    "judgements": [
+        {
+            "frames": [
+                "p1",
+                "p2",
+                "p3",
+                "p4",
+                "p5",
+                "p6",
+                "p7"
+            ],
+            "items": 17,
+            "judged": 17,
+            "status": "judged",
+            "not_reading": [
+                "p2.f1",
+                "p2.f2",
+                "p2.f3"
+            ],
+            "replies": [
+                "a7",
+                "a8"
+            ],
+            "naming": [
+                "a7",
+                "a8"
+            ]
+        },
+        {
+            "frames": [],
+            "items": 0,
+            "judged": 0,
+            "status": "judged",
+            "not_reading": [],
+            "replies": [
+                "a7",
+                "a8"
+            ],
+            "naming": []
+        }
+    ],
+    "findings_left": [
+        {
+            "code": "partner.names_filler",
+            "address": "a4",
+            "detail": "the line names «evenings», a filler of p4"
+        },
+        {
+            "code": "partner.names_filler",
+            "address": "a5",
+            "detail": "the line names «weekends», a filler of p4"
+        },
+        {
+            "code": "vocab.stop_word",
+            "address": "v5",
+            "detail": "«evening» is a word of the stop list («evening»)"
+        },
+        {
+            "code": "filler.repeats_frame",
+            "address": "p2.f1",
+            "detail": "«на гриле» repeats «на», the frame's word at the slot of «Я работал на ___»"
+        },
+        {
+            "code": "filler.repeats_frame",
+            "address": "p2.f2",
+            "detail": "«на салатной станции» repeats «на», the frame's word at the slot of «Я работал на ___»"
+        },
+        {
+            "code": "filler.repeats_frame",
+            "address": "p2.f3",
+            "detail": "«на кондитерской станции» repeats «на», the frame's word at the slot of «Я работал на ___»"
+        },
+        {
+            "code": "filler.native_seam",
+            "address": "p2.f1",
+            "detail": "«Я работал на на гриле» («Я работал на ___» with «на гриле») does not read as Russian, the seam judge says"
+        },
+        {
+            "code": "filler.native_seam",
+            "address": "p2.f2",
+            "detail": "«Я работал на на салатной станции» («Я работал на ___» with «на салатной станции») does not read as Russian, the seam judge says"
+        },
+        {
+            "code": "filler.native_seam",
+            "address": "p2.f3",
+            "detail": "«Я работал на на кондитерской станции» («Я работал на ___» with «на кондитерской станции») does not read as Russian, the seam judge says"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x8.check",
+            "detail": "the right option «At the close of each payment cycle» repeats «at the» of A's «The pay is transferred at the end of each pay period.»"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x9.check",
+            "detail": "the right option «Они проходят обучение в первую неделю» repeats «проходят обучение» of A's «Да. Новые сотрудники проходят обучение в течение первой недели.»"
+        }
+    ],
+    "skeleton": {
+        "topic": {
+            "title_target": "Experience and conditions",
+            "title_native": "Опыт и условия",
+            "description_target": "Talk about your cooking experience, ask about duties, pay, and possible start time.",
+            "description_native": "Рассказать о кулинарном опыте, спросить об обязанностях, оплате и возможном начале работы."
+        },
+        "learner_role": {
+            "role_target": "Cook",
+            "role_native": "Повар"
+        },
+        "role_gender": "male",
+        "phrases": [
+            {
+                "id": "p1",
+                "kind": "answer",
+                "must_say": [
+                    1
+                ],
+                "frame_target": "I prepared ___",
+                "frame_native": "Я готовил ___",
+                "pronunciation_native": "ай припэрд ___",
+                "slot": {
+                    "hint_native": "что вы готовили или делали",
+                    "fillers": [
+                        {
+                            "target": "salads",
+                            "native": "салаты",
+                            "pronunciation_native": "сэлэдз",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "soups",
+                            "native": "супы",
+                            "pronunciation_native": "супс",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "hot dishes",
+                            "native": "горячие блюда",
+                            "pronunciation_native": "хот дишиз",
+                            "in_dialogue": true
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p2",
+                "kind": "answer",
+                "must_say": [
+                    2
+                ],
+                "frame_target": "I worked on ___",
+                "frame_native": "Я работал на ___",
+                "pronunciation_native": "ай уёркт он ___",
+                "slot": {
+                    "hint_native": "на какой станции",
+                    "fillers": [
+                        {
+                            "target": "the grill",
+                            "native": "на гриле",
+                            "pronunciation_native": "зэ гриль",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "the salad station",
+                            "native": "на салатной станции",
+                            "pronunciation_native": "зэ сэлэд стэйшн",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "the pastry station",
+                            "native": "на кондитерской станции",
+                            "pronunciation_native": "зэ пэйстри стэйшн",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p3",
+                "kind": "answer",
+                "must_say": [
+                    3
+                ],
+                "frame_target": "I can make ___",
+                "frame_native": "Я могу готовить ___",
+                "pronunciation_native": "ай кэн мэйк ___",
+                "slot": {
+                    "hint_native": "какие блюда вы умеете готовить",
+                    "fillers": [
+                        {
+                            "target": "pasta",
+                            "native": "пасту",
+                            "pronunciation_native": "паста",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "soups",
+                            "native": "супы",
+                            "pronunciation_native": "супс",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "meat dishes",
+                            "native": "мясные блюда",
+                            "pronunciation_native": "мит дишиз",
+                            "in_dialogue": true
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p4",
+                "kind": "answer",
+                "must_say": [
+                    4
+                ],
+                "frame_target": "I can work ___",
+                "frame_native": "Я могу работать ___",
+                "pronunciation_native": "ай кэн уёрк ___",
+                "slot": {
+                    "hint_native": "какую смену",
+                    "fillers": [
+                        {
+                            "target": "evenings",
+                            "native": "по вечерам",
+                            "pronunciation_native": "ивнингз",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "weekends",
+                            "native": "по выходным",
+                            "pronunciation_native": "уикэндз",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "night shifts",
+                            "native": "в ночные смены",
+                            "pronunciation_native": "найт шифтс",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p5",
+                "kind": "ask",
+                "must_say": [
+                    5
+                ],
+                "frame_target": "What are the main duties?",
+                "frame_native": "Какие основные обязанности?",
+                "pronunciation_native": "уот ар зэ мэйн дьютиз",
+                "slot": null
+            },
+            {
+                "id": "p6",
+                "kind": "ask",
+                "must_say": [
+                    6
+                ],
+                "frame_target": "What is the pay per ___?",
+                "frame_native": "Какая оплата за ___?",
+                "pronunciation_native": "уот из зэ пэй пёр ___",
+                "slot": {
+                    "hint_native": "за какой период",
+                    "fillers": [
+                        {
+                            "target": "month",
+                            "native": "месяц",
+                            "pronunciation_native": "манс",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "week",
+                            "native": "неделю",
+                            "pronunciation_native": "уик",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p7",
+                "kind": "ask",
+                "must_say": [
+                    7
+                ],
+                "frame_target": "Can I start ___?",
+                "frame_native": "Я могу начать ___?",
+                "pronunciation_native": "кэн ай старт ___",
+                "slot": {
+                    "hint_native": "когда вы можете начать",
+                    "fillers": [
+                        {
+                            "target": "next week",
+                            "native": "на следующей неделе",
+                            "pronunciation_native": "нэкст уик",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "on Monday",
+                            "native": "в понедельник",
+                            "pronunciation_native": "он мандэй",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "this weekend",
+                            "native": "в эти выходные",
+                            "pronunciation_native": "зис уикэнд",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            }
+        ],
+        "partner_lines": [
+            {
+                "id": "a1",
+                "must_understand": 1,
+                "kind": "question",
+                "pairs_with": [
+                    1
+                ],
+                "text_target": "What duties did you have in your last job?",
+                "text_native": "Какие обязанности у вас были на прошлой работе?"
+            },
+            {
+                "id": "a2",
+                "must_understand": 2,
+                "kind": "question",
+                "pairs_with": [
+                    2
+                ],
+                "text_target": "Which station did you work on?",
+                "text_native": "На какой станции вы работали?"
+            },
+            {
+                "id": "a3",
+                "must_understand": 2,
+                "kind": "question",
+                "pairs_with": [
+                    3
+                ],
+                "text_target": "What dishes can you cook?",
+                "text_native": "Какие блюда вы умеете готовить?"
+            },
+            {
+                "id": "a4",
+                "must_understand": 3,
+                "kind": "question",
+                "pairs_with": [
+                    4
+                ],
+                "text_target": "Can you work evenings?",
+                "text_native": "Вы можете работать по вечерам?"
+            },
+            {
+                "id": "a5",
+                "must_understand": 3,
+                "kind": "question",
+                "pairs_with": [
+                    4
+                ],
+                "text_target": "Can you work weekends?",
+                "text_native": "Вы можете работать по выходным?"
+            },
+            {
+                "id": "a6",
+                "must_understand": 4,
+                "kind": "statement",
+                "pairs_with": [
+                    5
+                ],
+                "text_target": "The main duties are food prep and keeping the kitchen clean.",
+                "text_native": "Основные обязанности — подготовка продуктов и поддержание чистоты на кухне."
+            },
+            {
+                "id": "a7",
+                "must_understand": 5,
+                "kind": "statement",
+                "pairs_with": [
+                    6
+                ],
+                "text_target": "The pay is transferred at the end of each pay period.",
+                "text_native": "Оплату переводят в конце каждого расчётного периода."
+            },
+            {
+                "id": "a8",
+                "must_understand": 5,
+                "kind": "statement",
+                "pairs_with": [
+                    7
+                ],
+                "text_target": "Yes. New staff receive training during the first week.",
+                "text_native": "Да. Новые сотрудники проходят обучение в течение первой недели."
+            }
+        ],
+        "vocabulary": [
+            {
+                "id": "v1",
+                "term_target": "to prepare",
+                "translation_native": "готовить",
+                "pronunciation_native": "ту припэр",
+                "definition_target": "to make food ready",
+                "kind": "word",
+                "image_prompt": "a cook preparing ingredients on a kitchen counter",
+                "used_in": [
+                    "p1",
+                    "a6"
+                ]
+            },
+            {
+                "id": "v2",
+                "term_target": "food prep",
+                "translation_native": "подготовка продуктов",
+                "pronunciation_native": "фуд преп",
+                "definition_target": "preparing food before cooking",
+                "kind": "chunk",
+                "image_prompt": "a cook chopping vegetables and preparing ingredients on a kitchen counter",
+                "used_in": [
+                    "a6"
+                ]
+            },
+            {
+                "id": "v3",
+                "term_target": "station",
+                "translation_native": "станция",
+                "pronunciation_native": "стэйшн",
+                "definition_target": "one work area in a kitchen",
+                "kind": "word",
+                "image_prompt": "a cook working at a labeled kitchen station",
+                "used_in": [
+                    "p2",
+                    "a2"
+                ]
+            },
+            {
+                "id": "v4",
+                "term_target": "dish",
+                "translation_native": "блюдо",
+                "pronunciation_native": "диш",
+                "definition_target": "prepared food served as one item",
+                "kind": "word",
+                "image_prompt": "a plated cooked dish in a restaurant kitchen",
+                "used_in": [
+                    "p3",
+                    "a3"
+                ]
+            },
+            {
+                "id": "v5",
+                "term_target": "evening",
+                "translation_native": "вечер",
+                "pronunciation_native": "ивнинг",
+                "definition_target": "the time late in the day",
+                "kind": "word",
+                "image_prompt": "restaurant kitchen staff working in the evening",
+                "used_in": [
+                    "p4",
+                    "a4"
+                ]
+            },
+            {
+                "id": "v6",
+                "term_target": "weekend",
+                "translation_native": "выходные",
+                "pronunciation_native": "уикэнд",
+                "definition_target": "Saturday and Sunday",
+                "kind": "word",
+                "image_prompt": "a restaurant open on a busy weekend evening",
+                "used_in": [
+                    "p4",
+                    "a5",
+                    "p7"
+                ]
+            },
+            {
+                "id": "v7",
+                "term_target": "main duties",
+                "translation_native": "основные обязанности",
+                "pronunciation_native": "мэйн дьютиз",
+                "definition_target": "the most important tasks in a job",
+                "kind": "chunk",
+                "image_prompt": null,
+                "used_in": [
+                    "p5",
+                    "a6"
+                ]
+            },
+            {
+                "id": "v8",
+                "term_target": "pay",
+                "translation_native": "оплата",
+                "pronunciation_native": "пэй",
+                "definition_target": "money you get for your work",
+                "kind": "word",
+                "image_prompt": "a payslip on a table in an office",
+                "used_in": [
+                    "p6",
+                    "a7"
+                ]
+            },
+            {
+                "id": "v9",
+                "term_target": "to start",
+                "translation_native": "начинать",
+                "pronunciation_native": "ту старт",
+                "definition_target": "to begin work",
+                "kind": "word",
+                "image_prompt": "a new cook entering a professional kitchen for the first day",
+                "used_in": [
+                    "p7",
+                    "a8"
+                ]
+            }
+        ]
+    }
+}

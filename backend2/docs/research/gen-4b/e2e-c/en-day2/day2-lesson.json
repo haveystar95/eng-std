@@ -1,0 +1,795 @@
+{
+    "topic": {
+        "title_native": "Опыт и условия",
+        "title_target": "Experience and conditions",
+        "description_native": "Рассказать о кулинарном опыте, спросить об обязанностях, оплате и возможном начале работы.",
+        "description_target": "Talk about your cooking experience, ask about duties, pay, and possible start time."
+    },
+    "phrases": [
+        {
+            "id": "p1",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "салаты",
+                        "target": "salads",
+                        "in_dialogue": false,
+                        "pronunciation_native": "сэлэдз"
+                    },
+                    {
+                        "native": "супы",
+                        "target": "soups",
+                        "in_dialogue": false,
+                        "pronunciation_native": "супс"
+                    },
+                    {
+                        "native": "горячие блюда",
+                        "target": "hot dishes",
+                        "in_dialogue": true,
+                        "pronunciation_native": "хот дишиз"
+                    }
+                ],
+                "hint_native": "что вы готовили или делали"
+            },
+            "frame_native": "Я готовил ___.",
+            "frame_target": "I prepared ___.",
+            "pronunciation_native": "ай припэрд ___"
+        },
+        {
+            "id": "p2",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "на гриле",
+                        "target": "the grill",
+                        "in_dialogue": true,
+                        "pronunciation_native": "зэ гриль"
+                    },
+                    {
+                        "native": "на салатной станции",
+                        "target": "the salad station",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ сэлэд стэйшн"
+                    },
+                    {
+                        "native": "на кондитерской станции",
+                        "target": "the pastry station",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зэ пэйстри стэйшн"
+                    }
+                ],
+                "hint_native": "на какой станции"
+            },
+            "frame_native": "Я работал на ___.",
+            "frame_target": "I worked on ___.",
+            "pronunciation_native": "ай уёркт он ___"
+        },
+        {
+            "id": "p3",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "пасту",
+                        "target": "pasta",
+                        "in_dialogue": false,
+                        "pronunciation_native": "паста"
+                    },
+                    {
+                        "native": "супы",
+                        "target": "soups",
+                        "in_dialogue": false,
+                        "pronunciation_native": "супс"
+                    },
+                    {
+                        "native": "мясные блюда",
+                        "target": "meat dishes",
+                        "in_dialogue": true,
+                        "pronunciation_native": "мит дишиз"
+                    }
+                ],
+                "hint_native": "какие блюда вы умеете готовить"
+            },
+            "frame_native": "Я могу готовить ___.",
+            "frame_target": "I can make ___.",
+            "pronunciation_native": "ай кэн мэйк ___"
+        },
+        {
+            "id": "p4",
+            "kind": "answer",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "по вечерам",
+                        "target": "evenings",
+                        "in_dialogue": true,
+                        "pronunciation_native": "ивнингз"
+                    },
+                    {
+                        "native": "по выходным",
+                        "target": "weekends",
+                        "in_dialogue": true,
+                        "pronunciation_native": "уикэндз"
+                    },
+                    {
+                        "native": "в ночные смены",
+                        "target": "night shifts",
+                        "in_dialogue": false,
+                        "pronunciation_native": "найт шифтс"
+                    }
+                ],
+                "hint_native": "какую смену"
+            },
+            "frame_native": "Я могу работать ___.",
+            "frame_target": "I can work ___.",
+            "pronunciation_native": "ай кэн уёрк ___"
+        },
+        {
+            "id": "p5",
+            "kind": "ask",
+            "slot": null,
+            "frame_native": "Какие основные обязанности?",
+            "frame_target": "What are the main duties?",
+            "pronunciation_native": "уот ар зэ мэйн дьютиз"
+        },
+        {
+            "id": "p6",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "месяц",
+                        "target": "month",
+                        "in_dialogue": true,
+                        "pronunciation_native": "манс"
+                    },
+                    {
+                        "native": "неделю",
+                        "target": "week",
+                        "in_dialogue": false,
+                        "pronunciation_native": "уик"
+                    }
+                ],
+                "hint_native": "за какой период"
+            },
+            "frame_native": "Какая оплата за ___?",
+            "frame_target": "What is the pay per ___?",
+            "pronunciation_native": "уот из зэ пэй пёр ___"
+        },
+        {
+            "id": "p7",
+            "kind": "ask",
+            "slot": {
+                "fillers": [
+                    {
+                        "native": "на следующей неделе",
+                        "target": "next week",
+                        "in_dialogue": true,
+                        "pronunciation_native": "нэкст уик"
+                    },
+                    {
+                        "native": "в понедельник",
+                        "target": "on Monday",
+                        "in_dialogue": false,
+                        "pronunciation_native": "он мандэй"
+                    },
+                    {
+                        "native": "в эти выходные",
+                        "target": "this weekend",
+                        "in_dialogue": false,
+                        "pronunciation_native": "зис уикэнд"
+                    }
+                ],
+                "hint_native": "когда вы можете начать"
+            },
+            "frame_native": "Я могу начать ___?",
+            "frame_target": "Can I start ___?",
+            "pronunciation_native": "кэн ай старт ___"
+        }
+    ],
+    "dialogue": [
+        {
+            "kind": "answer",
+            "step": 1,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Вашу ожидаемую зарплату",
+                        "text_target": "Your expected salary"
+                    },
+                    {
+                        "text_native": "Задачи, которые вы выполняли на прежнем месте работы",
+                        "text_target": "The responsibilities you handled at your former workplace"
+                    },
+                    {
+                        "text_native": "Ваш предпочтительный рабочий график",
+                        "text_target": "Your preferred work schedule"
+                    }
+                ],
+                "text_native": "Что менеджер хочет узнать?",
+                "text_target": "What does the manager want to know?",
+                "explanation_native": "Менеджер спрашивает о том, что вы делали на прошлой работе.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Менеджер",
+                    "role_target": "Manager",
+                    "text_native": "Какие обязанности у вас были на прошлой работе?",
+                    "text_target": "What duties did you have in your last job?"
+                },
+                {
+                    "filler": "hot dishes",
+                    "speaker": "B",
+                    "phrase_id": "p1",
+                    "role_native": "Повар",
+                    "role_target": "Cook",
+                    "text_native": "Я готовил горячие блюда.",
+                    "text_target": "I prepared hot dishes.",
+                    "speaking_key": "I prepared",
+                    "simplified_variants": [
+                        "I made hot dishes."
+                    ],
+                    "pronunciation_native": "ай припэрд хот дишиз"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 2,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Какие блюда вы умеете готовить",
+                        "text_target": "Which dishes you can make"
+                    },
+                    {
+                        "text_native": "Участок кухни, где у вас был опыт",
+                        "text_target": "The kitchen section where you had experience"
+                    },
+                    {
+                        "text_native": "Какую смену вы предпочитаете",
+                        "text_target": "Which shift you prefer"
+                    }
+                ],
+                "text_native": "Что менеджер хочет узнать?",
+                "text_target": "What does the manager want to know?",
+                "explanation_native": "Менеджер хочет узнать, на каком участке кухни у вас был опыт.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Менеджер",
+                    "role_target": "Manager",
+                    "text_native": "На какой станции вы работали?",
+                    "text_target": "Which station did you work on?"
+                },
+                {
+                    "filler": "the grill",
+                    "speaker": "B",
+                    "phrase_id": "p2",
+                    "role_native": "Повар",
+                    "role_target": "Cook",
+                    "text_native": "Я работал на на гриле.",
+                    "text_target": "I worked on the grill.",
+                    "speaking_key": "I worked on",
+                    "simplified_variants": [
+                        "I was on the grill."
+                    ],
+                    "pronunciation_native": "ай уёркт он зэ гриль"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 3,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Каким оборудованием вы пользовались",
+                        "text_target": "What equipment you used"
+                    },
+                    {
+                        "text_native": "Когда вы можете начать",
+                        "text_target": "What time you can start"
+                    },
+                    {
+                        "text_native": "Какие рецепты вам удаётся готовить",
+                        "text_target": "Which recipes you manage to prepare"
+                    }
+                ],
+                "text_native": "Что менеджер хочет узнать?",
+                "text_target": "What does the manager want to know?",
+                "explanation_native": "Менеджер спрашивает, какие рецепты вам удаётся готовить.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Менеджер",
+                    "role_target": "Manager",
+                    "text_native": "Какие блюда вы умеете готовить?",
+                    "text_target": "What dishes can you cook?"
+                },
+                {
+                    "filler": "meat dishes",
+                    "speaker": "B",
+                    "phrase_id": "p3",
+                    "role_native": "Повар",
+                    "role_target": "Cook",
+                    "text_native": "Я могу готовить мясные блюда.",
+                    "text_target": "I can make meat dishes.",
+                    "speaking_key": "I can make",
+                    "simplified_variants": [
+                        "I can cook meat dishes."
+                    ],
+                    "pronunciation_native": "ай кэн мэйк мит дишиз"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 4,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Возможность работать поздно днём и вечером",
+                        "text_target": "Availability late in the day"
+                    },
+                    {
+                        "text_native": "Опыт с десертами",
+                        "text_target": "Experience with desserts"
+                    },
+                    {
+                        "text_native": "Оплата за неделю",
+                        "text_target": "Payment by week"
+                    }
+                ],
+                "text_native": "О чём спрашивает менеджер?",
+                "text_target": "What is the manager asking about?",
+                "explanation_native": "Менеджер спрашивает, можете ли вы работать вечером.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Менеджер",
+                    "role_target": "Manager",
+                    "text_native": "Вы можете работать по вечерам?",
+                    "text_target": "Can you work evenings?"
+                },
+                {
+                    "filler": "evenings",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Повар",
+                    "role_target": "Cook",
+                    "text_native": "Я могу работать по вечерам.",
+                    "text_target": "I can work evenings.",
+                    "speaking_key": "I can work",
+                    "simplified_variants": [
+                        "I can do evenings."
+                    ],
+                    "pronunciation_native": "ай кэн уёрк ивнингз"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "answer",
+            "step": 5,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Работа по субботам и воскресеньям",
+                        "text_target": "Work on Saturdays and Sundays"
+                    },
+                    {
+                        "text_native": "Обучение в первые дни",
+                        "text_target": "Training in the first days"
+                    },
+                    {
+                        "text_native": "Приготовление мясных блюд",
+                        "text_target": "Cooking meat meals"
+                    }
+                ],
+                "text_native": "О чём спрашивает менеджер?",
+                "text_target": "What is the manager asking about?",
+                "explanation_native": "Менеджер спрашивает, можете ли вы работать в выходные.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "speaker": "A",
+                    "role_native": "Менеджер",
+                    "role_target": "Manager",
+                    "text_native": "Вы можете работать по выходным?",
+                    "text_target": "Can you work weekends?"
+                },
+                {
+                    "filler": "weekends",
+                    "speaker": "B",
+                    "phrase_id": "p4",
+                    "role_native": "Повар",
+                    "role_target": "Cook",
+                    "text_native": "Я могу работать по выходным.",
+                    "text_target": "I can work weekends.",
+                    "speaking_key": "I can work",
+                    "simplified_variants": [
+                        "I can do weekends."
+                    ],
+                    "pronunciation_native": "ай кэн уёрк уикэндз"
+                }
+            ],
+            "initiator": "A"
+        },
+        {
+            "kind": "ask",
+            "step": 6,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Подготовка ингредиентов",
+                        "text_target": "Getting ingredients ready"
+                    },
+                    {
+                        "text_native": "Обслуживание столов",
+                        "text_target": "Serving tables"
+                    },
+                    {
+                        "text_native": "Заказ продуктов",
+                        "text_target": "Ordering supplies"
+                    }
+                ],
+                "text_native": "Какую обязанность называет менеджер?",
+                "text_target": "Which duty does the manager mention?",
+                "explanation_native": "Менеджер говорит о подготовке продуктов и чистоте на кухне.",
+                "correct_option_index": 0
+            },
+            "messages": [
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": "p5",
+                    "role_native": "Повар",
+                    "role_target": "Cook",
+                    "text_native": "Какие основные обязанности?",
+                    "text_target": "What are the main duties?",
+                    "speaking_key": "the main duties",
+                    "simplified_variants": [
+                        "Main duties?"
+                    ],
+                    "pronunciation_native": "уот ар зэ мэйн дьютиз"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Менеджер",
+                    "role_target": "Manager",
+                    "text_native": "Основные обязанности — подготовка продуктов и поддержание чистоты на кухне.",
+                    "text_target": "The main duties are food prep and keeping the kitchen clean."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "rescue",
+            "step": 7,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Вечерние смены",
+                        "text_target": "Evening shifts"
+                    },
+                    {
+                        "text_native": "Обучение по выходным",
+                        "text_target": "Weekend training"
+                    },
+                    {
+                        "text_native": "Чистую кухню",
+                        "text_target": "A tidy kitchen"
+                    }
+                ],
+                "text_native": "Что ещё менеджер упоминает кроме подготовки продуктов?",
+                "text_target": "What else does the manager mention besides food prep?",
+                "explanation_native": "В повторе менеджер добавляет, что кухня должна быть чистой.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": null,
+                    "speaker": "B",
+                    "phrase_id": null,
+                    "role_native": "Повар",
+                    "role_target": "Cook",
+                    "text_native": "Повторите, пожалуйста.",
+                    "text_target": "Could you repeat, please?",
+                    "speaking_key": "repeat, please",
+                    "simplified_variants": [
+                        "Please repeat.",
+                        "Say it again, please."
+                    ],
+                    "pronunciation_native": "куд ю рипит, плиз"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Менеджер",
+                    "role_target": "Manager",
+                    "text_native": "Подготовка продуктов и чистая кухня.",
+                    "text_target": "Food prep and a clean kitchen."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 8,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Каждый день после смены",
+                        "text_target": "Every day after the shift"
+                    },
+                    {
+                        "text_native": "В конце каждого расчётного периода",
+                        "text_target": "At the close of each payment cycle"
+                    },
+                    {
+                        "text_native": "В начале рабочей недели",
+                        "text_target": "At the start of the work week"
+                    }
+                ],
+                "text_native": "Когда переводят деньги?",
+                "text_target": "When is the money sent?",
+                "explanation_native": "Менеджер говорит, что оплату переводят в конце расчётного периода.",
+                "correct_option_index": 1
+            },
+            "messages": [
+                {
+                    "filler": "month",
+                    "speaker": "B",
+                    "phrase_id": "p6",
+                    "role_native": "Повар",
+                    "role_target": "Cook",
+                    "text_native": "Какая оплата за месяц?",
+                    "text_target": "What is the pay per month?",
+                    "speaking_key": "the pay per",
+                    "simplified_variants": [
+                        "Pay per month?"
+                    ],
+                    "pronunciation_native": "уот из зэ пэй пёр манс"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Менеджер",
+                    "role_target": "Manager",
+                    "text_native": "Оплату переводят в конце каждого расчётного периода.",
+                    "text_target": "The pay is transferred at the end of each pay period."
+                }
+            ],
+            "initiator": "B"
+        },
+        {
+            "kind": "ask",
+            "step": 9,
+            "check": {
+                "options": [
+                    {
+                        "text_native": "Они выбирают свою станцию",
+                        "text_target": "They choose their station"
+                    },
+                    {
+                        "text_native": "Им платят каждый день",
+                        "text_target": "They are paid every day"
+                    },
+                    {
+                        "text_native": "Они проходят обучение в первую неделю",
+                        "text_target": "They get instruction in week one"
+                    }
+                ],
+                "text_native": "Что происходит в начале у новых сотрудников?",
+                "text_target": "What happens in the beginning for new workers?",
+                "explanation_native": "Менеджер говорит, что в первую неделю новые сотрудники проходят обучение.",
+                "correct_option_index": 2
+            },
+            "messages": [
+                {
+                    "filler": "next week",
+                    "speaker": "B",
+                    "phrase_id": "p7",
+                    "role_native": "Повар",
+                    "role_target": "Cook",
+                    "text_native": "Я могу начать на следующей неделе?",
+                    "text_target": "Can I start next week?",
+                    "speaking_key": "Can I start",
+                    "simplified_variants": [
+                        "Start next week?"
+                    ],
+                    "pronunciation_native": "кэн ай старт нэкст уик"
+                },
+                {
+                    "speaker": "A",
+                    "role_native": "Менеджер",
+                    "role_target": "Manager",
+                    "text_native": "Да. Новые сотрудники проходят обучение в течение первой недели.",
+                    "text_target": "Yes. New staff receive training during the first week."
+                }
+            ],
+            "initiator": "B"
+        }
+    ],
+    "listening": {
+        "questions": [
+            {
+                "text_native": "Какие блюда вы сказали, что умеете готовить?",
+                "options_native": [
+                    "мясные блюда",
+                    "пасту",
+                    "супы"
+                ],
+                "explanation_native": "Вы сказали, что умеете готовить мясные блюда.",
+                "correct_option_index": 0
+            },
+            {
+                "text_native": "Что менеджер назвал среди основных обязанностей?",
+                "options_native": [
+                    "заказ поставок",
+                    "подготовку продуктов",
+                    "работу в зале"
+                ],
+                "explanation_native": "Менеджер сказал про подготовку продуктов и чистоту на кухне.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Когда, по словам менеджера, переводят оплату?",
+                "options_native": [
+                    "в начале месяца",
+                    "в конце каждого расчётного периода",
+                    "после каждой смены"
+                ],
+                "explanation_native": "Менеджер сказал, что оплату переводят в конце каждого расчётного периода.",
+                "correct_option_index": 1
+            },
+            {
+                "text_native": "Когда вы спросили, можно ли начать работу?",
+                "options_native": [
+                    "на следующей неделе",
+                    "в эти выходные",
+                    "в понедельник"
+                ],
+                "explanation_native": "Вы спросили, можно ли начать на следующей неделе.",
+                "correct_option_index": 0
+            }
+        ]
+    },
+    "vocabulary": [
+        {
+            "id": "v1",
+            "kind": "word",
+            "used_in": [
+                "p1",
+                "A6"
+            ],
+            "term_target": "to prepare",
+            "image_prompt": "a cook preparing ingredients on a kitchen counter",
+            "definition_target": "to make food ready",
+            "translation_native": "готовить",
+            "pronunciation_native": "ту припэр"
+        },
+        {
+            "id": "v2",
+            "kind": "chunk",
+            "used_in": [
+                "A6"
+            ],
+            "term_target": "food prep",
+            "image_prompt": "a cook chopping vegetables and preparing ingredients on a kitchen counter",
+            "definition_target": "preparing food before cooking",
+            "translation_native": "подготовка продуктов",
+            "pronunciation_native": "фуд преп"
+        },
+        {
+            "id": "v3",
+            "kind": "word",
+            "used_in": [
+                "p2",
+                "A2"
+            ],
+            "term_target": "station",
+            "image_prompt": "a cook working at a labeled kitchen station",
+            "definition_target": "one work area in a kitchen",
+            "translation_native": "станция",
+            "pronunciation_native": "стэйшн"
+        },
+        {
+            "id": "v4",
+            "kind": "word",
+            "used_in": [
+                "p3",
+                "A3"
+            ],
+            "term_target": "dish",
+            "image_prompt": "a plated cooked dish in a restaurant kitchen",
+            "definition_target": "prepared food served as one item",
+            "translation_native": "блюдо",
+            "pronunciation_native": "диш"
+        },
+        {
+            "id": "v5",
+            "kind": "word",
+            "used_in": [
+                "p4",
+                "A4"
+            ],
+            "term_target": "evening",
+            "image_prompt": "restaurant kitchen staff working in the evening",
+            "definition_target": "the time late in the day",
+            "translation_native": "вечер",
+            "pronunciation_native": "ивнинг"
+        },
+        {
+            "id": "v6",
+            "kind": "word",
+            "used_in": [
+                "p4",
+                "A5",
+                "p7"
+            ],
+            "term_target": "weekend",
+            "image_prompt": "a restaurant open on a busy weekend evening",
+            "definition_target": "Saturday and Sunday",
+            "translation_native": "выходные",
+            "pronunciation_native": "уикэнд"
+        },
+        {
+            "id": "v7",
+            "kind": "chunk",
+            "used_in": [
+                "p5",
+                "A6"
+            ],
+            "term_target": "main duties",
+            "image_prompt": null,
+            "definition_target": "the most important tasks in a job",
+            "translation_native": "основные обязанности",
+            "pronunciation_native": "мэйн дьютиз"
+        },
+        {
+            "id": "v8",
+            "kind": "word",
+            "used_in": [
+                "p6",
+                "A8"
+            ],
+            "term_target": "pay",
+            "image_prompt": "a payslip on a table in an office",
+            "definition_target": "money you get for your work",
+            "translation_native": "оплата",
+            "pronunciation_native": "пэй"
+        },
+        {
+            "id": "v9",
+            "kind": "word",
+            "used_in": [
+                "p7",
+                "A9"
+            ],
+            "term_target": "to start",
+            "image_prompt": "a new cook entering a professional kitchen for the first day",
+            "definition_target": "to begin work",
+            "translation_native": "начинать",
+            "pronunciation_native": "ту старт"
+        }
+    ],
+    "role_gender": "male",
+    "learner_role": {
+        "role_native": "Повар",
+        "role_target": "Cook"
+    }
+}

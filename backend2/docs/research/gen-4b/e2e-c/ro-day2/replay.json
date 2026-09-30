@@ -1,0 +1,958 @@
+{
+    "plan": "01M3QET095394QGAWYFS7K1JR6",
+    "day": 2,
+    "scene": "01M3QETBPZX4W5MZ5JWF75R7HC",
+    "status": "ready",
+    "fail_reason": null,
+    "same_skeleton_as_stored": true,
+    "calls_replayed": {
+        "skeleton": 2,
+        "dialogue": 1,
+        "repair": 7,
+        "seam_judge": 2
+    },
+    "calls_recorded": {
+        "skeleton": 2,
+        "dialogue": 1,
+        "repair": 7,
+        "seam_judge": 2
+    },
+    "judge": "recorded",
+    "repairs_asked": [
+        {
+            "address": "p6",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "filler.common_prefix",
+                    "detail": "p6: every native filler starts with «слово» — the word is the frame's"
+                },
+                {
+                    "code": "vocab.carried",
+                    "detail": "p6: not a finding: this card alone says the words of the day «a însemna» (v5) — keep each of them in the card you write, or the day loses it"
+                }
+            ]
+        },
+        {
+            "address": "a5",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "partner.names_filler_meaning",
+                    "detail": "a5: the reply names or paraphrases a filler of the frame: one general fact about the matter of the scene instead, true whatever was asked («Da. Postul are contact zilnic cu oamenii și lucru în echipă.» to «Postul include ___?» with «lucrul cu clienții», «munca la calculator», «pregătirea coletelor», the seam judge says)"
+                },
+                {
+                    "code": "vocab.carried",
+                    "detail": "a5: not a finding: this card alone says the words of the day «în echipă» (v10) — keep each of them in the card you write, or the day loses it"
+                }
+            ]
+        },
+        {
+            "address": "v6",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "vocab.from_placeholder",
+                    "detail": "v6: a placeholder word: replace with a word from a frame or a partner line of this day («pregătire» is said only through the filler p5.f3 «pregătirea coletelor», p7.f1 «pregătire», no detail of the learner's)"
+                }
+            ]
+        },
+        {
+            "address": "x4.check",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "detail": "x4.check: the right option «Есть ли у вас практика в этой задаче» repeats «у вас» of A's «У вас есть опыт с этой задачей?»"
+                }
+            ]
+        },
+        {
+            "address": "x5.check",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "detail": "x5.check: the right option «Cu o echipă în prima săptămână» repeats «echipă în» of A's «Da. Veți lucra în echipă în prima săptămână.»"
+                }
+            ]
+        },
+        {
+            "address": "x6.check",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "detail": "x6.check: the right option «În prima săptămână» repeats «în prima» of A's «În prima săptămână, veți lucra în echipă.»"
+                }
+            ]
+        },
+        {
+            "address": "x8.check",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "detail": "x8.check: the right option «La început» repeats «la început» of A's «Da, la început.»"
+                }
+            ]
+        }
+    ],
+    "judge_answers": [
+        {
+            "prompt": "recorded",
+            "replies": [
+                "a5"
+            ],
+            "answer": {
+                "verdicts": [
+                    {
+                        "id": "p1.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p8.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p8.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p8.f3",
+                        "reads": true
+                    }
+                ],
+                "replies": [
+                    {
+                        "id": "a5",
+                        "names_a_value": true
+                    }
+                ]
+            },
+            "cost_usd": "0"
+        },
+        {
+            "prompt": "recorded",
+            "replies": [
+                "a5"
+            ],
+            "answer": {
+                "verdicts": [
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f3",
+                        "reads": true
+                    }
+                ],
+                "replies": [
+                    {
+                        "id": "a5",
+                        "names_a_value": true
+                    }
+                ]
+            },
+            "cost_usd": "0"
+        }
+    ],
+    "attempts": [
+        {
+            "stage": "skeleton",
+            "attempt": 1,
+            "findings": [
+                {
+                    "code": "pronunciation.foreign_script",
+                    "address": "p7.f2",
+                    "detail": "the reading «прегэтиrе» has letters of another alphabet: r"
+                },
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v1",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («depozit» is said only through the filler p1.f1 «un depozit», no detail of the learner's)"
+                },
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v5",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («inventar» is said only through the filler p4.f1 «inventarul», no detail of the learner's)"
+                },
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v8",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («instruire» is said only through the filler p7.f1 «instruire», no detail of the learner's)"
+                },
+                {
+                    "code": "partner.yes_no_missing",
+                    "address": "a5",
+                    "detail": "a yes-or-no question: start with Da. or Nu., then one general fact (the reply to p5 «Postul include ___?»)"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a6",
+                    "detail": "the line names «un răspuns», a filler of p8"
+                }
+            ],
+            "fatal": [
+                "pronunciation.foreign_script",
+                "vocab.from_placeholder",
+                "partner.yes_no_missing"
+            ],
+            "off_schema": null
+        },
+        {
+            "stage": "skeleton",
+            "attempt": 2,
+            "findings": [
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v6",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («pregătire» is said only through the filler p5.f3 «pregătirea coletelor», p7.f1 «pregătire», no detail of the learner's)"
+                },
+                {
+                    "code": "filler.common_prefix",
+                    "address": "p6",
+                    "detail": "every native filler starts with «слово» — the word is the frame's"
+                }
+            ],
+            "fatal": [],
+            "off_schema": null
+        },
+        {
+            "stage": "dialogue",
+            "attempt": 1,
+            "findings": [
+                {
+                    "code": "check.verbatim",
+                    "address": "x4.check",
+                    "detail": "the right option «Есть ли у вас практика в этой задаче» repeats «у вас» of A's «У вас есть опыт с этой задачей?»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x5.check",
+                    "detail": "the right option «Cu o echipă în prima săptămână» repeats «echipă în» of A's «Da. Veți lucra în echipă în prima săptămână.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x6.check",
+                    "detail": "the right option «În prima săptămână» repeats «în prima» of A's «În prima săptămână, veți lucra în echipă.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x8.check",
+                    "detail": "the right option «La început» repeats «la început» of A's «Da, la început.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x9.check",
+                    "detail": "the right option «Până vineri» repeats «până vineri» of A's «După interviu, vă sunăm până vineri.»"
+                }
+            ],
+            "fatal": [],
+            "off_schema": null
+        }
+    ],
+    "repairs": [
+        {
+            "stage": "skeleton",
+            "address": "p6",
+            "kind": "frame",
+            "sent_for": [
+                "filler.common_prefix"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "skeleton",
+            "address": "a5",
+            "kind": "partner_line",
+            "sent_for": [
+                "partner.names_filler_meaning"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [
+                "partner.names_filler_meaning"
+            ],
+            "helped": false,
+            "note": ""
+        },
+        {
+            "stage": "skeleton",
+            "address": "v6",
+            "kind": "term",
+            "sent_for": [
+                "vocab.from_placeholder"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "dialogue",
+            "address": "x4.check",
+            "kind": "check",
+            "sent_for": [
+                "check.verbatim"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "dialogue",
+            "address": "x5.check",
+            "kind": "check",
+            "sent_for": [
+                "check.verbatim"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [
+                "check.verbatim"
+            ],
+            "helped": false,
+            "note": ""
+        },
+        {
+            "stage": "dialogue",
+            "address": "x6.check",
+            "kind": "check",
+            "sent_for": [
+                "check.verbatim"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "dialogue",
+            "address": "x8.check",
+            "kind": "check",
+            "sent_for": [
+                "check.verbatim"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        }
+    ],
+    "judgements": [
+        {
+            "frames": [
+                "p1",
+                "p2",
+                "p3",
+                "p4",
+                "p5",
+                "p6",
+                "p7",
+                "p8"
+            ],
+            "items": 23,
+            "judged": 23,
+            "status": "judged",
+            "not_reading": [],
+            "replies": [
+                "a5"
+            ],
+            "naming": [
+                "a5"
+            ]
+        },
+        {
+            "frames": [
+                "p6"
+            ],
+            "items": 3,
+            "judged": 3,
+            "status": "judged",
+            "not_reading": [],
+            "replies": [
+                "a5"
+            ],
+            "naming": [
+                "a5"
+            ]
+        }
+    ],
+    "findings_left": [
+        {
+            "code": "partner.names_filler_meaning",
+            "address": "a5",
+            "detail": "the reply names or paraphrases a filler of the frame: one general fact about the matter of the scene instead, true whatever was asked («Da. Veți lucra în echipă în prima săptămână.» to «Postul include ___?» with «lucrul cu clienții», «munca la calculator», «pregătirea coletelor», the seam judge says)"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x5.check",
+            "detail": "the right option «Вместе с коллегами в первую рабочую неделю» repeats «в первую» of A's «Да. В первую неделю вы будете работать в команде.»"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x9.check",
+            "detail": "the right option «Până vineri» repeats «până vineri» of A's «După interviu, vă sunăm până vineri.»"
+        }
+    ],
+    "skeleton": {
+        "topic": {
+            "title_target": "Interviul despre experiență",
+            "title_native": "Собеседование об опыте",
+            "description_target": "Să vorbiți simplu despre experiența anterioară, să înțelegeți întrebări de bază și să întrebați despre rol.",
+            "description_native": "Просто говорить о прошлом опыте, понимать базовые вопросы и спрашивать о роли."
+        },
+        "learner_role": {
+            "role_target": "Candidat",
+            "role_native": "Кандидат"
+        },
+        "role_gender": "male",
+        "phrases": [
+            {
+                "id": "p1",
+                "kind": "answer",
+                "must_say": [
+                    1
+                ],
+                "frame_target": "Am lucrat la ___",
+                "frame_native": "Я работал ___",
+                "pronunciation_native": "ам лукрат ла ___",
+                "slot": {
+                    "hint_native": "место работы",
+                    "fillers": [
+                        {
+                            "target": "un birou",
+                            "native": "в офисе",
+                            "pronunciation_native": "ун бироу",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "un magazin",
+                            "native": "в магазине",
+                            "pronunciation_native": "ун магазын",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "o școală",
+                            "native": "в школе",
+                            "pronunciation_native": "о шкоалэ",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p2",
+                "kind": "answer",
+                "must_say": [
+                    2
+                ],
+                "frame_target": "Am lucrat acolo ___",
+                "frame_native": "Я работал там ___",
+                "pronunciation_native": "ам лукрат аколо ___",
+                "slot": {
+                    "hint_native": "срок",
+                    "fillers": [
+                        {
+                            "target": "doi ani",
+                            "native": "два года",
+                            "pronunciation_native": "дой ань",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "șase luni",
+                            "native": "шесть месяцев",
+                            "pronunciation_native": "шасе лунь",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "un an",
+                            "native": "один год",
+                            "pronunciation_native": "ун ан",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p3",
+                "kind": "answer",
+                "must_say": [
+                    3
+                ],
+                "frame_target": "Mă ocupam de ___",
+                "frame_native": "Я занимался ___",
+                "pronunciation_native": "мэ окупам де ___",
+                "slot": {
+                    "hint_native": "обязанность",
+                    "fillers": [
+                        {
+                            "target": "clienți",
+                            "native": "клиентами",
+                            "pronunciation_native": "клиенць",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "documente",
+                            "native": "документами",
+                            "pronunciation_native": "документе",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "livrări",
+                            "native": "доставками",
+                            "pronunciation_native": "ливрэрь",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p4",
+                "kind": "answer",
+                "must_say": [
+                    4
+                ],
+                "frame_target": "Da, am experiență cu ___",
+                "frame_native": "Да, у меня есть опыт с ___",
+                "pronunciation_native": "да, ам експерьенцэ ку ___",
+                "slot": {
+                    "hint_native": "задача",
+                    "fillers": [
+                        {
+                            "target": "vânzarea",
+                            "native": "продажами",
+                            "pronunciation_native": "вынзаря",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "programarea",
+                            "native": "составлением графика",
+                            "pronunciation_native": "програмаря",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "ambalarea",
+                            "native": "упаковкой",
+                            "pronunciation_native": "амбаляря",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p5",
+                "kind": "ask",
+                "must_say": [
+                    5
+                ],
+                "frame_target": "Postul include ___?",
+                "frame_native": "В эту работу входит ___?",
+                "pronunciation_native": "постул инклуде ___",
+                "slot": {
+                    "hint_native": "обязанность",
+                    "fillers": [
+                        {
+                            "target": "lucrul cu clienții",
+                            "native": "работа с клиентами",
+                            "pronunciation_native": "лукрул ку клиенций",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "munca la calculator",
+                            "native": "работа за компьютером",
+                            "pronunciation_native": "мунка ла калкулатор",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "pregătirea coletelor",
+                            "native": "подготовка посылок",
+                            "pronunciation_native": "прегэтыря колетелор",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p6",
+                "kind": "ask",
+                "must_say": [
+                    6
+                ],
+                "frame_target": "Ce înseamnă cuvântul ___?",
+                "frame_native": "Что означает слово ___?",
+                "pronunciation_native": "че ынсямнэ кувынтул ___",
+                "slot": {
+                    "hint_native": "название",
+                    "fillers": [
+                        {
+                            "target": "program",
+                            "native": "«график»",
+                            "pronunciation_native": "програм",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "tură",
+                            "native": "«смена»",
+                            "pronunciation_native": "турэ",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "cerință",
+                            "native": "«требование»",
+                            "pronunciation_native": "черинцэ",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p7",
+                "kind": "ask",
+                "must_say": [
+                    7
+                ],
+                "frame_target": "Oferiți ___?",
+                "frame_native": "Вы предоставляете ___?",
+                "pronunciation_native": "офериць ___",
+                "slot": {
+                    "hint_native": "обучение",
+                    "fillers": [
+                        {
+                            "target": "pregătire",
+                            "native": "обучение",
+                            "pronunciation_native": "прегэтире",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "ajutor la început",
+                            "native": "помощь в начале",
+                            "pronunciation_native": "ажутор ла ынчепут",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "p8",
+                "kind": "answer",
+                "must_say": [
+                    8
+                ],
+                "frame_target": "Am înțeles, urmează ___",
+                "frame_native": "Я понял, дальше ___",
+                "pronunciation_native": "ам ынцелес, урмязэ ___",
+                "slot": {
+                    "hint_native": "следующий шаг",
+                    "fillers": [
+                        {
+                            "target": "un răspuns vineri",
+                            "native": "ответ в пятницу",
+                            "pronunciation_native": "ун рэспунз винерь",
+                            "in_dialogue": true
+                        },
+                        {
+                            "target": "un telefon mâine",
+                            "native": "звонок завтра",
+                            "pronunciation_native": "ун телефон мыне",
+                            "in_dialogue": false
+                        },
+                        {
+                            "target": "un e-mail curând",
+                            "native": "письмо скоро",
+                            "pronunciation_native": "ун и-мейл куранд",
+                            "in_dialogue": false
+                        }
+                    ]
+                }
+            }
+        ],
+        "partner_lines": [
+            {
+                "id": "a1",
+                "must_understand": 1,
+                "kind": "question",
+                "pairs_with": [
+                    1
+                ],
+                "text_target": "Unde ați lucrat înainte?",
+                "text_native": "Где вы раньше работали?"
+            },
+            {
+                "id": "a2",
+                "must_understand": 1,
+                "kind": "question",
+                "pairs_with": [
+                    2
+                ],
+                "text_target": "Cât timp ați lucrat acolo?",
+                "text_native": "Как долго вы там работали?"
+            },
+            {
+                "id": "a3",
+                "must_understand": 2,
+                "kind": "question",
+                "pairs_with": [
+                    3
+                ],
+                "text_target": "Care erau sarcinile dumneavoastră principale?",
+                "text_native": "Какие у вас были основные обязанности?"
+            },
+            {
+                "id": "a4",
+                "must_understand": 3,
+                "kind": "question",
+                "pairs_with": [
+                    4
+                ],
+                "text_target": "Aveți experiență cu această sarcină?",
+                "text_native": "У вас есть опыт с этой задачей?"
+            },
+            {
+                "id": "a5",
+                "must_understand": 4,
+                "kind": "statement",
+                "pairs_with": [
+                    5
+                ],
+                "text_target": "Da. Veți lucra în echipă în prima săptămână.",
+                "text_native": "Да. В первую неделю вы будете работать в команде."
+            },
+            {
+                "id": "a6",
+                "must_understand": 5,
+                "kind": "statement",
+                "pairs_with": [
+                    8
+                ],
+                "text_target": "După interviu, vă sunăm până vineri.",
+                "text_native": "После собеседования мы позвоним вам до пятницы."
+            }
+        ],
+        "vocabulary": [
+            {
+                "id": "v1",
+                "term_target": "a lucra",
+                "translation_native": "работать",
+                "pronunciation_native": "а лукра",
+                "definition_target": "a avea un loc de muncă",
+                "kind": "word",
+                "image_prompt": "person working at a desk in a simple office",
+                "used_in": [
+                    "p1",
+                    "p2",
+                    "a1",
+                    "a2"
+                ]
+            },
+            {
+                "id": "v2",
+                "term_target": "a se ocupa de",
+                "translation_native": "заниматься",
+                "pronunciation_native": "а се окупа де",
+                "definition_target": "a avea ca sarcină",
+                "kind": "chunk",
+                "image_prompt": "person helping customers at a service counter",
+                "used_in": [
+                    "p3"
+                ]
+            },
+            {
+                "id": "v3",
+                "term_target": "experiență",
+                "translation_native": "опыт",
+                "pronunciation_native": "експерьенцэ",
+                "definition_target": "cunoștințe din muncă anterioară",
+                "kind": "word",
+                "image_prompt": null,
+                "used_in": [
+                    "p4",
+                    "a4"
+                ]
+            },
+            {
+                "id": "v4",
+                "term_target": "a include",
+                "translation_native": "включать",
+                "pronunciation_native": "а инклуде",
+                "definition_target": "a avea ca parte",
+                "kind": "word",
+                "image_prompt": null,
+                "used_in": [
+                    "p5"
+                ]
+            },
+            {
+                "id": "v5",
+                "term_target": "a însemna",
+                "translation_native": "значить",
+                "pronunciation_native": "а ынсямна",
+                "definition_target": "a avea un sens",
+                "kind": "word",
+                "image_prompt": null,
+                "used_in": [
+                    "p6"
+                ]
+            },
+            {
+                "id": "v6",
+                "term_target": "a oferi",
+                "translation_native": "предоставлять",
+                "pronunciation_native": "а офери",
+                "definition_target": "a da ceva cuiva",
+                "kind": "word",
+                "image_prompt": "employer handing training materials to a new employee",
+                "used_in": [
+                    "p7"
+                ]
+            },
+            {
+                "id": "v7",
+                "term_target": "a urma",
+                "translation_native": "следовать",
+                "pronunciation_native": "а урма",
+                "definition_target": "a veni după altceva",
+                "kind": "word",
+                "image_prompt": null,
+                "used_in": [
+                    "p8"
+                ]
+            },
+            {
+                "id": "v8",
+                "term_target": "sarcină",
+                "translation_native": "задача",
+                "pronunciation_native": "сарчынэ",
+                "definition_target": "lucru pe care trebuie să-l faci",
+                "kind": "word",
+                "image_prompt": "checklist with tasks on a clipboard at a workplace",
+                "used_in": [
+                    "a3",
+                    "a4"
+                ]
+            },
+            {
+                "id": "v9",
+                "term_target": "principal",
+                "translation_native": "основной",
+                "pronunciation_native": "прынчипал",
+                "definition_target": "cel mai important",
+                "kind": "word",
+                "image_prompt": null,
+                "used_in": [
+                    "a3"
+                ]
+            },
+            {
+                "id": "v10",
+                "term_target": "în echipă",
+                "translation_native": "в команде",
+                "pronunciation_native": "ын экипэ",
+                "definition_target": "împreună cu alți colegi",
+                "kind": "chunk",
+                "image_prompt": "small team of coworkers discussing work together",
+                "used_in": [
+                    "a5"
+                ]
+            }
+        ]
+    }
+}

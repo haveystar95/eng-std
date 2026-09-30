@@ -1,0 +1,182 @@
+{
+    "plan": {
+        "id": "01M3QET095394QGAWYFS7K1JR6",
+        "status": "active",
+        "goal": "Собеседование в пятницу, боюсь вопросов про опыт",
+        "title_native": "Собеседование",
+        "title_target": "Interviu de angajare",
+        "overdue_native": "Собеседование было вчера",
+        "prompt_version_plan": "plan-builder-v2.1",
+        "model_plan": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.016388",
+        "attempts_plan": 1,
+        "findings": [
+            {
+                "mode": "observe",
+                "check": "survival_slot_none",
+                "action": "counted",
+                "detail": "scene 1: 3 must_say items end with «— slot: none» (at most 2)"
+            },
+            {
+                "mode": "observe",
+                "check": "survival_unanswered",
+                "action": "counted",
+                "detail": "scene 1: must_understand 2 «asks whether this is your first time here» has no answer in must_say"
+            }
+        ]
+    },
+    "days": [
+        {
+            "number": 1,
+            "type": "scene",
+            "scene_id": "01M3QETBPY2G1P65D4PQNMSZYR",
+            "status": "closed"
+        },
+        {
+            "number": 2,
+            "type": "scene",
+            "scene_id": "01M3QETBPZX4W5MZ5JWF75R7HC",
+            "status": "locked"
+        }
+    ],
+    "scenes": [
+        {
+            "id": "01M3QETBPY2G1P65D4PQNMSZYR",
+            "order": 1,
+            "priority": 2,
+            "title_native": "Ожидание",
+            "title_target": "Așteptarea",
+            "teaches_native": "назвать себя, ждать начала",
+            "goals_native": [
+                "назвать своё имя",
+                "сказать, на какую вакансию",
+                "спросить, где ждать",
+                "подтвердить готовность"
+            ],
+            "topic_description": "Situation: You arrive for a job interview on Friday and first speak to the receptionist before meeting the interviewer. This is a short check-in that gets you to the right place and makes the start less stressful before the main conversation about your background.\nLearner: Candidate. Partner: Receptionist.\nNot in this scene: talking about work experience, answering questions about skills, discussing schedule or salary.",
+            "must_say": [
+                {
+                    "slot": "the name",
+                    "text": "give your name"
+                },
+                {
+                    "slot": "the position",
+                    "text": "say why you are here"
+                },
+                {
+                    "slot": "the last visit (never, once)",
+                    "text": "answer whether you have been here before"
+                },
+                {
+                    "slot": null,
+                    "text": "ask how long the interview will take"
+                },
+                {
+                    "slot": null,
+                    "text": "ask where to wait"
+                },
+                {
+                    "slot": null,
+                    "text": "confirm you are ready to begin"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks for your name and what position you are here for"
+                },
+                {
+                    "text": "asks whether this is your first time here"
+                },
+                {
+                    "text": "says the interviewer will see you soon"
+                },
+                {
+                    "text": "tells you where to wait"
+                },
+                {
+                    "text": "asks whether you are ready to start"
+                }
+            ],
+            "lesson_status": "ready",
+            "fail_reason": null,
+            "prompt_version_lesson": "lesson_skeleton.v1.1+lesson_dialogue.v1.1",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "cost_usd_lesson": "0.105792",
+            "latency_ms_lesson": 62595,
+            "attempts_lesson": 2
+        },
+        {
+            "id": "01M3QETBPZX4W5MZ5JWF75R7HC",
+            "order": 2,
+            "priority": 1,
+            "title_native": "Интервью",
+            "title_target": "Interviul",
+            "teaches_native": "рассказать про опыт работы",
+            "goals_native": [
+                "сказать, где вы работали",
+                "сказать, как долго",
+                "сказать, что вы делали",
+                "спросить про обязанности"
+            ],
+            "topic_description": "Situation: This is the main interview with the hiring manager or recruiter. The learner's main worry is questions about previous experience, so this scene focuses on simple ways to describe past work, understand basic follow-up questions, and ask about the role before the decision moves forward.\nLearner: Candidate. Partner: Interviewer.\nNot in this scene: checking in at reception, waiting arrangements, detailed salary negotiation or signing documents.",
+            "must_say": [
+                {
+                    "slot": "the workplace",
+                    "text": "say what work you did before"
+                },
+                {
+                    "slot": "the length of time",
+                    "text": "say how long you worked there"
+                },
+                {
+                    "slot": "the duty",
+                    "text": "say what your main duties were"
+                },
+                {
+                    "slot": "the task",
+                    "text": "answer whether you have experience with a task"
+                },
+                {
+                    "slot": "the duty",
+                    "text": "ask what duties this job includes"
+                },
+                {
+                    "slot": "the word",
+                    "text": "ask what a word means"
+                },
+                {
+                    "slot": "the training",
+                    "text": "ask whether training is provided"
+                },
+                {
+                    "slot": "the next step",
+                    "text": "confirm you understand the next step"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks where you worked before and for how long"
+                },
+                {
+                    "text": "asks what your main duties were"
+                },
+                {
+                    "text": "asks whether you have experience with a task"
+                },
+                {
+                    "text": "says what the job involves"
+                },
+                {
+                    "text": "explains the next step after the interview"
+                }
+            ],
+            "lesson_status": "ready",
+            "fail_reason": null,
+            "prompt_version_lesson": "lesson_skeleton.v1.1+lesson_dialogue.v1.1",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "cost_usd_lesson": "0.210576",
+            "latency_ms_lesson": 130688,
+            "attempts_lesson": 3
+        }
+    ]
+}

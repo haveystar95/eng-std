@@ -1,0 +1,86 @@
+{
+    "v1.2": {
+        "replies": 41,
+        "names_by_markup": 28,
+        "found": 26,
+        "found_right": 24,
+        "found_wrong": 2,
+        "missed": 4,
+        "alone": {
+            "replies": 4,
+            "found": 4,
+            "names_by_markup": 3
+        }
+    },
+    "v1.3": {
+        "replies": 41,
+        "names_by_markup": 28,
+        "found": 26,
+        "found_right": 25,
+        "found_wrong": 1,
+        "missed": 3,
+        "alone": {
+            "replies": 4,
+            "found": 2,
+            "names_by_markup": 3
+        }
+    },
+    "differ": [
+        {
+            "reply": "days/gpt54-b/02 a7",
+            "markup": true,
+            "v1.2": false,
+            "v1.3": true,
+            "note": "«Avoid sports» — «play sports» по смыслу"
+        },
+        {
+            "reply": "days/gpt54-b/14 a5",
+            "markup": true,
+            "v1.2": true,
+            "v1.3": false,
+            "note": ""
+        },
+        {
+            "reply": "days/gpt54/07 a2",
+            "markup": true,
+            "v1.2": true,
+            "v1.3": false,
+            "note": ""
+        },
+        {
+            "reply": "days/gpt54/07 a6",
+            "markup": true,
+            "v1.2": true,
+            "v1.3": false,
+            "note": ""
+        },
+        {
+            "reply": "days/gpt54/09 a7",
+            "markup": true,
+            "v1.2": false,
+            "v1.3": true,
+            "note": "«nie jeść» — значение «jeść» дословно"
+        },
+        {
+            "reply": "days/gpt54/11 a3",
+            "markup": true,
+            "v1.2": false,
+            "v1.3": true,
+            "note": "«dos dormitorios» — значение «dormitorios» дословно"
+        },
+        {
+            "reply": "days/gpt54/14 a5",
+            "markup": false,
+            "v1.2": true,
+            "v1.3": false,
+            "note": "спорно: «casa de marcat» — место кассира, не «un casier»"
+        },
+        {
+            "reply": "days/gpt54/15 a7",
+            "markup": true,
+            "v1.2": false,
+            "v1.3": true,
+            "note": "«Hunde» — «Haustieren» по смыслу"
+        }
+    ]
+}

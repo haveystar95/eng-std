@@ -91,9 +91,11 @@ define('RECHECK_FILE', RUNS.'/'.(getenv('RECHECK_FILE') ?: 'recheck.json'));
  * The caps on OpenAI, one `spend.json` for all: GEN-4's $5 (spent $4.9341, the e2e of §6 in it — unit `e2e`, its calls read
  * off the e2e journal), GEN-4b's $1 on top — the three failed days again and its e2e (unit `e2e-b`; spent $0.4701) — and
  * GEN-4c's $1 on top of what the two spent ($5.4042): the seam judge v1.2 on the recorded replies (unit `judge-c`) and both
- * e2e days (units `e2e-c-ro`, `e2e-c-en`, read off the e2e journal).
+ * e2e days (units `e2e-c-ro`, `e2e-c-en`, read off the e2e journal); GEN-4c-2's $0.7 more ($1.7 in all): both days 2 of the
+ * e2e (`e2e-c2-*`), the judge asked again on their replies (`judge-probe-c2`), the judge v1.3 on the recorded replies
+ * (`judge-c2`) and on the days 2 again (`replay-c2`).
  */
-const CAP_USD = 6.4042;
+const CAP_USD = 7.1042;
 
 /** The dearest one unit of each kind may cost, seen or feared: a plan, a day of either model, a skeleton thought hard about. */
 const WORST_USD = ['plan' => 0.08, 'luna' => 0.25, 'gpt54' => 0.30, 'gpt54-b' => 0.30, 'luna-high' => 0.10];

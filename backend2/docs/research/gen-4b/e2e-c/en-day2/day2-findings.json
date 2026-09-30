@@ -1,0 +1,62 @@
+[
+    {
+        "code": "partner.names_filler",
+        "detail": "the line names «evenings», a filler of p4",
+        "address": "a4"
+    },
+    {
+        "code": "partner.names_filler",
+        "detail": "the line names «weekends», a filler of p4",
+        "address": "a5"
+    },
+    {
+        "code": "vocab.stop_word",
+        "detail": "«evening» is a word of the stop list («evening»)",
+        "address": "v5"
+    },
+    {
+        "code": "filler.repeats_frame",
+        "detail": "«на гриле» repeats «на», the frame's word at the slot of «Я работал на ___»",
+        "address": "p2.f1"
+    },
+    {
+        "code": "filler.repeats_frame",
+        "detail": "«на салатной станции» repeats «на», the frame's word at the slot of «Я работал на ___»",
+        "address": "p2.f2"
+    },
+    {
+        "code": "filler.repeats_frame",
+        "detail": "«на кондитерской станции» repeats «на», the frame's word at the slot of «Я работал на ___»",
+        "address": "p2.f3"
+    },
+    {
+        "code": "filler.native_seam",
+        "detail": "«Я работал на на гриле» («Я работал на ___» with «на гриле») does not read as Russian, the seam judge says",
+        "address": "p2.f1"
+    },
+    {
+        "code": "filler.native_seam",
+        "detail": "«Я работал на на салатной станции» («Я работал на ___» with «на салатной станции») does not read as Russian, the seam judge says",
+        "address": "p2.f2"
+    },
+    {
+        "code": "filler.native_seam",
+        "detail": "«Я работал на на кондитерской станции» («Я работал на ___» with «на кондитерской станции») does not read as Russian, the seam judge says",
+        "address": "p2.f3"
+    },
+    {
+        "code": "partner.names_filler_meaning",
+        "detail": "the reply names or paraphrases a filler of the frame: one general fact about the matter of the scene instead, true whatever was asked («Yes. New staff receive training during the first week.» to «Can I start ___?» with «next week», «on Monday», «this weekend», the seam judge says)",
+        "address": "a8"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «At the close of each payment cycle» repeats «at the» of A's «The pay is transferred at the end of each pay period.»",
+        "address": "x8.check"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «Они проходят обучение в первую неделю» repeats «проходят обучение» of A's «Да. Новые сотрудники проходят обучение в течение первой недели.»",
+        "address": "x9.check"
+    }
+]

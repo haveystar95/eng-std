@@ -1,0 +1,135 @@
+{
+    "call": 2,
+    "id": "a8",
+    "question": "Can I start ___?",
+    "values": [
+        "next week",
+        "on Monday",
+        "this weekend"
+    ],
+    "reads": [
+        {
+            "reply": "Yes. New staff receive training during the first week.",
+            "as_recorded": true,
+            "asked": 5,
+            "names_a_value": 3,
+            "answers": [
+                [
+                    "a7",
+                    "a8"
+                ],
+                [
+                    "a7",
+                    "a8"
+                ],
+                [
+                    "a7",
+                    "a8"
+                ],
+                [],
+                [
+                    "a7"
+                ]
+            ],
+            "cost_usd": 0.005499
+        },
+        {
+            "reply": "Yes. New staff receive training at the start.",
+            "as_recorded": false,
+            "asked": 5,
+            "names_a_value": 1,
+            "answers": [
+                [
+                    "a7"
+                ],
+                [
+                    "a7"
+                ],
+                [
+                    "a7",
+                    "a8"
+                ],
+                [
+                    "a7"
+                ],
+                [
+                    "a7"
+                ]
+            ],
+            "cost_usd": 0.005479
+        },
+        {
+            "reply": "Yes. The manager will call you with the details.",
+            "as_recorded": false,
+            "asked": 5,
+            "names_a_value": 0,
+            "answers": [
+                [
+                    "a7"
+                ],
+                [
+                    "a7"
+                ],
+                [
+                    "a7"
+                ],
+                [
+                    "a7"
+                ],
+                [
+                    "a7"
+                ]
+            ],
+            "cost_usd": 0.00547
+        },
+        {
+            "reply": "The manager will call you with the details.",
+            "as_recorded": false,
+            "asked": 5,
+            "names_a_value": 1,
+            "answers": [
+                [
+                    "a7"
+                ],
+                [
+                    "a7"
+                ],
+                [
+                    "a8"
+                ],
+                [
+                    "a7"
+                ],
+                [
+                    "a7"
+                ]
+            ],
+            "cost_usd": 0.005465
+        },
+        {
+            "reply": "Yes. The manager will call you with the details.",
+            "as_recorded": false,
+            "shape": "alone",
+            "asked": 5,
+            "names_a_value": 5,
+            "answers": [
+                [
+                    "a8"
+                ],
+                [
+                    "a8"
+                ],
+                [
+                    "a8"
+                ],
+                [
+                    "a8"
+                ],
+                [
+                    "a8"
+                ]
+            ],
+            "cost_usd": 0.00532
+        }
+    ]
+}

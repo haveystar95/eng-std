@@ -1,0 +1,167 @@
+{
+    "day": 2,
+    "replies": [
+        {
+            "id": "a6",
+            "frame": "p5",
+            "question": "What are the main duties?",
+            "values": [],
+            "asks_for": "fact («what»)",
+            "line_kind": "statement",
+            "attempt_1": {
+                "reply": "The main duties are prep, cooking, and keeping the kitchen clean.",
+                "opens_with": null,
+                "question": "What are the main duties?",
+                "frame": "p5",
+                "findings": []
+            },
+            "attempt_2": {
+                "reply": "The main duties are food prep and keeping the kitchen clean.",
+                "opens_with": null,
+                "question": "What are the main duties?",
+                "frame": "p5",
+                "findings": []
+            },
+            "judge": [],
+            "repairs": [],
+            "final": {
+                "reply": "The main duties are food prep and keeping the kitchen clean.",
+                "native": "Основные обязанности — подготовка продуктов и поддержание чистоты на кухне.",
+                "opens_with": null
+            },
+            "left": []
+        },
+        {
+            "id": "a7",
+            "frame": "p6",
+            "question": "What is the pay per ___?",
+            "values": [
+                "month",
+                "week"
+            ],
+            "asks_for": "fact («what»)",
+            "line_kind": "statement",
+            "attempt_1": {
+                "reply": "The pay is per hour.",
+                "opens_with": null,
+                "question": "What is the pay per ___?",
+                "frame": "p6",
+                "findings": [
+                    "partner.names_filler"
+                ]
+            },
+            "attempt_2": {
+                "reply": "The pay is per month.",
+                "opens_with": null,
+                "question": "What is the pay per ___?",
+                "frame": "p6",
+                "findings": [
+                    "partner.names_filler"
+                ]
+            },
+            "judge": [
+                {
+                    "reply": "The pay is per month.",
+                    "names_a_value": true
+                },
+                {
+                    "reply": "The pay is transferred at the end of each pay period.",
+                    "names_a_value": false
+                }
+            ],
+            "repairs": [
+                {
+                    "stage": "skeleton",
+                    "address": "a7",
+                    "kind": "partner_line",
+                    "sent_for": [
+                        "partner.names_filler",
+                        "partner.names_filler_meaning"
+                    ],
+                    "status": "repaired",
+                    "kept": true,
+                    "broke": [],
+                    "left": [],
+                    "helped": true,
+                    "note": ""
+                }
+            ],
+            "final": {
+                "reply": "The pay is transferred at the end of each pay period.",
+                "native": "Оплату переводят в конце каждого расчётного периода.",
+                "opens_with": null
+            },
+            "left": []
+        },
+        {
+            "id": "a8",
+            "frame": "p7",
+            "question": "Can I start ___?",
+            "values": [
+                "next week",
+                "on Monday",
+                "this weekend"
+            ],
+            "asks_for": "yes_no",
+            "line_kind": "statement",
+            "attempt_1": {
+                "reply": "You can start next week.",
+                "opens_with": null,
+                "question": "Can I start ___.",
+                "frame": "p7",
+                "findings": [
+                    "partner.yes_no_missing",
+                    "partner.names_filler"
+                ]
+            },
+            "attempt_2": {
+                "reply": "You can start next week if we choose you.",
+                "opens_with": null,
+                "question": "Can I start ___?",
+                "frame": "p7",
+                "findings": [
+                    "partner.yes_no_missing",
+                    "partner.names_filler"
+                ]
+            },
+            "judge": [
+                {
+                    "reply": "You can start next week if we choose you.",
+                    "names_a_value": true
+                },
+                {
+                    "reply": "Yes. New staff receive training during the first week.",
+                    "names_a_value": true
+                }
+            ],
+            "repairs": [
+                {
+                    "stage": "skeleton",
+                    "address": "a8",
+                    "kind": "partner_line",
+                    "sent_for": [
+                        "partner.yes_no_missing",
+                        "partner.names_filler",
+                        "partner.names_filler_meaning"
+                    ],
+                    "status": "repaired",
+                    "kept": true,
+                    "broke": [],
+                    "left": [
+                        "partner.names_filler_meaning"
+                    ],
+                    "helped": false,
+                    "note": ""
+                }
+            ],
+            "final": {
+                "reply": "Yes. New staff receive training during the first week.",
+                "native": "Да. Новые сотрудники проходят обучение в течение первой недели.",
+                "opens_with": "yes"
+            },
+            "left": [
+                "partner.names_filler_meaning"
+            ]
+        }
+    ]
+}

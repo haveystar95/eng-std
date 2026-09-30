@@ -439,6 +439,9 @@ e2e — `wordtrainer_e2e_test` кодом ветки. **Не влито** — п
 (`restart horizon`). Промты `plan-builder-v2.1`, `lesson_skeleton.v1.1`, `lesson_dialogue.v1.1`, `lesson_card_repair.v1.5` не
 тронуты. Раздел — §12, а не §11 наряда: §11 занял выкат 29.09.
 
+**GEN-4c-2 (30.09)** — проверка на дне 2 и судья **v1.3** (вердикт на каждую реплику вместо списка названных): раздел
+«Проверка на дне 2» в конце §12. Ниже, где сказано «v1.2», — замер GEN-4c; вид ответа v1.2 на бой не выходил.
+
 **Итог.**
 - **Новые коды на записанных ответах** (бесплатно, `gate.php recheck` → `runs/recheck-c.json`, `summary-c.md`): у gpt-5.4 на
   промтах v1 `vocab.from_placeholder` — в 20 скелетах из 28, `partner.yes_no_missing` — в 21, на v1.1 (три дня GEN-4b) — в 3 из
@@ -621,3 +624,199 @@ main), PHPStan 0, Pest 3 128 passed (`--parallel`), `migrate:fresh` ок, `flutt
 -Return ONLY a JSON object {"verdicts": [{"id": "…", "reads": true}]} — one verdict for every item, in the order given, with the item's id copied exactly. No markdown, no code fences, no commentary. The first character of the response must be { and the last must be }.
 +Return ONLY a JSON object {"verdicts": [{"id": "…", "reads": true}], "replies_naming_values": ["a6"]} — "verdicts": one verdict for every item, in the order given, with the item's id copied exactly, and an empty list when ITEMS is none; "replies_naming_values": the ids of the replies that name a value, each copied exactly, and an empty list when no reply does or REPLIES is none. No markdown, no code fences, no commentary. The first character of the response must be { and the last must be }.
 ```
+
+### Проверка на дне 2 (GEN-4c-2, 30.09.2026)
+
+Наряд GEN-4c-2 после приёмки §12: живая починка да/нет-ответов и пересказов наполнений на дне 2 «Интервью», которого GEN-4c
+не собирал. Код ветки `gen-4c` (`ff758e8b`), стенд `wt_gen4c`, `php -S :8030` на `wordtrainer_e2e_test`, очередь `sync`,
+`SPEECH_ENABLED=false`, `IMAGE_DRIVER=fake` (фото не покупались), модели боя: ступени gpt-5.4, починки Luna, судья
+gpt-5.4-mini. Итог: **оба дня 2 собраны без «ещё раз»; одно ожидание наряда не выполнено — после починок судья v1.2 оставлял
+`partner.names_filler_meaning` на репликах, которые ничего не называют.** Причина — вид ответа судьи, не чтение: исправлено
+(судья **v1.3**), день переигран из записанных ответов итоговым кодом, ворота пройдены.
+
+**Как строится день 2.** Бой строит урок дня N+1 только при закрытии дня N: `POST /plans/{id}/days/{n}/close` →
+`CloseDayHandler` → `buildLesson` сцены следующего дня (§11 GEN-3); закрыть можно открытый день, где отвечены все карточки и
+пройден разговор. `tools/e2e-walk.py` делает это, как телефон: `/auth/dev` тем же QA-учеником → `start` (план был `ready`) →
+`open` дня 1 → ответ на каждую карточку (`speak_answer` — `skipped`, остальные — `passed`, повторно выданные — тоже) →
+закрытие семи ступеней → разговор (ученик говорит строки своих карточек дня по порядку, пока роль не попрощается) → `close`.
+При `sync` урок дня 2 строится внутри запроса закрытия; день 2 остаётся `locked` до своей даты (1.10), как на бою.
+
+| | ru→ro 3 (`01M3QET0…`) | ru→en 2 (`01M3QFD3…`) |
+|---|---|---|
+| день 1 — разговор | 17 ходов, `natural`, $0.0117 | 15 ходов, `natural`, $0.0101 |
+| день 2 | «Интервью» | «Опыт и условия» |
+| скелет | 2 ответа: первый фатален сверх бюджета (5 бюджетных карточек > 4) | 2 ответа: первый фатален `frame.known_repeat` (p2 «I worked at ___.» — каркас дня 1) |
+| починки скелета | 3: p6 (`filler.common_prefix`) ✓, a5 (пересказ) оставлена, v6 «pregătire» → «a oferi» ✓ | 4: p2 отвергнута, a7 ✓, a8 оставлена, v2 «grill» → «food prep» ✓ |
+| чтения судьи | 2 | 2 |
+| диалог | 1 ответ; 4 починки проверок (3 помогли) | 2 ответа: первый фатален `line.ne_frame`; 4 починки проверок ✓ |
+| вызовов урока | 12 | 14 |
+| урок | ready, $0.2106 | ready, $0.2130 |
+| job урока (закрытие дня 1) | 131 с | 141 с (запрос — 142 с) |
+
+**Находки первого ответа скелета.** ru→ro: `pronunciation.foreign_script` p7.f2 («прегэтиrе»), `vocab.from_placeholder` v1
+«depozit», v5 «inventar», v8 «instruire», `partner.yes_no_missing` a5, `partner.names_filler` a6 — пять бюджетных карточек при
+четырёх починках, ступень спрошена ещё раз; второй ответ — `vocab.from_placeholder` v6 «pregătire», `filler.common_prefix` p6.
+ru→en: фатальный `frame.known_repeat` p2 и рядом `vocab.from_placeholder` v2 «prep work», v4 «grill», v6 «grilled fish»,
+`partner.yes_no_missing` a8, `partner.names_filler` a4, a5, a7, a8; второй ответ — `vocab.from_placeholder` v2 «grill»,
+`partner.yes_no_missing` a8, `partner.names_filler` a4, a5, a7, a8, `vocab.stop_word` v5, `filler.repeats_frame` p2.f1–f3.
+`partner.yes_no_extra` не было ни в одном ответе обоих дней — это результат, не пропуск.
+
+**Реплики собеседника на вопросы ученика** (`e2e-c/*-day2/replies.json`; судья — как день собирался, v1.2):
+
+| день | id | каркас | класс | первый ответ (1-й / 2-й скелет) | находки | починка | итог |
+|---|---|---|---|---|---|---|---|
+| ro | a5 | p5 «Postul include ___?» (lucrul cu clienții · munca la calculator · pregătirea coletelor) | да/нет | «Postul are lucru cu clienții și documente zilnic.» / «Da. Postul are contact zilnic cu oamenii și lucru în echipă.» | 1-й: `yes_no_missing` (ответ отвергнут целиком, судья его не читал); 2-й: код чист, судья — называет | за `names_filler_meaning` с заметкой «în echipă» (v10) → «Da. Veți lucra în echipă în prima săptămână.» — **оставлена**, «în echipă» сохранено; перечитывание v1.2 — «называет», находка осталась | «Da. Veți lucra în echipă în prima săptămână.» — Da ✓, ничего не называет (по чтению); находка v1.2 ложная |
+| ro | x7 (A диалога) | p6 «Ce înseamnă cuvântul ___?» | факт («ce») | «Este orarul de lucru.» | — | — | без Da/Nu ✓ |
+| ro | x8 (A диалога) | p7 «Oferiți ___?» | да/нет | «Da, la început.» | — | — | Da ✓ |
+| en | a6 | p5 «What are the main duties?» (без окна) | факт («what») | «The main duties are prep, cooking, and keeping the kitchen clean.» / «…food prep and keeping the kitchen clean.» | — (без значений судья не читает) | — | без Yes ✓ |
+| en | a7 | p6 «What is the pay per ___?» (month · week) | факт («what») | «The pay is per hour.» / «The pay is per month.» | `names_filler`; 2-й: судья — называет | за `names_filler` и `names_filler_meaning` → «The pay is transferred at the end of each pay period.» — **оставлена, помогла** (код и судья чисты) | без Yes ✓, не называет ✓ |
+| en | a8 | p7 «Can I start ___?» (next week · on Monday · this weekend) | да/нет | «You can start next week.» / «You can start next week if we choose you.» | `yes_no_missing`, `names_filler` «next week»; 2-й: судья — называет | за `yes_no_missing`, `names_filler`, `names_filler_meaning` → «Yes. New staff receive training during the first week.» — **оставлена**; код чист; перечитывание v1.2 — «называет», находка осталась | «Yes. …» ✓, ничего не называет (по чтению); находка v1.2 ложная |
+
+x7 и x8 ru→ro пишет ступень диалога: у p6 и p7 нет спаренной реплики скелета, и их ответы не читают ни правила да/нет, ни
+судья (оба — о репликах скелета); здесь оба верны. x7 называет «program» по смыслу законно — это ответ на один вопрос, а не
+реплика, сказанная всем наполнениям.
+
+**Ожидания наряда.**
+1. ✅ Да/нет-ответы начинаются с «Da.»/«Yes.» (a5, x8, a8 — после починки), фактовые — без (x7, a6, a7).
+2. ❌ **По букве**: после починок судья v1.2 не чист — `partner.names_filler_meaning` остался на a5 ru→ro и a8 ru→en, хотя
+   обе реплики ничего не называют (код чист). Причина и починка — ниже; итоговым кодом ru→en чист, ru→ro — спорно.
+3. ✅ Слов-заглушек в словаре нет: ru→ro — «depozit», «inventar», «instruire» ушли с повтором ступени, «pregătire» → «a oferi»;
+   ru→en — «grill» → «food prep»; слов деталей в словаре дня 2 нет («cook» — день 1), находок на них нет.
+4. ✅ Все починки заглушки, да/нет и пересказа **оставлены** (ro v6, a5; en v2, a7, a8); `vocab.carried` — «în echipă»
+   сохранено; слова дня на месте.
+5. ✅ Оба дня готовы без «ещё раз» ученика.
+
+**Причина — вид ответа судьи.** v1.2 отвечал списком `replies_naming_values` (enum — отправленные id). Судья (gpt-5.4-mini без
+рассуждения) вносит в такой список реплику, отправленную одну, **всегда** — что бы она ни говорила; из двух — почти всегда
+одну. Перечитывание после починки почти всегда несёт одну-две реплики, так что починка пересказа по судье «не помогала»
+никогда, а день с одной репликой-ответом получал находку при любом её тексте. Тот же запрос второго чтения — пять раз на каждый
+текст (`tools/gen4c-judge-probe.php`, `e2e-c/*-day2/judge-probe*.json`; «называет» из 5):
+
+| реплика | вид запроса | v1.2 | v1.3 |
+|---|---|---|---|
+| ro «Da. Veți lucra în echipă în prima săptămână.» (починка a5) | одна реплика + 3 шва p6, как в дне | 5 | 0 |
+| ro «Da. Detaliile le discutăm vineri.» | то же | 5 | — |
+| ro «Da. În prima săptămână aveți un coleg alături.» | то же | 5 | — |
+| ro «Detaliile le discutăm vineri.» (без «Da.») | то же / без швов | 5 / 5 | 0 / — |
+| ro «Da. Postul are contact zilnic cu oamenii și lucru în echipă.» (2-й скелет) | одна реплика + 3 шва | (в дне 1 из 1) | 0 |
+| en «Yes. New staff receive training during the first week.» (починка a8) | a7 + a8, как в дне | 3 | 0 |
+| en «Yes. New staff receive training at the start.» | a7 + a8 | 1 | — |
+| en «Yes. The manager will call you with the details.» | a7 + a8 / одна | 0 / 5 | — / 0 |
+| en «The manager will call you with the details.» | a7 + a8 | 1 | — |
+| en «You can start next week if we choose you.» (2-й скелет, дословно) | одна | — | 5 |
+
+В тех же пробах v1.2 вносил в список соседку a7 («The pay is transferred…») 18 раз из 20, хотя в дне прочитал её чистой. В
+каноне GEN-4c все 4 вызова с одной репликой — «называет», и ни один из 16 вызовов не вернул пустой список.
+
+**Починка — судья v1.3**: `replies` — вердикт `{id, names_a_value}` на каждую отправленную реплику, как `verdicts` у швов;
+правила чтения не тронуты. Канон — 41 реплика записанных ответов, **одна мерка** для обеих версий (`runs/judge-c-marks.json` —
+разметка §12, записанная файлом: названные v1.2 без двух его промахов и четыре пропуска; счёт — `tools/judge-score.py` →
+`runs/judge-c2-score.json`):
+
+| | найдено | верных | неверных | пропущено из 28 | вызовы с одной репликой: найдено / по разметке |
+|---|---|---|---|---|---|
+| v1.2 (`judge-c.json`) | 26 | 24 | 2 | 4 | 4 из 4 / 3 |
+| v1.3 (`judge-c2.json`) | 26 | 25 | 1 | 3 | 2 из 4 / 3 |
+
+v1.3 находит «nie jeść», «dos dormitorios», «Hunde» к «Haustieren», «Avoid sports…» (b02) и не находит спорное «casa de
+marcat» к «un casier»; пропускает «Postul include…» к «acest post» и два итальянских пересказа («interrompe spesso durante la
+lezione» к «interruzioni in classe», «nelle lezioni» к «durante le lezioni»). **Предел v1.3** — рыхлый пересказ читает общим
+фактом.
+
+**Итоговым кодом по записанным ответам** (`tools/gen4c-replay.php`: ответы скелета, диалога и починок — записанные, починки — по
+адресу; судья v1.3 — вживую, `REPLAY_JUDGE=live`). Сначала без вызовов: вердикты v1.2, переведённые в вид v1.3, дают тот же
+день, что сохранён (оба дня — тот же скелет, те же вызовы).
+- **ru→en — 3 из 3 одинаково**: первое чтение — a7 и a8 «называют» (верно), швы p2 не читаются (как у v1.2); после починок
+  обе «не называют» — починки a7 и a8 **помогли**, `partner.names_filler_meaning` в дне не остаётся, скелет — тот же, что день
+  сохранил. Этот день из записанных ответов и ответов v1.3 — тест `RecordedDayReplayTest` (фикстура
+  `gen4c2-e2e-en-day2.json`: запрос с днём 1, оба ответа каждой ступени, починки, два ответа судьи); мутация разбора (снова
+  список) роняет его и 8 тестов `SeamJudgeRepliesTest` из 11.
+- **ru→ro — 4 из 4 первых чтений**: a5 второго скелета «Da. Postul are contact zilnic cu oamenii și lucru în echipă.» — «не
+  называет», в починку не идёт. **Спорно**: «contact zilnic cu oamenii» — пересказ «lucrul cu clienții» шире (люди ⊃ клиенты);
+  v1.2 отметил его вызовом с одной репликой, где отмечает всё. Дальше повтор не идёт: записанный диалог написан под
+  починенную a5 (`partner.changed` — след повтора, не исход дня); нового платного диалога не брал. Скелет итоговым кодом: p6 и
+  v6 починены, заглушек и да/нет-находок нет, a5 — с «Da.».
+
+**В дне, но вне ожиданий наряда.**
+- **ru→en: ученик видит «Я работал на на гриле.»** (B шага 2). Шов p2 («I worked on ___» / «Я работал на ___» + «на гриле»)
+  код и судья нашли; починка написала верно («I worked ___» / «Я работал ___»), но её отвергли — её родной каркас совпал с
+  родным каркасом дня 1 («I worked at ___.» / «Я работал ___.»), `frame.known_repeat` сверяет оба языка, а русский «at» и
+  «on» не различает. Первый диалог с верным «Я работал на гриле» — фатальный `line.ne_frame`, второй скопировал сломанный шов.
+  В ROADMAP — для архитектора.
+- ru→en: A-вопросы «Can you work evenings?», «Can you work weekends?» называют наполнения каркаса-ответа p4
+  (`partner.names_filler`) — в конце очереди, в четыре починки не вошли; `vocab.stop_word` v5 «evening». ru→ro:
+  `check.verbatim` x5 (починка не помогла), x9 (сверх бюджета); ru→en — `check.verbatim` x8, x9.
+
+**Что изменено (код, `9a27d733`).** `lesson_seam_judge.v1.2.md` → `v1.3.md` (`git mv`; реестр — sha256 `70cfd12a…`, наряд GEN-4c-2);
+`PlanSchemas::seamJudge` — `replies: [{id ∈ отправленных, names_a_value: boolean}]`; `LessonSeamJudge` читает вердикт каждой
+реплики (первый вердикт id — в счёт, без да/нет — не вердикт; реплика без вердикта — «не называет»); `FakePlanModel` —
+`JUDGE_VERSION` v1.3 и ответ по умолчанию в новом виде; тесты — `SeamJudgeRepliesTest` (вид ответа, 7 случаев разбора),
+`DayBuildTest` (судья-фейк в новом виде), `RecordedDayReplayTest` (день 2 ru→en). Документы — `plan-v2.md`, README модуля,
+DECISIONS п. **455** и «Отменено», ROADMAP. Дифф промта — `judge-v1.3.diff`:
+
+```diff
+--- lesson_seam_judge.v1.2.md
++++ lesson_seam_judge.v1.3.md
+@@ -1,4 +1,4 @@
+-LESSON SEAM JUDGE — v1.2
++LESSON SEAM JUDGE — v1.3
+@@ -21,4 +21,4 @@
+ OUTPUT
+-Return ONLY a JSON object {"verdicts": [{"id": "…", "reads": true}], "replies_naming_values": ["a6"]} — "verdicts": one verdict for every item, in the order given, with the item's id copied exactly, and an empty list when ITEMS is none; "replies_naming_values": the ids of the replies that name a value, each copied exactly, and an empty list when no reply does or REPLIES is none. No markdown, no code fences, no commentary. The first character of the response must be { and the last must be }.
++Return ONLY a JSON object {"verdicts": [{"id": "…", "reads": true}], "replies": [{"id": "…", "names_a_value": false}]} — "verdicts": one verdict for every item, in the order given, with the item's id copied exactly, and an empty list when ITEMS is none; "replies": one verdict for every reply, in the order given, with the reply's id copied exactly — "names_a_value": true when the reply names at least one of its VALUES, false when it names none — and an empty list when REPLIES is none. No markdown, no code fences, no commentary. The first character of the response must be { and the last must be }.
+```
+
+Код (схема и разбор ответа):
+
+```diff
+--- a/app/Modules/Plan/Infrastructure/Prompt/PlanSchemas.php
++++ b/app/Modules/Plan/Infrastructure/Prompt/PlanSchemas.php
+-            'replies_naming_values' => [
++            'replies' => [
+                 'type' => 'array',
+-                'items' => ['type' => 'string', 'enum' => $replyIds === [] ? ['a1'] : $replyIds],
++                'items' => self::object([
++                    'id' => ['type' => 'string', 'enum' => $replyIds === [] ? ['a1'] : $replyIds],
++                    'names_a_value' => ['type' => 'boolean'],
++                ]),
+             ],
+--- a/app/Modules/Plan/Application/Service/LessonSeamJudge.php
++++ b/app/Modules/Plan/Application/Service/LessonSeamJudge.php
+-        $naming = $reply->payload['replies_naming_values'] ?? null;
+-        if (($items !== [] && ! is_array($verdicts)) || ($items === [] && ! is_array($naming))) {
++        $answers = $reply->payload['replies'] ?? null;
++        if (($items !== [] && ! is_array($verdicts)) || ($items === [] && ! is_array($answers))) {
+@@
++        $read = [];
+         $named = [];
+-        foreach (is_array($naming) ? $naming : [] as $id) {
+-            if (! is_string($id) || ! isset($asked[$id]) || isset($named[$id])) {
++        foreach (is_array($answers) ? $answers : [] as $answer) {
++            $id = is_array($answer) ? ($answer['id'] ?? null) : null;
++            $names = is_array($answer) ? ($answer['names_a_value'] ?? null) : null;
++            if (! is_string($id) || ! is_bool($names) || ! isset($asked[$id]) || isset($read[$id])) {
++                continue;
++            }
++            $read[$id] = true;
++            if (! $names) {
+                 continue;
+@@
+-            $replies !== [] && ! is_array($naming) ? 'no replies_naming_values in the answer' : '', …
++            $replies !== [] && ! is_array($answers) ? 'no replies in the answer' : '', …
+```
+
+**Деньги** — OpenAI GEN-4c-2 **$0.5802 из $0.7** (`spend.json`): e2e ru→ro $0.2222 (разговор дня 1 $0.0117 + урок дня 2
+$0.2106), e2e ru→en $0.2231 ($0.0101 + $0.2130), пробы судьи $0.0965 (85 вызовов), судья v1.3 на каноне $0.0178, повторы дней
+с живым судьёй $0.0207. Весь GEN-4c — **$1.4091 из $1.7** (кап `gate.php` — $7.1042). ElevenLabs — 0; фото не покупались.
+
+**Ворота** — один раз, в конце (код менялся): `composer check` на стенде `wt_gen4c`, база `wordtrainer_gen4c_test` — OpenAPI
+ok ×2, deptrac 0 (uncovered 3 — как в main), PHPStan 0, Pest 3 132 passed (`--parallel`); `flutter analyze` — чисто
+(mobile не тронут).
+
+**Файлы** — `e2e-c/ro-day2/`, `e2e-c/en-day2/`: `plan.json`, `day2-{skeleton,lesson,findings}.json`, `calls.json` и
+`calls-bodies.json` (окно закрытия дня 1), `replay.json` (день кодом ветки из записанных ответов), `replay-v1.3-*.json`
+(судья v1.3 вживую), `replies.json` (таблица выше), `judge-probe.json` (v1.2), `judge-probe-v1.3.json`; `runs/judge-c2.json`,
+`runs/judge-c-marks.json`, `runs/judge-c2-score.json`, `judge-v1.3.diff`. Инструменты: `tools/e2e-walk.py` (день через API
+до закрытия), `gen4c-replay.php`, `gen4c-replies.php`, `gen4c-judge-probe.php`, `spend-e2e.php` (окно журнала e2e → `spend.json`),
+`judge-score.py`; `e2e.php dump <план> <день> <с> <по>`, `e2e-bodies.php … <с> <по>`, `gen4c.php judge` (`JUDGE_FILE`,
+`JUDGE_UNIT`).

@@ -244,11 +244,13 @@ switch ($argv[1] ?? '') {
                 $only = array_values(array_filter(explode(',', substr($arg, 7))));
             }
         }
-        $model = new RecordingPlanModel(builder(), 'judge-c');
+        // GEN-4c-2: the judge v1.3 into a file and a unit of its own — -e JUDGE_FILE=judge-c2.json -e JUDGE_UNIT=judge-c2.
+        $file = RUNS.'/'.(getenv('JUDGE_FILE') ?: 'judge-c.json');
+        $model = new RecordingPlanModel(builder(), getenv('JUDGE_UNIT') ?: 'judge-c');
         app()->instance(PlanModelPort::class, $model);
         app()->forgetInstance(LessonSeamJudge::class);
         $judge = app(LessonSeamJudge::class);
-        $out = readJson(RUNS.'/judge-c.json') ?? [];
+        $out = readJson($file) ?? [];
         foreach (skeletonAnswers() as [$run, $id, $attempt, $request, $raw]) {
             $key = "{$run}/{$id}";
             $first = $attempt === 1 || $attempt === 'stored';
@@ -274,7 +276,7 @@ switch ($argv[1] ?? '') {
                 'cost_usd' => $verdict->costUsd,
                 'raw' => end($model->calls)['raw'] ?? null,
             ];
-            write(RUNS.'/judge-c.json', $out);
+            write($file, $out);
             fwrite(STDERR, sprintf("judge %s: %d replies, naming %s · spent $%.4f\n", $key, count($replies), json_encode($verdict->naming), spent()));
         }
         break;

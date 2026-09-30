@@ -124,15 +124,18 @@ switch ($argv[1] ?? '') {
                 'cost_usd_lesson' => $s->cost_usd_lesson, 'latency_ms_lesson' => $s->latency_ms_lesson, 'attempts_lesson' => $s->attempts_lesson,
             ])->all(),
         ]);
-        $day1 = $days->firstWhere('number', 1);
+        // GEN-4c-2: `dump <plan-id> <day>` writes that day's files (day2-…); the day 1 by default.
+        $number = (int) ($argv[3] ?? 1);
+        $day1 = $days->firstWhere('number', $number);
         $scene = $scenes->firstWhere('id', $day1?->scene_id);
         if ($scene !== null) {
-            e2eWrite('day1-skeleton.json', jsonColumn($scene->skeleton_json));
-            e2eWrite('day1-lesson.json', jsonColumn($scene->lesson_json));
-            e2eWrite('day1-findings.json', jsonColumn($scene->checks_json));
+            e2eWrite("day{$number}-skeleton.json", jsonColumn($scene->skeleton_json));
+            e2eWrite("day{$number}-lesson.json", jsonColumn($scene->lesson_json));
+            e2eWrite("day{$number}-findings.json", jsonColumn($scene->checks_json));
         }
-        $from = $plan->created_at;
-        $to = DB::table('plan_scenes')->where('plan_id', $id)->max('updated_at');
+        // GEN-4c-2: the calls of a window of its own (`dump <plan> <day> <from> <to>`, UTC) — a day built after the plan.
+        $from = (string) ($argv[4] ?? $plan->created_at);
+        $to = (string) ($argv[5] ?? DB::table('plan_scenes')->where('plan_id', $id)->max('updated_at'));
         $calls = DB::table('model_calls')->where('started_at', '>=', $from)->where('started_at', '<=', $to)->orderBy('started_at')
             ->get(['id', 'status', 'model', 'answered_model', 'purpose', 'tokens_in', 'cached_tokens', 'tokens_out', 'cost_usd', 'latency_ms', 'started_at']);
         e2eWrite('calls.json', ['calls' => $calls, 'cost_usd' => round((float) $calls->sum('cost_usd'), 6)]);

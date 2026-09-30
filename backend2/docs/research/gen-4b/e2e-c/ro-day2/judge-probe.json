@@ -1,0 +1,133 @@
+{
+    "call": 2,
+    "id": "a5",
+    "question": "Postul include ___?",
+    "values": [
+        "lucrul cu clienții",
+        "munca la calculator",
+        "pregătirea coletelor"
+    ],
+    "reads": [
+        {
+            "reply": "Da. Veți lucra în echipă în prima săptămână.",
+            "as_recorded": true,
+            "asked": 5,
+            "names_a_value": 5,
+            "answers": [
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ]
+            ],
+            "cost_usd": 0.00585
+        },
+        {
+            "reply": "Da. Detaliile le discutăm vineri.",
+            "as_recorded": false,
+            "asked": 5,
+            "names_a_value": 5,
+            "answers": [
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ]
+            ],
+            "cost_usd": 0.00583
+        },
+        {
+            "reply": "Da. În prima săptămână aveți un coleg alături.",
+            "as_recorded": false,
+            "asked": 5,
+            "names_a_value": 5,
+            "answers": [
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ]
+            ],
+            "cost_usd": 0.005845
+        },
+        {
+            "reply": "Detaliile le discutăm vineri.",
+            "as_recorded": false,
+            "asked": 5,
+            "names_a_value": 5,
+            "answers": [
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ]
+            ],
+            "cost_usd": 0.005825
+        },
+        {
+            "reply": "Detaliile le discutăm vineri.",
+            "as_recorded": false,
+            "shape": "no items",
+            "asked": 5,
+            "names_a_value": 5,
+            "answers": [
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ],
+                [
+                    "a5"
+                ]
+            ],
+            "cost_usd": 0.004625
+        }
+    ]
+}

@@ -1,0 +1,60 @@
+{
+    "call": 2,
+    "id": "a5",
+    "question": "Postul include ___?",
+    "values": [
+        "lucrul cu clienții",
+        "munca la calculator",
+        "pregătirea coletelor"
+    ],
+    "reads": [
+        {
+            "prompt": "lesson_seam_judge.v1.3",
+            "reply": "Da. Veți lucra în echipă în prima săptămână.",
+            "as_recorded": true,
+            "shape": "as sent",
+            "asked": 5,
+            "names_a_value": 0,
+            "answers": [
+                [],
+                [],
+                [],
+                [],
+                []
+            ],
+            "cost_usd": 0.00614
+        },
+        {
+            "prompt": "lesson_seam_judge.v1.3",
+            "reply": "Detaliile le discutăm vineri.",
+            "as_recorded": false,
+            "shape": "as sent",
+            "asked": 5,
+            "names_a_value": 0,
+            "answers": [
+                [],
+                [],
+                [],
+                [],
+                []
+            ],
+            "cost_usd": 0.006115
+        },
+        {
+            "prompt": "lesson_seam_judge.v1.3",
+            "reply": "Da. Postul are contact zilnic cu oamenii și lucru în echipă.",
+            "as_recorded": false,
+            "shape": "as sent",
+            "asked": 5,
+            "names_a_value": 0,
+            "answers": [
+                [],
+                [],
+                [],
+                [],
+                []
+            ],
+            "cost_usd": 0.006145
+        }
+    ]
+}

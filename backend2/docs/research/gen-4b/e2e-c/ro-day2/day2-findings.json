@@ -1,0 +1,17 @@
+[
+    {
+        "code": "partner.names_filler_meaning",
+        "detail": "the reply names or paraphrases a filler of the frame: one general fact about the matter of the scene instead, true whatever was asked («Da. Veți lucra în echipă în prima săptămână.» to «Postul include ___?» with «lucrul cu clienții», «munca la calculator», «pregătirea coletelor», the seam judge says)",
+        "address": "a5"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «Вместе с коллегами в первую рабочую неделю» repeats «в первую» of A's «Да. В первую неделю вы будете работать в команде.»",
+        "address": "x5.check"
+    },
+    {
+        "code": "check.verbatim",
+        "detail": "the right option «Până vineri» repeats «până vineri» of A's «După interviu, vă sunăm până vineri.»",
+        "address": "x9.check"
+    }
+]

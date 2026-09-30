@@ -31,8 +31,10 @@ if ($plan === null || $out === '') {
     fwrite(STDERR, "e2e-bodies.php <plan-id> <out.json>\n");
     exit(1);
 }
-$to = DB::table('plan_scenes')->where('plan_id', $id)->max('updated_at');
-$rows = DB::table('api_request_logs')->where('direction', 'outbound')->where('occurred_at', '>=', $plan->created_at)->where('occurred_at', '<=', $to)
+// GEN-4c-2: a window of its own — `<from> <to>` (UTC) — for a day built after the plan (closing day 1 builds day 2).
+$from = (string) ($argv[3] ?? $plan->created_at);
+$to = (string) ($argv[4] ?? DB::table('plan_scenes')->where('plan_id', $id)->max('updated_at'));
+$rows = DB::table('api_request_logs')->where('direction', 'outbound')->where('occurred_at', '>=', $from)->where('occurred_at', '<=', $to)
     ->where('path', 'like', '%chat/completions%')->orderBy('occurred_at')->orderBy('id')->get();
 $calls = [];
 foreach ($rows as $row) {

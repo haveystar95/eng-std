@@ -1,0 +1,421 @@
+{
+    "plan": "01M3QET095394QGAWYFS7K1JR6",
+    "day": 2,
+    "scene": "01M3QETBPZX4W5MZ5JWF75R7HC",
+    "status": "failed",
+    "fail_reason": "fatal: partner.changed",
+    "same_skeleton_as_stored": false,
+    "calls_replayed": {
+        "skeleton": 2,
+        "dialogue": 2,
+        "repair": 2,
+        "seam_judge": 2
+    },
+    "calls_recorded": {
+        "skeleton": 2,
+        "dialogue": 1,
+        "repair": 7,
+        "seam_judge": 2
+    },
+    "judge": "live",
+    "reused": [
+        "dialogue 2"
+    ],
+    "repairs_asked": [
+        {
+            "address": "p6",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "filler.common_prefix",
+                    "detail": "p6: every native filler starts with «слово» — the word is the frame's"
+                },
+                {
+                    "code": "vocab.carried",
+                    "detail": "p6: not a finding: this card alone says the words of the day «a însemna» (v5) — keep each of them in the card you write, or the day loses it"
+                }
+            ]
+        },
+        {
+            "address": "v6",
+            "recorded": true,
+            "findings": [
+                {
+                    "code": "vocab.from_placeholder",
+                    "detail": "v6: a placeholder word: replace with a word from a frame or a partner line of this day («pregătire» is said only through the filler p5.f3 «pregătirea coletelor», p7.f1 «pregătire», no detail of the learner's)"
+                }
+            ]
+        }
+    ],
+    "judge_answers": [
+        {
+            "prompt": "lesson_seam_judge.v1.3",
+            "replies": [
+                "a5"
+            ],
+            "answer": {
+                "verdicts": [
+                    {
+                        "id": "p1.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p1.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p3.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p4.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p5.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f3",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p7.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p8.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p8.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p8.f3",
+                        "reads": true
+                    }
+                ],
+                "replies": [
+                    {
+                        "id": "a5",
+                        "names_a_value": false
+                    }
+                ]
+            },
+            "cost_usd": "0.001586"
+        },
+        {
+            "prompt": "lesson_seam_judge.v1.3",
+            "replies": [],
+            "answer": {
+                "verdicts": [
+                    {
+                        "id": "p6.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p6.f3",
+                        "reads": true
+                    }
+                ],
+                "replies": []
+            },
+            "cost_usd": "0.001132"
+        }
+    ],
+    "attempts": [
+        {
+            "stage": "skeleton",
+            "attempt": 1,
+            "findings": [
+                {
+                    "code": "pronunciation.foreign_script",
+                    "address": "p7.f2",
+                    "detail": "the reading «прегэтиrе» has letters of another alphabet: r"
+                },
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v1",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («depozit» is said only through the filler p1.f1 «un depozit», no detail of the learner's)"
+                },
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v5",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («inventar» is said only through the filler p4.f1 «inventarul», no detail of the learner's)"
+                },
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v8",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («instruire» is said only through the filler p7.f1 «instruire», no detail of the learner's)"
+                },
+                {
+                    "code": "partner.yes_no_missing",
+                    "address": "a5",
+                    "detail": "a yes-or-no question: start with Da. or Nu., then one general fact (the reply to p5 «Postul include ___?»)"
+                },
+                {
+                    "code": "partner.names_filler",
+                    "address": "a6",
+                    "detail": "the line names «un răspuns», a filler of p8"
+                }
+            ],
+            "fatal": [
+                "pronunciation.foreign_script",
+                "vocab.from_placeholder",
+                "partner.yes_no_missing"
+            ],
+            "off_schema": null
+        },
+        {
+            "stage": "skeleton",
+            "attempt": 2,
+            "findings": [
+                {
+                    "code": "vocab.from_placeholder",
+                    "address": "v6",
+                    "detail": "a placeholder word: replace with a word from a frame or a partner line of this day («pregătire» is said only through the filler p5.f3 «pregătirea coletelor», p7.f1 «pregătire», no detail of the learner's)"
+                },
+                {
+                    "code": "filler.common_prefix",
+                    "address": "p6",
+                    "detail": "every native filler starts with «слово» — the word is the frame's"
+                }
+            ],
+            "fatal": [],
+            "off_schema": null
+        },
+        {
+            "stage": "dialogue",
+            "attempt": 1,
+            "findings": [
+                {
+                    "code": "partner.changed",
+                    "address": "A5",
+                    "detail": "a5 is «Da. Postul are contact zilnic cu oamenii și lucru în echipă.» / «Да. В этой работе каждый день есть общение с людьми и работа в команде.», A says «Da. Veți lucra în echipă în prima săptămână.» / «Да. В первую неделю вы будете работать в команде.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x4.check",
+                    "detail": "the right option «Есть ли у вас практика в этой задаче» repeats «у вас» of A's «У вас есть опыт с этой задачей?»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x5.check",
+                    "detail": "the right option «Cu o echipă în prima săptămână» repeats «echipă în» of A's «Da. Veți lucra în echipă în prima săptămână.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x6.check",
+                    "detail": "the right option «În prima săptămână» repeats «în prima» of A's «În prima săptămână, veți lucra în echipă.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x8.check",
+                    "detail": "the right option «La început» repeats «la început» of A's «Da, la început.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x9.check",
+                    "detail": "the right option «Până vineri» repeats «până vineri» of A's «După interviu, vă sunăm până vineri.»"
+                }
+            ],
+            "fatal": [
+                "partner.changed"
+            ],
+            "off_schema": null
+        },
+        {
+            "stage": "dialogue",
+            "attempt": 2,
+            "findings": [
+                {
+                    "code": "partner.changed",
+                    "address": "A5",
+                    "detail": "a5 is «Da. Postul are contact zilnic cu oamenii și lucru în echipă.» / «Да. В этой работе каждый день есть общение с людьми и работа в команде.», A says «Da. Veți lucra în echipă în prima săptămână.» / «Да. В первую неделю вы будете работать в команде.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x4.check",
+                    "detail": "the right option «Есть ли у вас практика в этой задаче» repeats «у вас» of A's «У вас есть опыт с этой задачей?»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x5.check",
+                    "detail": "the right option «Cu o echipă în prima săptămână» repeats «echipă în» of A's «Da. Veți lucra în echipă în prima săptămână.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x6.check",
+                    "detail": "the right option «În prima săptămână» repeats «în prima» of A's «În prima săptămână, veți lucra în echipă.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x8.check",
+                    "detail": "the right option «La început» repeats «la început» of A's «Da, la început.»"
+                },
+                {
+                    "code": "check.verbatim",
+                    "address": "x9.check",
+                    "detail": "the right option «Până vineri» repeats «până vineri» of A's «După interviu, vă sunăm până vineri.»"
+                }
+            ],
+            "fatal": [
+                "partner.changed"
+            ],
+            "off_schema": null
+        }
+    ],
+    "repairs": [
+        {
+            "stage": "skeleton",
+            "address": "p6",
+            "kind": "frame",
+            "sent_for": [
+                "filler.common_prefix"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        },
+        {
+            "stage": "skeleton",
+            "address": "v6",
+            "kind": "term",
+            "sent_for": [
+                "vocab.from_placeholder"
+            ],
+            "status": "repaired",
+            "kept": true,
+            "broke": [],
+            "left": [],
+            "helped": true,
+            "note": ""
+        }
+    ],
+    "judgements": [
+        {
+            "frames": [
+                "p1",
+                "p2",
+                "p3",
+                "p4",
+                "p5",
+                "p6",
+                "p7",
+                "p8"
+            ],
+            "items": 23,
+            "judged": 23,
+            "status": "judged",
+            "not_reading": [],
+            "replies": [
+                "a5"
+            ],
+            "naming": []
+        },
+        {
+            "frames": [
+                "p6"
+            ],
+            "items": 3,
+            "judged": 3,
+            "status": "judged",
+            "not_reading": [],
+            "replies": [],
+            "naming": []
+        }
+    ],
+    "findings_left": [
+        {
+            "code": "partner.changed",
+            "address": "A5",
+            "detail": "a5 is «Da. Postul are contact zilnic cu oamenii și lucru în echipă.» / «Да. В этой работе каждый день есть общение с людьми и работа в команде.», A says «Da. Veți lucra în echipă în prima săptămână.» / «Да. В первую неделю вы будете работать в команде.»"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x4.check",
+            "detail": "the right option «Есть ли у вас практика в этой задаче» repeats «у вас» of A's «У вас есть опыт с этой задачей?»"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x5.check",
+            "detail": "the right option «Cu o echipă în prima săptămână» repeats «echipă în» of A's «Da. Veți lucra în echipă în prima săptămână.»"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x6.check",
+            "detail": "the right option «În prima săptămână» repeats «în prima» of A's «În prima săptămână, veți lucra în echipă.»"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x8.check",
+            "detail": "the right option «La început» repeats «la început» of A's «Da, la început.»"
+        },
+        {
+            "code": "check.verbatim",
+            "address": "x9.check",
+            "detail": "the right option «Până vineri» repeats «până vineri» of A's «După interviu, vă sunăm până vineri.»"
+        }
+    ],
+    "skeleton": null
+}

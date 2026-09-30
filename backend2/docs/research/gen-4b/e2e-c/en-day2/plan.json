@@ -1,0 +1,169 @@
+{
+    "plan": {
+        "id": "01M3QFD3EBGZM6ZNKV6T9PDBBN",
+        "status": "active",
+        "goal": "Собеседование, я повар, работал в ресторане три года",
+        "title_native": "Собеседование",
+        "title_target": "Job interview",
+        "overdue_native": "Собеседование было вчера",
+        "prompt_version_plan": "plan-builder-v2.1",
+        "model_plan": "gpt-5.4-2026-03-05",
+        "cost_usd_plan": "0.016185",
+        "attempts_plan": 1,
+        "findings": [
+            {
+                "mode": "observe",
+                "check": "survival_slot_answer",
+                "action": "counted",
+                "detail": "scene 2: must_say 7 «ask when you can start» — slot «the time expression» is what the answer names (time)"
+            }
+        ]
+    },
+    "days": [
+        {
+            "number": 1,
+            "type": "scene",
+            "scene_id": "01M3QFDEY9BABMYDQEBRNXB20V",
+            "status": "closed"
+        },
+        {
+            "number": 2,
+            "type": "scene",
+            "scene_id": "01M3QFDEY9FZVPVB20VBVEBZ9K",
+            "status": "locked"
+        }
+    ],
+    "scenes": [
+        {
+            "id": "01M3QFDEY9BABMYDQEBRNXB20V",
+            "order": 1,
+            "priority": 2,
+            "title_native": "Начало встречи",
+            "title_target": "Interview start",
+            "teaches_native": "представиться и спросить график",
+            "goals_native": [
+                "сказать, как вас зовут",
+                "сказать, где работали",
+                "сказать, как долго",
+                "спросить про график"
+            ],
+            "topic_description": "Situation: You arrive for a job interview at a restaurant and meet the manager for the first minutes of the conversation. You are applying as a cook and have three years of restaurant experience. This scene covers the opening, your basic background, and practical timing questions before detailed work questions begin.\nLearner: Cook. Partner: Manager.\nNot in this scene: duties and kitchen tasks, tools and stations, salary, hiring decision.",
+            "must_say": [
+                {
+                    "slot": "the name",
+                    "text": "say your name"
+                },
+                {
+                    "slot": "the job",
+                    "text": "say which job you are applying for"
+                },
+                {
+                    "slot": "the workplace",
+                    "text": "say where you worked before"
+                },
+                {
+                    "slot": "the length of time",
+                    "text": "say how long you worked there"
+                },
+                {
+                    "slot": null,
+                    "text": "ask what the work schedule is"
+                },
+                {
+                    "slot": null,
+                    "text": "ask when they need an answer"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks your name and which job you want"
+                },
+                {
+                    "text": "asks where you worked before and for how long"
+                },
+                {
+                    "text": "says what shifts are available"
+                },
+                {
+                    "text": "tells you the next step and when they will decide"
+                }
+            ],
+            "lesson_status": "ready",
+            "fail_reason": null,
+            "prompt_version_lesson": "lesson_skeleton.v1.1+lesson_dialogue.v1.1",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "cost_usd_lesson": "0.121985",
+            "latency_ms_lesson": 74342,
+            "attempts_lesson": 2
+        },
+        {
+            "id": "01M3QFDEY9FZVPVB20VBVEBZ9K",
+            "order": 2,
+            "priority": 1,
+            "title_native": "Опыт и условия",
+            "title_target": "Experience and terms",
+            "teaches_native": "описать опыт и спросить оплату",
+            "goals_native": [
+                "сказать, что делали",
+                "сказать, что готовите",
+                "спросить про обязанности",
+                "спросить про оплату"
+            ],
+            "topic_description": "Situation: The manager now asks about your practical cooking experience and whether you fit the kitchen's needs. This is the core part of the interview because it decides if your background matches the role. You also need to understand the duties, pay, and when work could begin if they choose you.\nLearner: Cook. Partner: Manager.\nNot in this scene: introductions, saying your name, naming the job, where you worked, how long you worked there, interview timing.",
+            "must_say": [
+                {
+                    "slot": "the duty",
+                    "text": "say what duties you had before"
+                },
+                {
+                    "slot": "the station",
+                    "text": "say which station you worked at"
+                },
+                {
+                    "slot": "the dishes",
+                    "text": "say which dishes you can prepare"
+                },
+                {
+                    "slot": "the shift type",
+                    "text": "answer whether you can work a shift"
+                },
+                {
+                    "slot": null,
+                    "text": "ask what the main duties are"
+                },
+                {
+                    "slot": "the pay period",
+                    "text": "ask how much the pay is"
+                },
+                {
+                    "slot": "the time expression",
+                    "text": "ask when you can start"
+                }
+            ],
+            "must_understand": [
+                {
+                    "text": "asks what your duties were in your last job"
+                },
+                {
+                    "text": "asks which station you worked at and what you can cook"
+                },
+                {
+                    "text": "asks whether you can work evenings or weekends"
+                },
+                {
+                    "text": "says what the main duties are"
+                },
+                {
+                    "text": "tells you the pay and possible start date"
+                }
+            ],
+            "lesson_status": "ready",
+            "fail_reason": null,
+            "prompt_version_lesson": "lesson_skeleton.v1.1+lesson_dialogue.v1.1",
+            "model_lesson": "gpt-5.4-2026-03-05",
+            "cost_usd_lesson": "0.212959",
+            "latency_ms_lesson": 141420,
+            "attempts_lesson": 4
+        }
+    ]
+}
