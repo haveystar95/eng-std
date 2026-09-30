@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Domain\Lesson;
 
 /**
- * THE PARTNER'S REPLIES TO THE LEARNER'S QUESTIONS, AS THE SEAM JUDGE READS THEM (наряд GEN-4c, `lesson_seam_judge.v1.2`):
+ * THE PARTNER'S REPLIES TO THE LEARNER'S QUESTIONS, AS THE SEAM JUDGE READS THEM (наряд GEN-4c, `lesson_seam_judge.v1.3`):
  * every statement of the partner paired with an `ask` frame that has fillers ({@see Skeleton::repliesToAsks()}) — the
  * question with its slot, the values it is asked with, the reply said to every one of them alike. Whether the reply names a
  * value by its meaning is no code's to say («lucru cu clienții și pregătirea documentelor» to «Postul include ___?» with

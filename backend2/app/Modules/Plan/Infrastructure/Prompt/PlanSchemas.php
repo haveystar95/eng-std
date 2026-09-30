@@ -138,10 +138,11 @@ final class PlanSchemas
     }
 
     /**
-     * THE SEAM JUDGE (`lesson_seam_judge.v1.2`): a verdict per sentence sent — its id (the enum has only the ids
-     * sent) and whether it reads. No length (п. 202): a sentence left without a verdict is simply not judged. And (наряд GEN-4c)
-     * the ids of the replies that name a value of their question — the enum has only the replies sent; an empty list when none
-     * does, or when none was sent.
+     * THE SEAM JUDGE (`lesson_seam_judge.v1.3`): a verdict per sentence sent — its id (the enum has only the ids
+     * sent) and whether it reads. No length (п. 202): a sentence left without a verdict is simply not judged. And (наряды
+     * GEN-4c, GEN-4c-2) a verdict per reply sent — its id (the enum has only the replies sent) and whether it names a value of
+     * its question. Not a list of the replies that name one: asked for such a list, the judge listed a reply sent alone every
+     * time, whatever it said (GEN-4c-2 — 20 of 20 on a day 2 of the e2e).
      *
      * @param  list<string>  $ids
      * @param  list<string>  $replyIds
@@ -157,9 +158,12 @@ final class PlanSchemas
                     'reads' => ['type' => 'boolean'],
                 ]),
             ],
-            'replies_naming_values' => [
+            'replies' => [
                 'type' => 'array',
-                'items' => ['type' => 'string', 'enum' => $replyIds === [] ? ['a1'] : $replyIds],
+                'items' => self::object([
+                    'id' => ['type' => 'string', 'enum' => $replyIds === [] ? ['a1'] : $replyIds],
+                    'names_a_value' => ['type' => 'boolean'],
+                ]),
             ],
         ]);
     }

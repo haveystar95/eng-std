@@ -20,14 +20,16 @@ use Throwable;
  * yes or a no for each. No rule of any language is written here or in the prompt. Since наряд GEN-4 it reads the SKELETON's
  * frames, before the dialogue — what does not read sends its frame to a repair — and once more the frames a repair changed.
  *
- * AND THE REPLIES THAT NAME A FILLER BY ITS MEANING (`partner.names_filler_meaning`, наряд GEN-4c, `lesson_seam_judge.v1.2`),
+ * AND THE REPLIES THAT NAME A FILLER BY ITS MEANING (`partner.names_filler_meaning`, наряд GEN-4c, `lesson_seam_judge.v1.3`),
  * in the same call: every reply of the partner to a question of the learner's ({@see \App\Modules\Plan\Domain\Lesson\AskReplies})
- * with the values of the question's slot — does the reply name one of them, word for word, in another form or in other words.
- * `partner.names_filler` finds the value said as it is written; the rest is no code's to say either. A reply that names one
- * sends its partner line to a repair; a line a repair changed is read again with the frames.
+ * with the values of the question's slot — does the reply name one of them, word for word, in another form or in other words;
+ * a yes or a no for each reply, as for each sentence (GEN-4c-2: asked for the list of the replies that name one, the judge
+ * listed a reply sent alone whatever it said). `partner.names_filler` finds the value said as it is written; the rest is no
+ * code's to say either. A reply that names one sends its partner line to a repair; a line a repair changed is read again with
+ * the frames.
  *
  * A warning, never fatal: a judge that fails or answers off the shape leaves the day as it is — nothing found,
- * `judge.unavailable` counted by the caller. An answer with its sentences read and no list of replies found none of them.
+ * `judge.unavailable` counted by the caller. A reply the answer gives no verdict on is found naming nothing.
  */
 final readonly class LessonSeamJudge
 {
@@ -52,8 +54,8 @@ final readonly class LessonSeamJudge
         }
 
         $verdicts = $reply->payload['verdicts'] ?? null;
-        $naming = $reply->payload['replies_naming_values'] ?? null;
-        if (($items !== [] && ! is_array($verdicts)) || ($items === [] && ! is_array($naming))) {
+        $answers = $reply->payload['replies'] ?? null;
+        if (($items !== [] && ! is_array($verdicts)) || ($items === [] && ! is_array($answers))) {
             return new LessonSeamVerdict(LessonSeamVerdict::UNAVAILABLE, [], count($items), 0, $reply->costUsd, $reply->latencyMs, 'no verdicts in the answer', $sent);
         }
 
@@ -88,9 +90,16 @@ final readonly class LessonSeamJudge
         foreach ($replies as $one) {
             $asked[$one['id']] = $one;
         }
+        $read = [];
         $named = [];
-        foreach (is_array($naming) ? $naming : [] as $id) {
-            if (! is_string($id) || ! isset($asked[$id]) || isset($named[$id])) {
+        foreach (is_array($answers) ? $answers : [] as $answer) {
+            $id = is_array($answer) ? ($answer['id'] ?? null) : null;
+            $names = is_array($answer) ? ($answer['names_a_value'] ?? null) : null;
+            if (! is_string($id) || ! is_bool($names) || ! isset($asked[$id]) || isset($read[$id])) {
+                continue;
+            }
+            $read[$id] = true;
+            if (! $names) {
                 continue;
             }
             $named[$id] = true;
@@ -105,7 +114,7 @@ final readonly class LessonSeamJudge
 
         return new LessonSeamVerdict(
             LessonSeamVerdict::JUDGED, $violations, count($items), count($judged), $reply->costUsd, $reply->latencyMs,
-            $replies !== [] && ! is_array($naming) ? 'no replies_naming_values in the answer' : '', $sent, array_map('strval', array_keys($named)),
+            $replies !== [] && ! is_array($answers) ? 'no replies in the answer' : '', $sent, array_map('strval', array_keys($named)),
         );
     }
 }

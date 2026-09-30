@@ -54,7 +54,7 @@ final class PlanPromptFiles
         'skeleton' => 'lesson_skeleton.v1.1.md',
         'dialogue' => 'lesson_dialogue.v1.1.md',
         'repair' => 'lesson_card_repair.v1.5.md',
-        'seam_judge' => 'lesson_seam_judge.v1.2.md',
+        'seam_judge' => 'lesson_seam_judge.v1.3.md',
         'slot_judge' => 'slot_judge.v3.md',
         'conversation' => 'conversation_agent.v3.4.md',
     ];
@@ -319,7 +319,7 @@ final class PlanPromptFiles
     }
 
     /**
-     * The seam judge's data (`lesson_seam_judge.v1.2`): the learner's language by name and every sentence to read, with its id;
+     * The seam judge's data (`lesson_seam_judge.v1.3`): the learner's language by name and every sentence to read, with its id;
      * then the target's language by name and every reply of the partner to a question of the learner's, with its partner line's
      * id (наряд GEN-4c) — `none` for a list with nothing in it.
      */

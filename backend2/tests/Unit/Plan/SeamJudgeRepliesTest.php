@@ -12,10 +12,11 @@ use App\Modules\Plan\Infrastructure\Prompt\PlanPromptFiles;
 use App\Modules\Plan\Infrastructure\Prompt\PlanSchemas;
 
 /*
- * THE SEAM JUDGE'S SECOND QUESTION, IN THE SAME CALL (наряд GEN-4c §3, `lesson_seam_judge.v1.2`): for every reply of the partner
+ * THE SEAM JUDGE'S SECOND QUESTION, IN THE SAME CALL (наряд GEN-4c §3, `lesson_seam_judge.v1.3`): for every reply of the partner
  * to a question of the learner's, does it name a filler of the question — word for word, in another form or by its meaning. The
- * answer is strict JSON: the seams' verdicts as they were, and the ids of the replies that name one. Contract tests of the
- * answer's reading — the model is the fake, answering what each test hands it.
+ * answer is strict JSON: the seams' verdicts as they were, and a verdict for every reply (GEN-4c-2: not the list of the replies
+ * that name one — the judge listed a reply sent alone whatever it said). Contract tests of the answer's reading — the model is
+ * the fake, answering what each test hands it.
  */
 
 /** The reply of the e2e of GEN-4b (a6) — «Postul include ___?» answered with two of its fillers in other words. */
@@ -44,7 +45,7 @@ function sjrJudge(array|Closure $answer): array
 it('reads the seams as before and every reply the judge names as partner.names_filler_meaning at its line', function () {
     [$verdict, $fake] = sjrJudge(static fn (NativeSeamJudgeRequest $r): array => [
         'verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => $id !== 'p3.f2'], $r->ids()),
-        'replies_naming_values' => ['a6'],
+        'replies' => [['id' => 'a6', 'names_a_value' => true]],
     ]);
 
     expect($verdict->status)->toBe(LessonSeamVerdict::JUDGED)
@@ -60,10 +61,11 @@ it('reads the seams as before and every reply the judge names as partner.names_f
         ->and($fake->judgeRequests[0]->targetLanguage)->toBe('Romanian');
 });
 
-// Canon (the judge is a warning, never fatal): an id nobody sent, an id twice, a list missing — none is a finding, and the
-// seams read the same. Catches a line found that the day does not have, a reply found twice, and a call refused whole over a
-// list it only half answered.
-it('finds no reply the judge was not asked about, each once, and keeps the seams when the list is missing', function (array $answer, array $found, string $note) {
+// Canon (the judge is a warning, never fatal): a reply said to name nothing, an id nobody sent, an id twice, a verdict with no
+// yes or no, the replies missing — none is a finding but the first verdict that names, and the seams read the same. Catches a
+// line found that the day does not have, a reply found twice or by its second verdict, and a call refused whole over replies
+// it only half answered.
+it('finds no reply the judge was not asked about, each once by its first verdict, and keeps the seams when the replies are missing', function (array $answer, array $found, string $note) {
     [$verdict] = sjrJudge(static fn (NativeSeamJudgeRequest $r): array => [
         'verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => true], $r->ids()),
         ...$answer,
@@ -73,16 +75,19 @@ it('finds no reply the judge was not asked about, each once, and keeps the seams
         ->and(array_map(static fn ($v): string => "{$v->code}@{$v->address}", $verdict->violations))->toBe($found)
         ->and($verdict->note)->toBe($note);
 })->with([
-    'none named' => [['replies_naming_values' => []], [], ''],
-    'an id not sent' => [['replies_naming_values' => ['a9', 'p3']], [], ''],
-    'an id twice' => [['replies_naming_values' => ['a6', 'a6']], ['partner.names_filler_meaning@a6'], ''],
-    'no list at all' => [[], [], 'no replies_naming_values in the answer'],
+    'names none' => [['replies' => [['id' => 'a6', 'names_a_value' => false]]], [], ''],
+    'no verdict for the reply' => [['replies' => []], [], ''],
+    'an id not sent' => [['replies' => [['id' => 'a9', 'names_a_value' => true], ['id' => 'p3', 'names_a_value' => true]]], [], ''],
+    'an id twice' => [['replies' => [['id' => 'a6', 'names_a_value' => true], ['id' => 'a6', 'names_a_value' => true]]], ['partner.names_filler_meaning@a6'], ''],
+    'an id twice, the first names none' => [['replies' => [['id' => 'a6', 'names_a_value' => false], ['id' => 'a6', 'names_a_value' => true]]], [], ''],
+    'a verdict with no yes or no' => [['replies' => [['id' => 'a6']]], [], ''],
+    'no replies at all' => [[], [], 'no replies in the answer'],
 ]);
 
 // Наряд GEN-4c §3: «второй вопрос в ТОМ ЖЕ вызове, без нового вызова». Catches a day with replies and no native seam left
-// unjudged, and a reply list read with no list in the answer.
-it('reads the replies of a day with no native seam, and calls it unavailable without its list', function () {
-    $fake = new FakePlanModel(judge: static fn (): array => ['verdicts' => [], 'replies_naming_values' => ['a6']]);
+// unjudged, and the replies read with none in the answer.
+it('reads the replies of a day with no native seam, and calls it unavailable without its replies', function () {
+    $fake = new FakePlanModel(judge: static fn (): array => ['verdicts' => [], 'replies' => [['id' => 'a6', 'names_a_value' => true]]]);
     $named = (new LessonSeamJudge($fake))->judge([], 'Russian', sjrReplies(), 'Romanian');
     $silent = (new LessonSeamJudge(new FakePlanModel(judge: static fn (): array => ['verdicts' => []])))->judge([], 'Russian', sjrReplies(), 'Romanian');
 
@@ -104,9 +109,10 @@ it('sends every statement paired with an ask frame that has fillers, once', func
         ->and(AskReplies::of(dayCanonSkeleton(), ['a7']))->toBe([]);
 });
 
-// The prompt's INPUTS and OUTPUT (`lesson_seam_judge.v1.2`): the replies after the sentences, the target's language named,
-// `none` for an empty list; the schema — the sentences' verdicts as they were, the replies' ids one of those sent. Catches a
-// reply the model cannot name back, and a request that drops the sentences a day of replies alone does not have.
+// The prompt's INPUTS and OUTPUT (`lesson_seam_judge.v1.3`): the replies after the sentences, the target's language named,
+// `none` for an empty list; the schema — the sentences' verdicts as they were, a verdict for every reply, its id one of those
+// sent. Catches a reply the model cannot name back, the list of the named ids back in the schema (GEN-4c-2), and a request
+// that drops the sentences a day of replies alone does not have.
 it('asks the second question in the same message and the same schema', function () {
     $request = new NativeSeamJudgeRequest('Russian', [], 'Romanian', sjrReplies());
     $user = (new PlanPromptFiles)->judgeUser($request);
@@ -115,9 +121,11 @@ it('asks the second question in the same message and the same schema', function 
     expect($user)->toContain("ITEMS (id · the pattern with its slot · the value put into the slot · the sentence they make):\nnone\n")
         ->and($user)->toContain("TARGET_LANGUAGE: Romanian\n")
         ->and($user)->toContain('"id":"a6","question":"Postul include ___?"')
-        ->and($schema['required'])->toBe(['verdicts', 'replies_naming_values'])
-        ->and($schema['properties']['replies_naming_values']['items']['enum'])->toBe(['a6'])
-        ->and((new PlanPromptFiles)->judgeVersion())->toBe('lesson_seam_judge.v1.2')
+        ->and($schema['required'])->toBe(['verdicts', 'replies'])
+        ->and($schema['properties']['replies']['items']['required'])->toBe(['id', 'names_a_value'])
+        ->and($schema['properties']['replies']['items']['properties']['id']['enum'])->toBe(['a6'])
+        ->and($schema['properties']['replies']['items']['properties']['names_a_value']['type'])->toBe('boolean')
+        ->and((new PlanPromptFiles)->judgeVersion())->toBe('lesson_seam_judge.v1.3')
         ->and(LessonCodes::JUDGED)->toContain(LessonCodes::NAMES_FILLER_MEANING)
         // Ranked for the repairs after the yes or no — and never fatal: the judge reads a skeleton already taken.
         ->and(LessonCodes::repairRank(LessonCodes::NAMES_FILLER_MEANING))->toBe(3)

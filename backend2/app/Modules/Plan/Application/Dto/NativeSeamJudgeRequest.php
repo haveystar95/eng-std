@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Plan\Application\Dto;
 
 /**
- * THE SEAM JUDGE'S ONE CALL OF A DAY (`lesson_seam_judge.v1.2`, наряды GEN-2b, GEN-4c): the learner's language by name, and
+ * THE SEAM JUDGE'S ONE CALL OF A DAY (`lesson_seam_judge.v1.3`, наряды GEN-2b, GEN-4c): the learner's language by name, and
  * every native sentence the day's frames make with their fillers — the filler's address, the native frame, the native filler,
  * and the sentence the server put together from them; and in the same call the target's language by name and every reply of
  * the partner to a question of the learner's ({@see \App\Modules\Plan\Domain\Lesson\AskReplies}) — the partner line's id, the

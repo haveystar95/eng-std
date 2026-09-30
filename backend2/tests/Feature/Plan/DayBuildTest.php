@@ -358,7 +358,7 @@ it('sends a reply the seam judge finds naming a filler to a repair, and has the 
         judge: static fn (NativeSeamJudgeRequest $request, int $call): array => [
             'verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => true], $request->ids()),
             // a7 — the reply to «Do we need ___?» of x8 — named once; the line the repair writes names nothing.
-            'replies_naming_values' => $call === 1 ? ['a7'] : [],
+            'replies' => array_map(static fn (string $id): array => ['id' => $id, 'names_a_value' => $call === 1 && $id === 'a7'], $request->replyIds()),
         ],
     );
     [, , $scene] = dbBuild($this, $fake);

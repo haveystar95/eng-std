@@ -269,7 +269,7 @@ reads plan tables.
 
 - The prompts live in `Infrastructure/Prompt/current/` and only there (наряд PROMPTS-1): one file per prompt, named as the
   prompt and its version — `plan-builder-v2.1`, `plan_line_repair.v1`, `lesson_skeleton.v1.1`, `lesson_dialogue.v1.1`,
-  `lesson_card_repair.v1.5`, `lesson_seam_judge.v1.2`, `slot_judge.v3`, `conversation_agent.v3.4`. `PlanPromptFiles::FILES`
+  `lesson_card_repair.v1.5`, `lesson_seam_judge.v1.3`, `slot_judge.v3`, `conversation_agent.v3.4`. `PlanPromptFiles::FILES`
   is the one map from a prompt to its file; `docs/prompts/REGISTRY.md` holds each one's name, version, path and sha256, and
   `PromptRegistryTest` holds the directory and the registry to each other. The files are FROZEN; the version is the file
   name. A new version replaces the old file in the same commit — no rollback file lies beside the current one; the history
@@ -300,10 +300,11 @@ reads plan tables.
   (`Domain/Service/ModelText`, at `ContentModelPlanBuilder`; `plan:clean-text` for what was stored before, наряд LANG-1b §6 —
   and, since its last step, the readings stored in `plan_terms` and the dealt cards, by the parser's own rule,
   `Domain/Service/ReadingLetters`). The skeleton is read by the seam judge before the dialogue (`Application/Service/LessonSeamJudge`,
-  `filler.native_seam`, a warning; `judge.unavailable` when it does not answer) — and in the same call, `lesson_seam_judge.v1.2`
+  `filler.native_seam`, a warning; `judge.unavailable` when it does not answer) — and in the same call, `lesson_seam_judge.v1.3`
   (GEN-4c), whether the partner's reply to a question of the learner's names a filler of it, word for word, in another form
-  or by its meaning (`partner.names_filler_meaning`, a warning, never fatal); what a repair changed that it reads — a frame, a
-  reply, a question whose fillers changed — once more, in one call. The SLOT judge counts in the same
+  or by its meaning (`partner.names_filler_meaning`, a warning, never fatal) — a yes or a no for every reply, as for every
+  sentence: asked for the list of the replies that name one (v1.2), the judge listed a reply sent alone whatever it said
+  (GEN-4c-2); what a repair changed that it reads — a frame, a reply, a question whose fillers changed — once more, in one call. The SLOT judge counts in the same
   table under its own prompt version (`slot_judge.v3`) and has that one code only: it judges a learner's attempt,
   not a lesson, so it writes no finding anywhere and its price goes to the outbound log, never to the scene. The
   conversation's guards count there too, under `conversation_agent.v3.4` (`conversation.learner_line`, `…_cut`, `…_kept`,

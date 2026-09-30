@@ -28,7 +28,7 @@ final class LessonCodes
 
     /**
      * A partner's reply to a question of the learner's names a filler of that question — in another form or by its meaning, the
-     * same things in other words — the seam judge's second question in the same call (наряд GEN-4c, `lesson_seam_judge.v1.2`).
+     * same things in other words — the seam judge's second question in the same call (наряд GEN-4c, `lesson_seam_judge.v1.3`).
      * `partner.names_filler` finds the filler said as it is written; this, what no code can find.
      */
     public const NAMES_FILLER_MEANING = 'partner.names_filler_meaning';

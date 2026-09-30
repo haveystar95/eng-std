@@ -52,7 +52,7 @@ final class FakePlanModel implements PlanModelPort
 
     public const REPAIR_VERSION = 'lesson_card_repair.v1.5';
 
-    public const JUDGE_VERSION = 'lesson_seam_judge.v1.2';
+    public const JUDGE_VERSION = 'lesson_seam_judge.v1.3';
 
     /** How many times each call was made — the assertion behind «one repeat, not two». */
     public int $planCalls = 0;
@@ -182,7 +182,10 @@ final class FakePlanModel implements PlanModelPort
         $this->judgeRequests[] = $request;
         $payload = $this->judge !== null
             ? ($this->judge)($request, $this->judgeCalls)
-            : ['verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => true], $request->ids()), 'replies_naming_values' => []];
+            : [
+                'verdicts' => array_map(static fn (string $id): array => ['id' => $id, 'reads' => true], $request->ids()),
+                'replies' => array_map(static fn (string $id): array => ['id' => $id, 'names_a_value' => false], $request->replyIds()),
+            ];
 
         return new ModelReply($payload, self::JUDGE_VERSION, self::MODEL, 400, 120, '0.000000', 2, '');
     }
