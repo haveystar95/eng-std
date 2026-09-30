@@ -1560,20 +1560,20 @@
                         "text_native": "Что менеджер хочет узнать?",
                         "options": [
                             {
-                                "text_target": "Your tasks in the previous kitchen job",
-                                "text_native": "Ваши задачи на прошлой кухонной работе"
+                                "text_target": "Your tasks at the previous workplace",
+                                "text_native": "Ваши задачи на предыдущем месте работы"
                             },
                             {
-                                "text_target": "Your preferred work schedule",
-                                "text_native": "Ваш предпочтительный рабочий график"
+                                "text_target": "Your starting date",
+                                "text_native": "Ваша дата начала работы"
                             },
                             {
-                                "text_target": "Your expected salary",
-                                "text_native": "Вашу ожидаемую зарплату"
+                                "text_target": "Your monthly salary",
+                                "text_native": "Ваша месячная зарплата"
                             }
                         ],
                         "correct_option_index": 0,
-                        "explanation_native": "Менеджер спрашивает о том, что вы делали на прошлой работе."
+                        "explanation_native": "Менеджер спрашивает, какие обязанности у вас были на прошлой работе."
                     }
                 },
                 {
@@ -1595,11 +1595,11 @@
                             "role_target": "Cook",
                             "role_native": "Повар",
                             "phrase_id": "p2",
-                            "filler": "the grill",
+                            "filler": "on the grill",
                             "text_target": "I worked on the grill",
-                            "text_native": "Я работал на на гриле",
+                            "text_native": "Я работал на гриле",
                             "pronunciation_native": "ай уёркт он зэ гриль",
-                            "speaking_key": "I worked on",
+                            "speaking_key": "I worked",
                             "simplified_variants": [
                                 "I was on the grill"
                             ]
@@ -1610,20 +1610,20 @@
                         "text_native": "Что менеджер хочет узнать?",
                         "options": [
                             {
-                                "text_target": "Which dishes you can make",
-                                "text_native": "Какие блюда вы умеете готовить"
+                                "text_target": "Which shift you prefer",
+                                "text_native": "Какую смену вы предпочитаете"
                             },
                             {
-                                "text_target": "Which kitchen area you worked at",
+                                "text_target": "Which kitchen area you worked in",
                                 "text_native": "На каком участке кухни вы работали"
                             },
                             {
-                                "text_target": "Which shift you prefer",
-                                "text_native": "Какую смену вы предпочитаете"
+                                "text_target": "How many hours you worked",
+                                "text_native": "Сколько часов вы работали"
                             }
                         ],
                         "correct_option_index": 1,
-                        "explanation_native": "Менеджер уточняет, на каком рабочем участке кухни вы были."
+                        "explanation_native": "Менеджер спрашивает, на какой станции вы работали."
                     }
                 },
                 {
@@ -1660,19 +1660,19 @@
                         "text_native": "Что менеджер хочет узнать?",
                         "options": [
                             {
-                                "text_target": "What equipment you used",
-                                "text_native": "Каким оборудованием вы пользовались"
+                                "text_target": "What equipment you use",
+                                "text_native": "Каким оборудованием вы пользуетесь"
                             },
                             {
-                                "text_target": "What time you can start",
-                                "text_native": "Когда вы можете начать"
+                                "text_target": "What food you are able to cook",
+                                "text_native": "Какую еду вы умеете готовить"
                             },
                             {
-                                "text_target": "What kinds of meals you are able to cook",
-                                "text_native": "Какие виды блюд вы умеете готовить"
+                                "text_target": "What days you can work",
+                                "text_native": "В какие дни вы можете работать"
                             }
                         ],
-                        "correct_option_index": 2,
+                        "correct_option_index": 1,
                         "explanation_native": "Менеджер спрашивает, какие блюда вы умеете готовить."
                     }
                 },
@@ -1710,20 +1710,20 @@
                         "text_native": "О чём спрашивает менеджер?",
                         "options": [
                             {
-                                "text_target": "Availability late in the day",
-                                "text_native": "Возможность работать поздно днём и вечером"
+                                "text_target": "Evening availability",
+                                "text_native": "Возможность работать вечером"
                             },
                             {
-                                "text_target": "Experience with desserts",
-                                "text_native": "Опыт с десертами"
+                                "text_target": "Weekend training",
+                                "text_native": "Обучение в выходные"
                             },
                             {
-                                "text_target": "Payment by week",
-                                "text_native": "Оплата за неделю"
+                                "text_target": "Monthly pay",
+                                "text_native": "Ежемесячная оплата"
                             }
                         ],
                         "correct_option_index": 0,
-                        "explanation_native": "Менеджер спрашивает, можете ли вы работать вечером."
+                        "explanation_native": "Менеджер спрашивает, можете ли вы работать по вечерам."
                     }
                 },
                 {
@@ -1745,13 +1745,13 @@
                             "role_target": "Cook",
                             "role_native": "Повар",
                             "phrase_id": "p4",
-                            "filler": "weekends",
-                            "text_target": "I can work weekends",
-                            "text_native": "Я могу работать по выходным",
-                            "pronunciation_native": "ай кэн уёрк уикэндз",
+                            "filler": "night shifts",
+                            "text_target": "I can work night shifts",
+                            "text_native": "Я могу работать в ночные смены",
+                            "pronunciation_native": "ай кэн уёрк найт шифтс",
                             "speaking_key": "I can work",
                             "simplified_variants": [
-                                "I can do weekends"
+                                "I can do night shifts"
                             ]
                         }
                     ],
@@ -1764,16 +1764,16 @@
                                 "text_native": "Работа по субботам и воскресеньям"
                             },
                             {
-                                "text_target": "Training in the first days",
-                                "text_native": "Обучение в первые дни"
+                                "text_target": "Work in the mornings",
+                                "text_native": "Работа по утрам"
                             },
                             {
-                                "text_target": "Cooking meat meals",
-                                "text_native": "Приготовление мясных блюд"
+                                "text_target": "Work at another station",
+                                "text_native": "Работа на другой станции"
                             }
                         ],
                         "correct_option_index": 0,
-                        "explanation_native": "Менеджер спрашивает, можете ли вы работать в выходные."
+                        "explanation_native": "Менеджер спрашивает, можете ли вы работать по выходным."
                     }
                 },
                 {
@@ -1793,9 +1793,7 @@
                             "text_native": "Какие основные обязанности?",
                             "pronunciation_native": "уот ар зэ мэйн дьютиз",
                             "speaking_key": "the main duties",
-                            "simplified_variants": [
-                                "Main duties?"
-                            ]
+                            "simplified_variants": []
                         },
                         {
                             "speaker": "A",
@@ -1810,20 +1808,20 @@
                         "text_native": "Какую обязанность называет менеджер?",
                         "options": [
                             {
-                                "text_target": "Ordering supplies",
-                                "text_native": "Заказ продуктов"
+                                "text_target": "Training new staff",
+                                "text_native": "Обучение новых сотрудников"
                             },
                             {
                                 "text_target": "Preparing ingredients",
                                 "text_native": "Подготовка продуктов"
                             },
                             {
-                                "text_target": "Serving tables",
-                                "text_native": "Обслуживание столов"
+                                "text_target": "Taking payments",
+                                "text_native": "Приём оплаты"
                             }
                         ],
                         "correct_option_index": 1,
-                        "explanation_native": "Менеджер говорит о подготовке продуктов и чистоте на кухне."
+                        "explanation_native": "Менеджер говорит о подготовке продуктов и поддержании чистоты на кухне."
                     }
                 },
                 {
@@ -1844,37 +1842,37 @@
                             "pronunciation_native": "куд ю рипит, плиз",
                             "speaking_key": "repeat, please",
                             "simplified_variants": [
-                                "Please repeat.",
-                                "Say it again, please."
+                                "Please repeat",
+                                "Could you say that again?"
                             ]
                         },
                         {
                             "speaker": "A",
                             "role_target": "Manager",
                             "role_native": "Менеджер",
-                            "text_target": "Food prep and a clean kitchen.",
-                            "text_native": "Подготовка продуктов и чистая кухня."
+                            "text_target": "Food prep and keeping the kitchen clean.",
+                            "text_native": "Подготовка продуктов и поддержание чистоты на кухне."
                         }
                     ],
                     "check": {
                         "text_target": "What else does the manager mention besides food prep?",
-                        "text_native": "Что ещё менеджер упоминает кроме подготовки продуктов?",
+                        "text_native": "Что ещё менеджер упоминает, кроме подготовки продуктов?",
                         "options": [
                             {
-                                "text_target": "A tidy kitchen",
-                                "text_native": "Чистую кухню"
+                                "text_target": "Ordering supplies",
+                                "text_native": "Заказ продуктов"
                             },
                             {
-                                "text_target": "Evening shifts",
-                                "text_native": "Вечерние смены"
+                                "text_target": "Cleaning the kitchen",
+                                "text_native": "Поддержание чистоты на кухне"
                             },
                             {
-                                "text_target": "Weekend training",
-                                "text_native": "Обучение по выходным"
+                                "text_target": "Serving guests",
+                                "text_native": "Обслуживание гостей"
                             }
                         ],
-                        "correct_option_index": 0,
-                        "explanation_native": "В повторе менеджер добавляет, что кухня должна быть чистой."
+                        "correct_option_index": 1,
+                        "explanation_native": "Кроме подготовки продуктов менеджер упоминает поддержание чистоты на кухне."
                     }
                 },
                 {
@@ -1895,7 +1893,7 @@
                             "pronunciation_native": "уот из зэ пэй пёр манс",
                             "speaking_key": "the pay per",
                             "simplified_variants": [
-                                "Pay per month?"
+                                "What is the monthly pay?"
                             ]
                         },
                         {
@@ -1907,24 +1905,24 @@
                         }
                     ],
                     "check": {
-                        "text_target": "When is the money sent?",
-                        "text_native": "Когда переводят деньги?",
+                        "text_target": "When is the pay transferred?",
+                        "text_native": "Когда переводят оплату?",
                         "options": [
                             {
-                                "text_target": "At the start of the work week",
-                                "text_native": "В начале рабочей недели"
+                                "text_target": "At the start of the month",
+                                "text_native": "В начале месяца"
+                            },
+                            {
+                                "text_target": "After each shift",
+                                "text_native": "После каждой смены"
                             },
                             {
                                 "text_target": "At the close of each payment cycle",
                                 "text_native": "В конце каждого расчётного периода"
-                            },
-                            {
-                                "text_target": "Every day after the shift",
-                                "text_native": "Каждый день после смены"
                             }
                         ],
-                        "correct_option_index": 1,
-                        "explanation_native": "Менеджер говорит, что оплату переводят в конце расчётного периода."
+                        "correct_option_index": 2,
+                        "explanation_native": "Менеджер говорит, что оплату переводят в конце каждого расчётного периода."
                     }
                 },
                 {
@@ -1945,7 +1943,7 @@
                             "pronunciation_native": "кэн ай старт нэкст уик",
                             "speaking_key": "Can I start",
                             "simplified_variants": [
-                                "Start next week?"
+                                "I can start next week"
                             ]
                         },
                         {
@@ -1957,23 +1955,23 @@
                         }
                     ],
                     "check": {
-                        "text_target": "What happens in the beginning for new workers?",
-                        "text_native": "Что происходит в начале у новых сотрудников?",
+                        "text_target": "What happens in the first week?",
+                        "text_native": "Что происходит в первую неделю?",
                         "options": [
                             {
-                                "text_target": "They choose their station",
-                                "text_native": "Они выбирают свою станцию"
+                                "text_target": "New workers get training",
+                                "text_native": "Новые сотрудники проходят обучение"
                             },
                             {
-                                "text_target": "They get instruction in week one",
-                                "text_native": "Они проходят обучение в первую неделю"
+                                "text_target": "New workers choose shifts",
+                                "text_native": "Новые сотрудники выбирают смены"
                             },
                             {
-                                "text_target": "They are paid every day",
-                                "text_native": "Им платят каждый день"
+                                "text_target": "New workers receive full pay",
+                                "text_native": "Новые сотрудники получают полную оплату"
                             }
                         ],
-                        "correct_option_index": 1,
+                        "correct_option_index": 0,
                         "explanation_native": "Менеджер говорит, что в первую неделю новые сотрудники проходят обучение."
                     }
                 }
@@ -1981,44 +1979,44 @@
             "listening": {
                 "questions": [
                     {
-                        "text_native": "Какие блюда вы сказали, что умеете готовить?",
+                        "text_native": "Что повар сказал о своём опыте на прошлой работе?",
                         "options_native": [
-                            "пасту",
-                            "супы",
-                            "мясные блюда"
+                            "Он готовил горячие блюда",
+                            "Он готовил салаты",
+                            "Он готовил супы"
                         ],
-                        "correct_option_index": 2,
-                        "explanation_native": "Вы сказали, что умеете готовить мясные блюда."
+                        "correct_option_index": 0,
+                        "explanation_native": "Повар сказал, что готовил горячие блюда."
                     },
                     {
                         "text_native": "Что менеджер назвал среди основных обязанностей?",
                         "options_native": [
-                            "подготовку продуктов",
-                            "работу в зале",
-                            "заказ поставок"
+                            "Подготовку продуктов",
+                            "Работу с кассой",
+                            "Обслуживание гостей"
                         ],
                         "correct_option_index": 0,
-                        "explanation_native": "Менеджер сказал про подготовку продуктов и чистоту на кухне."
+                        "explanation_native": "Менеджер назвал подготовку продуктов одной из основных обязанностей."
                     },
                     {
-                        "text_native": "Когда, по словам менеджера, переводят оплату?",
+                        "text_native": "За какой период повар спросил об оплате?",
                         "options_native": [
-                            "в конце каждого расчётного периода",
-                            "в начале месяца",
-                            "после каждой смены"
-                        ],
-                        "correct_option_index": 0,
-                        "explanation_native": "Менеджер сказал, что оплату переводят в конце каждого расчётного периода."
-                    },
-                    {
-                        "text_native": "Когда вы спросили, можно ли начать работу?",
-                        "options_native": [
-                            "в понедельник",
-                            "на следующей неделе",
-                            "в эти выходные"
+                            "За неделю",
+                            "За месяц",
+                            "За день"
                         ],
                         "correct_option_index": 1,
-                        "explanation_native": "Вы спросили, можно ли начать на следующей неделе."
+                        "explanation_native": "Повар спросил об оплате за месяц."
+                    },
+                    {
+                        "text_native": "Что менеджер сказал о первой неделе работы?",
+                        "options_native": [
+                            "Будет выходной",
+                            "Будет обучение",
+                            "Будет экзамен"
+                        ],
+                        "correct_option_index": 1,
+                        "explanation_native": "Менеджер сказал, что в первую неделю новые сотрудники проходят обучение."
                     }
                 ]
             }
@@ -2107,106 +2105,6 @@
                     "used_in": [
                         "a6"
                     ]
-                }
-            }
-        },
-        {
-            "address": "x1.check",
-            "answer": {
-                "card": {
-                    "text_target": "What does the manager want to know?",
-                    "text_native": "Что менеджер хочет узнать?",
-                    "options": [
-                        {
-                            "text_target": "Your preferred work schedule",
-                            "text_native": "Ваш предпочтительный рабочий график"
-                        },
-                        {
-                            "text_target": "Your expected salary",
-                            "text_native": "Вашу ожидаемую зарплату"
-                        },
-                        {
-                            "text_target": "The responsibilities you handled at your former workplace",
-                            "text_native": "Задачи, которые вы выполняли на прежнем месте работы"
-                        }
-                    ],
-                    "correct_option_index": 2,
-                    "explanation_native": "Менеджер спрашивает о том, что вы делали на прошлой работе."
-                }
-            }
-        },
-        {
-            "address": "x2.check",
-            "answer": {
-                "card": {
-                    "text_target": "What does the manager want to know?",
-                    "text_native": "Что менеджер хочет узнать?",
-                    "options": [
-                        {
-                            "text_target": "Which shift you prefer",
-                            "text_native": "Какую смену вы предпочитаете"
-                        },
-                        {
-                            "text_target": "The kitchen section where you had experience",
-                            "text_native": "Участок кухни, где у вас был опыт"
-                        },
-                        {
-                            "text_target": "Which dishes you can make",
-                            "text_native": "Какие блюда вы умеете готовить"
-                        }
-                    ],
-                    "correct_option_index": 1,
-                    "explanation_native": "Менеджер хочет узнать, на каком участке кухни у вас был опыт."
-                }
-            }
-        },
-        {
-            "address": "x3.check",
-            "answer": {
-                "card": {
-                    "text_target": "What does the manager want to know?",
-                    "text_native": "Что менеджер хочет узнать?",
-                    "options": [
-                        {
-                            "text_target": "What equipment you used",
-                            "text_native": "Каким оборудованием вы пользовались"
-                        },
-                        {
-                            "text_target": "Which recipes you manage to prepare",
-                            "text_native": "Какие рецепты вам удаётся готовить"
-                        },
-                        {
-                            "text_target": "What time you can start",
-                            "text_native": "Когда вы можете начать"
-                        }
-                    ],
-                    "correct_option_index": 1,
-                    "explanation_native": "Менеджер спрашивает, какие рецепты вам удаётся готовить."
-                }
-            }
-        },
-        {
-            "address": "x6.check",
-            "answer": {
-                "card": {
-                    "text_target": "Which duty does the manager mention?",
-                    "text_native": "Какую обязанность называет менеджер?",
-                    "options": [
-                        {
-                            "text_target": "Serving tables",
-                            "text_native": "Обслуживание столов"
-                        },
-                        {
-                            "text_target": "Ordering supplies",
-                            "text_native": "Заказ продуктов"
-                        },
-                        {
-                            "text_target": "Getting ingredients ready",
-                            "text_native": "Подготовка ингредиентов"
-                        }
-                    ],
-                    "correct_option_index": 2,
-                    "explanation_native": "Менеджер говорит о подготовке продуктов и чистоте на кухне."
                 }
             }
         }
@@ -2300,7 +2198,20 @@
         {
             "prompt": "lesson_seam_judge.v1.3",
             "answer": {
-                "verdicts": [],
+                "verdicts": [
+                    {
+                        "id": "p2.f1",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f2",
+                        "reads": true
+                    },
+                    {
+                        "id": "p2.f3",
+                        "reads": true
+                    }
+                ],
                 "replies": [
                     {
                         "id": "a7",
@@ -2308,7 +2219,7 @@
                     },
                     {
                         "id": "a8",
-                        "names_a_value": false
+                        "names_a_value": true
                     }
                 ]
             }

@@ -47,13 +47,22 @@ it('frame.must_say — a number out of the list, a number of two frames, a frame
     'none' => [[], 'p4'],
 ]);
 
-it('frame.known_repeat — a frame an earlier day taught, in either language, its full stop aside', function (string $target, string $native) {
+// Наряд GEN-4c-3: «frame.known_repeat — сверять только каркас языка цели (после нормализации: регистр, пунктуация,
+// апострофы/сокращения). Совпадение одного родного каркаса — не повтор … Тест — на канон: два каркаса цели с одним родным не
+// повтор; один и тот же каркас цели в двух днях — повтор». CATCHES a frame of the target day 1 taught let through because its
+// native frame is another, or because it is written in capitals and with other marks — and a new frame of the target refused
+// for the native frame day 1 had (e2e ru→en, day 2: «I worked ___» after «I worked at ___», both «Я работал ___»).
+it('frame.known_repeat — a frame of the target an earlier day taught, its case and marks aside; the native frame is not compared', function (string $target, string $native, ?string $at) {
     $earlier = new EarlierDays([new EarlierDay(1, 'Prima zi', 'Recepționer', VoiceGender::Female, [], [['target' => $target, 'native' => $native]], ['cuvânt'])]);
+    $found = skeletonFound(dayCanonSkeleton(), dayCanonSkeletonContext(earlier: $earlier));
 
-    expect(skeletonFound(dayCanonSkeleton(), dayCanonSkeletonContext(earlier: $earlier)))->toContain('frame.known_repeat@p1');
+    expect(array_values(array_filter($found, static fn (string $f): bool => str_starts_with($f, 'frame.known_repeat@'))))
+        ->toBe($at === null ? [] : ["frame.known_repeat@{$at}"]);
 })->with([
-    'target' => ['Mă numesc ___.', 'Как меня зовут ___.'],
-    'native' => ['Numele meu e ___.', 'Меня зовут ___.'],
+    'the same frame of the target, another native one' => ['Mă numesc ___.', 'Как меня зовут ___.', 'p1'],
+    'the same frame of the target in capitals, with a comma and another mark' => ['MĂ NUMESC, ___!', 'Меня зовут ___.', 'p1'],
+    'another frame of the target, the same native one' => ['Numele meu e ___.', 'Меня зовут ___.', null],
+    'the e2e case: another preposition of the target, the same native frame' => ['Am lucrat în ___.', 'Я работал в ___.', null],
 ]);
 
 it('partner.item_missing — an item of must_understand no partner line delivers', function () {

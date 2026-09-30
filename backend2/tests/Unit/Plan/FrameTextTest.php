@@ -57,6 +57,26 @@ it('capitalises a sentence past the Spanish opening marks, and nothing else', fu
         ->and(FrameText::nativeSentence('¿___ está abierta?', 'la farmacia', '?'))->toBe('¿La farmacia está abierta?');
 });
 
+// Наряд GEN-4c-3: «frame.known_repeat — сверять только каркас языка цели (после нормализации: регистр, пунктуация,
+// апострофы/сокращения)». CATCHES a frame an earlier day taught taken for a new one because it is written in another case,
+// with other marks, a typographic apostrophe or a contraction of the pack — and two frames taken for one because a word of
+// the frame, an article or the place of the window was read past.
+it('reads a frame of the target as the words it says around its window', function () {
+    $en = lessonPacks()->for('en');
+    $same = static fn (string $a, string $b): bool => FrameText::targetIdentity($a, $en) === FrameText::targetIdentity($b, $en);
+
+    expect(FrameText::targetIdentity("I'm looking for ___.", $en))->toBe('i am looking for ___')
+        ->and(FrameText::targetIdentity('What is the pay per ___?', $en))->toBe('what is the pay per ___')
+        ->and($same('I worked at ___.', 'i worked at ___'))->toBeTrue()
+        ->and($same('What’s ___?', "what's ___"))->toBeTrue()
+        ->and($same('What’s ___?', 'What is ___?'))->toBeTrue()
+        ->and($same("I can't ___.", 'I cannot ___'))->toBeTrue()
+        ->and($same('Yes, I can ___!', 'Yes I can ___'))->toBeTrue()
+        ->and($same('I worked at ___.', 'I worked ___.'))->toBeFalse()
+        ->and($same('Is ___ here?', '___ is here'))->toBeFalse()
+        ->and($same('Is the ___ ready?', 'Is ___ ready?'))->toBeFalse();
+});
+
 // Canon (LINE_TOO_LONG, «10 words, not counting leading glue» + LANG-1 §1): an exclamation opened by ¡ is glue like any
 // other. CATCHES «¡Claro!» counted into the line's words.
 it('reads glue opened by ¡ as glue', function () {

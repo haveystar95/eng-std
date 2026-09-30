@@ -11,9 +11,14 @@ use App\Modules\Plan\Domain\Lesson\Skeleton;
 use App\Modules\Plan\Domain\Service\FrameText;
 
 /**
- * `frame.known_repeat` — FATAL. A frame is new: it is not a Frame of EARLIER_DAYS in either language — the same string, its
- * case, its run of spaces and the mark it ends with aside ({@see FrameText::identity()}): the earlier day's frame is served
- * with the full stop the skeleton does not write.
+ * `frame.known_repeat` — FATAL. A frame of the target is new: it is not a frame of the target an earlier day taught
+ * (EARLIER_DAYS) — read as the words it says, case, marks, apostrophes and the pack's contractions aside ({@see
+ * FrameText::targetIdentity()}); the earlier day's frame is served with the full stop the skeleton does not write.
+ *
+ * THE NATIVE FRAME IS NOT COMPARED (наряд GEN-4c-3, п. 331 again): the learner learns the frames of the target, the native
+ * one is its translation and may be the same for two of them — «I worked at ___» and «I worked ___» are both «Я работал ___».
+ * Compared in either language, the e2e ru→en refused the repair of day 2 that wrote the second, and the day was served «Я
+ * работал на на гриле». One rule for the skeleton's answer and for every repair of it.
  */
 final class FrameKnownRepeat implements SkeletonRule
 {
@@ -33,17 +38,14 @@ final class FrameKnownRepeat implements SkeletonRule
     {
         $known = [];
         foreach ($context->earlierDays->frames() as $frame) {
-            $known[FrameText::identity($frame['target'])] = "«{$frame['target']}» of day {$frame['day']}";
-            $known[FrameText::identity($frame['native'])] = "«{$frame['native']}» of day {$frame['day']}";
+            $known[FrameText::targetIdentity($frame['target'], $context->target)] ??= "«{$frame['target']}» of day {$frame['day']}";
         }
         $out = [];
         foreach ($skeleton->frames as $frame) {
-            foreach ([$frame->phrase->frameTarget, $frame->phrase->frameNative] as $text) {
-                $was = $known[FrameText::identity($text)] ?? null;
-                if ($was !== null && trim($text) !== '') {
-                    $out[] = new LessonViolation(self::CODE, $frame->id(), "«{$text}» is the frame {$was}");
-                    break;
-                }
+            $text = $frame->phrase->frameTarget;
+            $was = trim($text) === '' ? null : ($known[FrameText::targetIdentity($text, $context->target)] ?? null);
+            if ($was !== null) {
+                $out[] = new LessonViolation(self::CODE, $frame->id(), "«{$text}» is the frame {$was}");
             }
         }
 

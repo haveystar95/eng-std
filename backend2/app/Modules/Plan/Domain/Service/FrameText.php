@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Plan\Domain\Service;
 
+use App\Modules\Plan\Domain\Check\Language\LanguagePack;
 use App\Modules\Plan\Domain\Check\Language\SentenceEnds;
 use App\Modules\Plan\Domain\Lesson\Filler;
 use App\Modules\Plan\Domain\Lesson\Phrase;
@@ -125,6 +126,20 @@ final class FrameText
         $slotted = (string) preg_replace(self::SLOT_PATTERN, '___', self::withoutEndMark($text));
 
         return mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', $slotted)));
+    }
+
+    /**
+     * WHEN A FRAME OF THE TARGET IS ONE AN EARLIER DAY TAUGHT (наряд GEN-4c-3, `frame.known_repeat`): the frame read as the
+     * words it says, part by part around its window ({@see FrameWords}, the articles kept) — lower case, every mark gone,
+     * either apostrophe, the pack's contractions spelt out — and the window where it stands. «I'm looking for ___.» and
+     * «I am looking for ___» are one frame, «What’s ___?» and «what is ___» too; «I worked at ___» and «I worked ___» are two.
+     */
+    public static function targetIdentity(string $frame, LanguagePack $pack): string
+    {
+        $parts = preg_split(self::SLOT_PATTERN, $frame) ?: [$frame];
+        $read = array_map(static fn (string $part): string => implode(' ', FrameWords::of($part, $pack, articles: true)), $parts);
+
+        return trim((string) preg_replace('/\s+/u', ' ', implode(' ___ ', $read)));
     }
 
     /** The mark a text ends with — a run of . ! ? … — or '' when it ends with none. */
