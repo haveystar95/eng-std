@@ -93,9 +93,10 @@ define('RECHECK_FILE', RUNS.'/'.(getenv('RECHECK_FILE') ?: 'recheck.json'));
  * GEN-4c's $1 on top of what the two spent ($5.4042): the seam judge v1.2 on the recorded replies (unit `judge-c`) and both
  * e2e days (units `e2e-c-ro`, `e2e-c-en`, read off the e2e journal); GEN-4c-2's $0.7 more ($1.7 in all): both days 2 of the
  * e2e (`e2e-c2-*`), the judge asked again on their replies (`judge-probe-c2`), the judge v1.3 on the recorded replies
- * (`judge-c2`) and on the days 2 again (`replay-c2`).
+ * (`judge-c2`) and on the days 2 again (`replay-c2`); GEN-4c-3's $0.3 more ($2 in all): day 2 ru→en again by the code of
+ * `frame.known_repeat` on the target alone (`replay-c3`) and its judge's second read asked again (`judge-probe-c3`).
  */
-const CAP_USD = 7.1042;
+const CAP_USD = 7.4042;
 
 /** The dearest one unit of each kind may cost, seen or feared: a plan, a day of either model, a skeleton thought hard about. */
 const WORST_USD = ['plan' => 0.08, 'luna' => 0.25, 'gpt54' => 0.30, 'gpt54-b' => 0.30, 'luna-high' => 0.10];

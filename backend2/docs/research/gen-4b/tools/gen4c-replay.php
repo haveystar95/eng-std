@@ -11,10 +11,14 @@ declare(strict_types=1);
  * why), every read of the judge — is what the API path does not keep. The check counters are not written (a counter of this
  * replay is no counter of the stand). The skeleton the replay ends with is compared with the one the day stored.
  *
- * A repair is answered by what was recorded for its card (by address, in order), or given back as written when nothing was
- * recorded for it. The judge's recorded answers are read in the shape the code reads now (a list of the replies that name a
- * value → a verdict for each reply sent). With -e REPLAY_JUDGE=live -e PLAN_MODEL_DRIVER=openai the judge is asked anew —
- * the prompt of the code as it is now, paid, journaled — and everything else is the day's own answers.
+ * A repair is answered by what was recorded for its card — only when the request quotes the same card as written (GEN-4c-3:
+ * a check of another dialogue at the same address is not its card) — else the card is given back as written and no call is
+ * made. The judge's recorded answers are read in the shape the code reads now (a list of the replies that name a value → a
+ * verdict for each reply sent). With -e REPLAY_JUDGE=live -e PLAN_MODEL_DRIVER=openai the judge is asked anew — the prompt of
+ * the code as it is now, paid, journaled — and everything else is the day's own answers; -e REPLAY_JUDGE_FROM=<a replay's
+ * output> hands each call of the judge the answer that replay got for the same sentences and replies (live only when it has
+ * none); -e REPLAY_DIALOGUE_RECORDED=n uses the first n recorded answers of the dialogue and asks a later call live.
+ * -e REPLAY_FIXTURE=<file> writes the day as a test replays it — the request and the answers the build used.
  *
  *   docker exec -e DB_DATABASE=wordtrainer_e2e_test wt_gen4c php docs/research/gen-4b/tools/gen4c-replay.php \
  *       01M3QET095394QGAWYFS7K1JR6 2 docs/research/gen-4b/e2e-c/ro-day2
@@ -59,22 +63,49 @@ foreach ($bodies as $call) {
     };
     if ($kind !== null) {
         preg_match('/ADDRESS: (\S+)/', (string) $call['user'], $m);
-        $answers[$kind][] = ['answer' => json_decode((string) $call['answer'], true, flags: JSON_THROW_ON_ERROR), 'address' => $m[1] ?? null];
+        preg_match('/CARD \(as written\):\n(.*?)\n\n[A-Z]/s', (string) $call['user'], $c);
+        $answers[$kind][] = [
+            'answer' => json_decode((string) $call['answer'], true, flags: JSON_THROW_ON_ERROR), 'address' => $m[1] ?? null,
+            'card' => isset($c[1]) ? json_decode($c[1], true) : null,
+        ];
     }
 }
 
-$live = getenv('REPLAY_JUDGE') === 'live';
-// The real judge is taken before the fake is bound — the port the application builds from the config.
-$real = $live ? app(PlanModelPort::class) : null;
+/** A value with every map's keys in order — jsonb keeps no order of keys. */
+function ksortDeep(mixed $value): mixed
+{
+    if (! is_array($value)) {
+        return $value;
+    }
+    $value = array_map(ksortDeep(...), $value);
+    if (! array_is_list($value)) {
+        ksort($value);
+    }
+
+    return $value;
+}
+
+// GEN-4c-3: what is asked anew, paid and journaled — the judge (-e REPLAY_JUDGE=live) and the dialogue beyond the first n of
+// its recorded answers (-e REPLAY_DIALOGUE_RECORDED=n); the real port is taken before the fake is bound.
+$judgeLive = getenv('REPLAY_JUDGE') === 'live';
+$dialogueRecorded = getenv('REPLAY_DIALOGUE_RECORDED') === false ? null : (int) getenv('REPLAY_DIALOGUE_RECORDED');
+// -e REPLAY_DIALOGUE_FROM=<a fixture> — the dialogue beyond the recorded ones from that fixture (an answer paid for once), no call.
+$dialogueFrom = getenv('REPLAY_DIALOGUE_FROM') ? json_decode((string) file_get_contents((string) getenv('REPLAY_DIALOGUE_FROM')), true, flags: JSON_THROW_ON_ERROR)['dialogue'] : null;
+$real = $judgeLive || ($dialogueRecorded !== null && $dialogueFrom === null) ? app(PlanModelPort::class) : null;
 if ($real instanceof FakePlanModel) {
-    fwrite(STDERR, "Refused: a live judge needs -e PLAN_MODEL_DRIVER=openai.\n");
+    fwrite(STDERR, "Refused: a live call needs -e PLAN_MODEL_DRIVER=openai.\n");
     exit(1);
 }
+// -e REPLAY_JUDGE_FROM=<a replay's output> — that replay's answers of the judge, each handed to the call that reads the same
+// sentences and the same replies (a call the file has no answer for is asked live, or refused).
+$fromFile = getenv('REPLAY_JUDGE_FROM') ? json_decode((string) file_get_contents((string) getenv('REPLAY_JUDGE_FROM')), true, flags: JSON_THROW_ON_ERROR)['judge_answers'] : null;
 $recorded = [];
 foreach ($answers['repair'] as $one) {
-    $recorded[(string) $one['address']][] = $one['answer'];
+    $recorded[(string) $one['address']][] = $one;
 }
 $judged = [];
+$live = [];
+$used = ['skeleton' => [], 'dialogue' => [], 'repairs' => []];
 
 $plan = app(PlanRepository::class)->findById(PlanId::fromString($planId)) ?? throw new RuntimeException("no plan {$planId}");
 $scene = $plan->sceneOf($plan->day($number)) ?? throw new RuntimeException("day {$number} is no scene day");
@@ -84,37 +115,75 @@ $asked = [];
 // A stage asked more times than the day asked it gets its last recorded answer again — the replay goes on to the day's
 // verdict (and its log) instead of stopping on a call nobody paid for. Said in the output (`reused`).
 $reused = [];
-$again = static function (string $stage, int $call) use ($answers, &$reused): array {
-    if (isset($answers[$stage][$call - 1])) {
-        return $answers[$stage][$call - 1]['answer'];
+$again = static function (string $stage, int $call) use ($answers, &$reused, &$used): array {
+    $answer = $answers[$stage][$call - 1]['answer'] ?? null;
+    if ($answer === null) {
+        $reused[] = "{$stage} {$call}";
+        $answer = end($answers[$stage])['answer'] ?? throw new RuntimeException("no {$stage} answer");
     }
-    $reused[] = "{$stage} {$call}";
+    $used[$stage][] = $answer;
 
-    return end($answers[$stage])['answer'] ?? throw new RuntimeException("no {$stage} answer");
+    return $answer;
 };
 $fake = new FakePlanModel(
     skeleton: static fn (LessonRequest $r, int $call): array => $again('skeleton', $call),
-    dialogue: static fn (DialogueRequest $r, int $call): array => $again('dialogue', $call),
-    repair: static function (LessonCardRepairRequest $r) use (&$recorded, &$asked): array {
-        $answer = array_shift($recorded[$r->address]);
-        $asked[] = ['address' => $r->address, 'recorded' => $answer !== null, 'findings' => $r->findings];
+    dialogue: static function (DialogueRequest $r, int $call) use ($again, $real, $dialogueRecorded, $dialogueFrom, &$live, &$used): array {
+        if ($dialogueFrom !== null && $dialogueRecorded !== null && $call > $dialogueRecorded) {
+            $answer = $dialogueFrom[$call - 1] ?? throw new RuntimeException("no dialogue answer {$call} in the fixture");
+            $used['dialogue'][] = $answer;
 
-        return $answer ?? ['card' => $r->card];
-    },
-    judge: static function (NativeSeamJudgeRequest $r, int $call) use ($answers, $real, &$judged): array {
-        if ($real !== null) {
-            $reply = $real->judgeNativeSeams($r);
-            $judged[] = ['prompt' => $reply->promptVersion, 'replies' => $r->replyIds(), 'answer' => $reply->payload, 'cost_usd' => $reply->costUsd];
+            return $answer;
+        }
+        if ($real !== null && $dialogueRecorded !== null && $call > $dialogueRecorded) {
+            $reply = $real->buildDialogue($r);
+            $live[] = ['purpose' => 'dialogue', 'call' => $call, 'model' => $reply->model, 'cost_usd' => $reply->costUsd];
+            $used['dialogue'][] = $reply->payload;
 
             return $reply->payload;
         }
-        // -e REPLAY_JUDGE_FROM=<a replay's output> — the judge's answers of that replay (a live one), in their order.
-        $from = getenv('REPLAY_JUDGE_FROM');
-        if ($from) {
-            $earlier = json_decode((string) file_get_contents($from), true, flags: JSON_THROW_ON_ERROR)['judge_answers'][$call - 1] ?? throw new RuntimeException("no judge answer {$call} in {$from}");
-            $judged[] = [...$earlier, 'cost_usd' => '0'];
 
-            return $earlier['answer'];
+        return $again('dialogue', $call);
+    },
+    // A repair's recorded answer goes only to the card it was written for — the card its request quoted as written; another
+    // card at the address (a check of another dialogue) is given back as written, and no call is made.
+    repair: static function (LessonCardRepairRequest $r) use (&$recorded, &$asked, &$used): array {
+        foreach ($recorded[$r->address] ?? [] as $i => $one) {
+            if (json_encode(ksortDeep($one['card'])) === json_encode(ksortDeep($r->card))) {
+                unset($recorded[$r->address][$i]);
+                $asked[] = ['address' => $r->address, 'recorded' => true, 'findings' => $r->findings];
+                $used['repairs'][] = ['address' => $r->address, 'answer' => $one['answer']];
+
+                return $one['answer'];
+            }
+        }
+        $asked[] = ['address' => $r->address, 'recorded' => false, 'why' => ($recorded[$r->address] ?? []) === [] ? 'nothing recorded' : 'recorded for another card', 'findings' => $r->findings];
+
+        return ['card' => $r->card];
+    },
+    judge: static function (NativeSeamJudgeRequest $r, int $call) use ($answers, $real, $judgeLive, &$fromFile, &$judged, &$live): array {
+        $sorted = static function (array $ids): array {
+            sort($ids);
+
+            return $ids;
+        };
+        foreach ($fromFile ?? [] as $i => $earlier) {
+            $said = $earlier['answer'];
+            if ($sorted(array_column($said['verdicts'] ?? [], 'id')) === $sorted($r->ids()) && $sorted(array_column($said['replies'] ?? [], 'id')) === $sorted($r->replyIds())) {
+                unset($fromFile[$i]);
+                $judged[] = [...$earlier, 'replies' => $r->replyIds(), 'cost_usd' => '0', 'source' => 'file'];
+
+                return $said;
+            }
+        }
+        if ($real !== null && $judgeLive) {
+            $reply = $real->judgeNativeSeams($r);
+            $judged[] = ['prompt' => $reply->promptVersion, 'replies' => $r->replyIds(), 'answer' => $reply->payload, 'cost_usd' => $reply->costUsd, 'source' => 'live'];
+            $live[] = ['purpose' => 'seam_judge', 'call' => $call, 'model' => $reply->model, 'cost_usd' => $reply->costUsd];
+
+            return $reply->payload;
+        }
+        if ($fromFile !== null) {
+            throw new RuntimeException("no answer of the judge in the file for call {$call}");
         }
         $answer = $answers['seam_judge'][$call - 1]['answer'] ?? throw new RuntimeException("no judge answer {$call}");
         // v1.2 answered with the list of the replies that name a value: a verdict for every reply sent, as v1.3 answers.
@@ -122,7 +191,7 @@ $fake = new FakePlanModel(
             $answer['replies'] = array_map(static fn (string $id): array => ['id' => $id, 'names_a_value' => in_array($id, $answer['replies_naming_values'], true)], $r->replyIds());
             unset($answer['replies_naming_values']);
         }
-        $judged[] = ['prompt' => 'recorded', 'replies' => $r->replyIds(), 'answer' => $answer, 'cost_usd' => '0'];
+        $judged[] = ['prompt' => 'recorded', 'replies' => $r->replyIds(), 'answer' => $answer, 'cost_usd' => '0', 'source' => 'recorded'];
 
         return $answer;
     },
@@ -146,20 +215,6 @@ $stored = json_decode((string) DB::table('plan_scenes')->where('id', $scene->id(
 $replayed = $outcome->skeleton?->toArray();
 $same = static fn (mixed $a, mixed $b): bool => json_encode(ksortDeep($a)) === json_encode(ksortDeep($b));
 
-/** A value with every map's keys in order — jsonb keeps no order of keys. */
-function ksortDeep(mixed $value): mixed
-{
-    if (! is_array($value)) {
-        return $value;
-    }
-    $value = array_map(ksortDeep(...), $value);
-    if (! array_is_list($value)) {
-        ksort($value);
-    }
-
-    return $value;
-}
-
 $out = [
     'plan' => $planId,
     'day' => $number,
@@ -171,6 +226,7 @@ $out = [
     'calls_recorded' => array_map('count', $answers),
     'judge' => $live ? 'live' : (getenv('REPLAY_JUDGE_FROM') ? 'from '.basename((string) getenv('REPLAY_JUDGE_FROM')) : 'recorded'),
     'reused' => $reused,
+    'live' => $live,
     'repairs_asked' => $asked,
     'judge_answers' => $judged,
     'attempts' => $outcome->log->attempts,
@@ -197,12 +253,16 @@ if (getenv('REPLAY_FIXTURE')) {
             ], $request->earlierDays->days),
             'scene_id' => $request->sceneId,
         ],
-        'skeleton' => array_column($answers['skeleton'], 'answer'),
-        'dialogue' => array_column($answers['dialogue'], 'answer'),
-        'repairs' => array_map(static fn (array $one): array => ['address' => $one['address'], 'answer' => $one['answer']], $answers['repair']),
+        'skeleton' => $used['skeleton'],
+        'dialogue' => $used['dialogue'],
+        'repairs' => $used['repairs'],
         'judge' => array_map(static fn (array $j): array => ['prompt' => $j['prompt'], 'answer' => $j['answer']], $judged),
     ];
     file_put_contents((string) getenv('REPLAY_FIXTURE'), json_encode($fixture, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");
+}
+// -e REPLAY_LESSON=<file> — the lesson the build assembled, as a scene stores it (`lesson_json`).
+if (getenv('REPLAY_LESSON')) {
+    file_put_contents($dir.'/'.getenv('REPLAY_LESSON'), json_encode($outcome->lesson?->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");
 }
 file_put_contents($dir.'/'.(getenv('REPLAY_OUT') ?: 'replay.json'), json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");
 fwrite(STDERR, sprintf("replayed day %d of %s: %s%s, same skeleton as stored: %s, calls %s / recorded %s%s\n", $number, $planId, $out['status'], $out['fail_reason'] !== null ? " ({$out['fail_reason']})" : '', $out['same_skeleton_as_stored'] ? 'yes' : 'NO', json_encode($out['calls_replayed']), json_encode($out['calls_recorded']), $reused !== [] ? ', reused: '.implode(', ', $reused) : ''));

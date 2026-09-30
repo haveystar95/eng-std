@@ -6100,5 +6100,82 @@
         "tokens_out": 50,
         "cost_usd": "0.001132",
         "source": "model_calls of wordtrainer_e2e_test"
+    },
+    {
+        "at": "2026-09-30 17:56:35+00",
+        "unit": "replay-c3",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 1285,
+        "cached_tokens_in": 0,
+        "tokens_out": 73,
+        "cost_usd": "0.001292",
+        "source": "model_calls of wordtrainer_e2e_test"
+    },
+    {
+        "at": "2026-09-30 17:56:37+00",
+        "unit": "replay-c3",
+        "purpose": "dialogue",
+        "model": "gpt-5.4-2026-03-05",
+        "tokens_in": 7322,
+        "cached_tokens_in": 0,
+        "tokens_out": 2607,
+        "cost_usd": "0.057410",
+        "source": "model_calls of wordtrainer_e2e_test"
+    },
+    {
+        "at": "2026-09-30 17:59:34+00",
+        "unit": "judge-probe-c3",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 1285,
+        "cached_tokens_in": 0,
+        "tokens_out": 73,
+        "cost_usd": "0.001292",
+        "source": "model_calls of wordtrainer_e2e_test"
+    },
+    {
+        "at": "2026-09-30 17:59:36+00",
+        "unit": "judge-probe-c3",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 1285,
+        "cached_tokens_in": 0,
+        "tokens_out": 73,
+        "cost_usd": "0.001292",
+        "source": "model_calls of wordtrainer_e2e_test"
+    },
+    {
+        "at": "2026-09-30 17:59:38+00",
+        "unit": "judge-probe-c3",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 1285,
+        "cached_tokens_in": 0,
+        "tokens_out": 73,
+        "cost_usd": "0.001292",
+        "source": "model_calls of wordtrainer_e2e_test"
+    },
+    {
+        "at": "2026-09-30 17:59:39+00",
+        "unit": "judge-probe-c3",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 1285,
+        "cached_tokens_in": 0,
+        "tokens_out": 73,
+        "cost_usd": "0.001292",
+        "source": "model_calls of wordtrainer_e2e_test"
+    },
+    {
+        "at": "2026-09-30 17:59:40+00",
+        "unit": "judge-probe-c3",
+        "purpose": "seam_judge",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "tokens_in": 1285,
+        "cached_tokens_in": 0,
+        "tokens_out": 73,
+        "cost_usd": "0.001292",
+        "source": "model_calls of wordtrainer_e2e_test"
     }
 ]

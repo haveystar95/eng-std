@@ -441,6 +441,7 @@ e2e — `wordtrainer_e2e_test` кодом ветки. **Не влито** — п
 
 **GEN-4c-2 (30.09)** — проверка на дне 2 и судья **v1.3** (вердикт на каждую реплику вместо списка названных): раздел
 «Проверка на дне 2» в конце §12. Ниже, где сказано «v1.2», — замер GEN-4c; вид ответа v1.2 на бой не выходил.
+**GEN-4c-3 (30.09)** — `frame.known_repeat` сверяет только каркас цели; «Я работал на на гриле.» ушло: раздел «GEN-4c-3».
 
 **Итог.**
 - **Новые коды на записанных ответах** (бесплатно, `gate.php recheck` → `runs/recheck-c.json`, `summary-c.md`): у gpt-5.4 на
@@ -820,3 +821,96 @@ ok ×2, deptrac 0 (uncovered 3 — как в main), PHPStan 0, Pest 3 132 passed
 до закрытия), `gen4c-replay.php`, `gen4c-replies.php`, `gen4c-judge-probe.php`, `spend-e2e.php` (окно журнала e2e → `spend.json`),
 `judge-score.py`; `e2e.php dump <план> <день> <с> <по>`, `e2e-bodies.php … <с> <по>`, `gen4c.php judge` (`JUDGE_FILE`,
 `JUDGE_UNIT`).
+
+### GEN-4c-3 — `frame.known_repeat` только по каркасу цели (30.09.2026)
+
+Наряд GEN-4c-3: последний видимый ученику дефект перед влитием — «Я работал на на гриле.» в дне 2 ru→en. Починка p2 была
+верной, но её отвергал `frame.known_repeat`: правило сверяло и родной каркас, а «Я работал ___» уже был у дня 1 («I worked at
+___.»). Теперь правило сверяет **только каркас цели** — словами, которые он говорит (DECISIONS п. **456**; как п. 331 GEN-3,
+с которым правило разошлось в GEN-4).
+
+**Дифф правила** (коммит `c6b4a096`; `FrameKnownRepeat`, новое `FrameText::targetIdentity` — чтение `FrameWords` с артиклями: регистр, знаки, оба
+апострофа и сокращения пакета цели не в счёт, окно на своём месте):
+
+```diff
+         foreach ($context->earlierDays->frames() as $frame) {
+-            $known[FrameText::identity($frame['target'])] = "«{$frame['target']}» of day {$frame['day']}";
+-            $known[FrameText::identity($frame['native'])] = "«{$frame['native']}» of day {$frame['day']}";
++            $known[FrameText::targetIdentity($frame['target'], $context->target)] ??= "«{$frame['target']}» of day {$frame['day']}";
+         }
+         foreach ($skeleton->frames as $frame) {
+-            foreach ([$frame->phrase->frameTarget, $frame->phrase->frameNative] as $text) {
+-                $was = $known[FrameText::identity($text)] ?? null;
+-                if ($was !== null && trim($text) !== '') {
+-                    $out[] = new LessonViolation(self::CODE, $frame->id(), "«{$text}» is the frame {$was}");
+-                    break;
+-                }
++            $text = $frame->phrase->frameTarget;
++            $was = trim($text) === '' ? null : ($known[FrameText::targetIdentity($text, $context->target)] ?? null);
++            if ($was !== null) {
++                $out[] = new LessonViolation(self::CODE, $frame->id(), "«{$text}» is the frame {$was}");
+             }
++    public static function targetIdentity(string $frame, LanguagePack $pack): string
++    {
++        $parts = preg_split(self::SLOT_PATTERN, $frame) ?: [$frame];
++        $read = array_map(static fn (string $part): string => implode(' ', FrameWords::of($part, $pack, articles: true)), $parts);
++
++        return trim((string) preg_replace('/\s+/u', ' ', implode(' ___ ', $read)));
++    }
+```
+
+Одно правило для ответа скелета и для проверки починки (`kept()` читает тот же `SkeletonCheck`). Тесты:
+- `SkeletonCheckTest`, на каноне: тот же каркас цели при другом родном — повтор; он же прописными и с другими знаками — повтор;
+  другой каркас цели при том же родном — не повтор; румынский двойник случая e2e («Am lucrat în ___» / «Я работал в ___»
+  против p3 «Am lucrat la ___» / «Я работал в ___») — не повтор.
+- `FrameTextTest`: «I'm» = «I am», «What’s» = «what is», «can't» = «cannot», регистр и знаки не в счёт; «at» / без «at»,
+  место окна, артикль — в счёт.
+- `RecordedDayReplayTest`: день 2 ru→en итоговым кодом (ниже).
+
+Мутация (родной каркас снова сверяется) роняет три теста: повтор дня 2 и оба случая «не повтор».
+
+**Повтор дня 2 ru→en итоговым кодом** (`tools/gen4c-replay.php` → `e2e-c/en-day2/replay-c3.json`):
+- **Записанные ответы, без вызовов:** оба ответа скелета; четыре починки скелета — p2, a7, a8, v2; первое чтение судьи v1.3.
+  Первый ответ скелета по-прежнему фатален: там p2 «I worked at ___.» — сам каркас цели дня 1.
+- **Починка p2 оставлена и помогла:** «I worked ___» / «Я работал ___» + «on the grill» / «на гриле».
+- **Второе чтение судьи — живое, $0.0013:** швы p2 читаются все три («Я работал на гриле», «…на салатной станции», «…на
+  кондитерской станции»).
+- **Записанный первый диалог не прошёл:** `line.foreign_filler` — его B2 держит старое наполнение «the grill», которого у
+  нового p2 нет. Поэтому **один платный диалог**, $0.0574, без фатальных находок.
+- **Починки проверок диалога** (x2, x3, x6 и вариант x7) шли к карточкам нового диалога. Записанных ответов под эти карточки
+  нет, поэтому отданы как написаны и вызовов не было; на бою это были бы ещё 4 вызова Luna.
+- **Итог:** день ready, 2 платных вызова — **$0.0587**. Тот же день из фикстуры без единого вызова (`replay-c3-nocall.json`)
+  даёт тот же скелет и те же находки.
+
+**Строка ученика** (B шага 2, диалог; `day2-lesson.json` → `day2-lesson-c3.json`):
+
+| | каркас p2 | B шага 2 |
+|---|---|---|
+| до | «I worked on ___» / «Я работал на ___» + «the grill» / «на гриле» | «I worked on the grill.» / **«Я работал на на гриле.»** |
+| после | «I worked ___» / «Я работал ___» + «on the grill» / «на гриле» | «I worked on the grill.» / **«Я работал на гриле.»** |
+
+Удвоенных слов в уроке нет: проверены все строки урока. В сохранённом дне удвоение было одно — эта строка. `frame.known_repeat`,
+`filler.native_seam`, `filler.repeats_frame` в дне больше нет.
+
+**Остальное — как в отчёте, кроме двух мест:**
+- a7, a8, v2 починены теми же ответами. a4, a5 (`names_filler`) и v5 (`stop_word`) по-прежнему вне бюджета.
+- Проверки диалога — другие: новый диалог даёт `check.verbatim` ×6 и `variant.longer` B7.
+- Живое второе чтение отметило a8 («Yes. New staff receive training during the first week.») как называющую значение; находка
+  осталась предупреждением. Тот же запрос, заданный ещё 5 раз, — 0 из 5 (`e2e-c/en-day2-c3/judge-probe.json`, $0.0065). Всего
+  v1.3 отметил эту реплику 1 раз из 19 прочтений. Фикстура хранит ответ этого повтора как есть: тест проверяет, что каждая
+  реплика читается по своему вердикту (a7 помогла, a8 — нет).
+
+**Фикстура** `gen4c2-e2e-en-day2.json` — под итоговый исход: запрос с днём 1 и ответы, которые взяла эта сборка (два
+скелета, два диалога — записанный и платный, четыре починки скелета, два ответа судьи).
+
+**Деньги** — OpenAI GEN-4c-3 **$0.0652 из $0.3** (`replay-c3` $0.0587, `judge-probe-c3` $0.0065). Весь GEN-4c — $1.4742 из
+$2.0 (кап `gate.php` — $7.4042). ElevenLabs и фото — 0.
+
+**Ворота** — один раз, в конце: `composer check` на стенде `wt_gen4c`, база `wordtrainer_gen4c_test` — OpenAPI ok ×2, deptrac
+0 (uncovered 3), PHPStan 0, Pest 3 135 passed (`--parallel`); `flutter analyze` — чисто (mobile не тронут). Стенд снесён.
+
+**Файлы** — `e2e-c/en-day2/replay-c3.json` (повтор с двумя платными вызовами), `replay-c3-nocall.json` (тот же день из
+фикстуры без вызовов), `day2-lesson-c3.json` (урок итоговым кодом); `e2e-c/en-day2-c3/` — тела двух платных вызовов и пять
+повторов второго чтения судьи. `tools/gen4c-replay.php`: починка получает записанный ответ только для своей карточки;
+`REPLAY_JUDGE_FROM` отдаёт ответ судьи вызову с теми же предложениями и репликами (иначе — живой);
+`REPLAY_DIALOGUE_RECORDED`, `REPLAY_DIALOGUE_FROM`, `REPLAY_LESSON`.

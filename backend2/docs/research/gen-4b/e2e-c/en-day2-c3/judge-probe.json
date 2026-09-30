@@ -1,0 +1,28 @@
+{
+    "call": 1,
+    "id": "a8",
+    "question": "Can I start ___?",
+    "values": [
+        "next week",
+        "on Monday",
+        "this weekend"
+    ],
+    "reads": [
+        {
+            "prompt": "lesson_seam_judge.v1.3",
+            "reply": "Yes. New staff receive training during the first week.",
+            "as_recorded": true,
+            "shape": "as sent",
+            "asked": 5,
+            "names_a_value": 0,
+            "answers": [
+                [],
+                [],
+                [],
+                [],
+                []
+            ],
+            "cost_usd": 0.00646
+        }
+    ]
+}
