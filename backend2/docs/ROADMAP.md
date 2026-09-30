@@ -1101,7 +1101,8 @@ DECISIONS пп. **439–446**, «Спорное» пп. 6, 8 закрыты, 9 �
 ## Хвост дня — GEN-4c (2026-09-29): слово из заглушки, «Da./Nu.», пересказ наполнений, четыре починки
 
 Работа — worktree `../gen-4c`, ветка `gen-4c` (от main `2f48d3ac`), стенд `wt_gen4c` (базы `wordtrainer_gen4c`,
-`wordtrainer_gen4c_test`); **не влито** — влитие по команде Дена (= выкат: restart horizon; миграций нет). Отчёт —
+`wordtrainer_gen4c_test`); **влито и выкачено 30.09, 21:44–21:46 UTC** (main `8909f5b9`; GEN-4c, 4c-2, 4c-3; миграций не было,
+restart horizon; README §12 «Выкат»). Отчёт —
 `docs/research/gen-4b/README.md` §12; решения — DECISIONS п. **454** и «Отменено»; канон — `docs/plan-v2.md` §2, §4.
 
 - [x] **`vocab.from_placeholder`** — слово только из наполнения, не детали ученика (цель плана); с бюджетом.

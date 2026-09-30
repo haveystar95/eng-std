@@ -435,8 +435,8 @@ invariant-reviewer — CLEAN.
 Наряд GEN-4c: три дыры e2e-b (§10) — слово словаря «depozit» из наполнения-заглушки, ответ a6 на да/нет-вопрос без «Da./Nu.»,
 тот же a6, пересказывающий наполнения p6, — и тесный бюджет починок. Ветка `gen-4c` от main `2f48d3ac` (GEN-4 и GEN-4b влиты,
 бой выкачен §11), worktree `../gen-4c`, стенд `wt_gen4c` (база прогона `wordtrainer_gen4c`, ворот — `wordtrainer_gen4c_test`),
-e2e — `wordtrainer_e2e_test` кодом ветки. **Не влито** — по команде Дена; миграций нет, влитие = выкат кода и конфига
-(`restart horizon`). Промты `plan-builder-v2.1`, `lesson_skeleton.v1.1`, `lesson_dialogue.v1.1`, `lesson_card_repair.v1.5` не
+e2e — `wordtrainer_e2e_test` кодом ветки. **Влито и выкачено 30.09, 21:44–21:46 UTC** по команде Дена (раздел «Выкат» в конце
+§12); миграций не было, выкат — код и конфиг (`restart horizon`). Промты `plan-builder-v2.1`, `lesson_skeleton.v1.1`, `lesson_dialogue.v1.1`, `lesson_card_repair.v1.5` не
 тронуты. Раздел — §12, а не §11 наряда: §11 занял выкат 29.09.
 
 **GEN-4c-2 (30.09)** — проверка на дне 2 и судья **v1.3** (вердикт на каждую реплику вместо списка названных): раздел
@@ -629,7 +629,7 @@ main), PHPStan 0, Pest 3 128 passed (`--parallel`), `migrate:fresh` ок, `flutt
 ### Проверка на дне 2 (GEN-4c-2, 30.09.2026)
 
 Наряд GEN-4c-2 после приёмки §12: живая починка да/нет-ответов и пересказов наполнений на дне 2 «Интервью», которого GEN-4c
-не собирал. Код ветки `gen-4c` (`ff758e8b`), стенд `wt_gen4c`, `php -S :8030` на `wordtrainer_e2e_test`, очередь `sync`,
+не собирал. Код ветки `gen-4c` (`58ad06f7`), стенд `wt_gen4c`, `php -S :8030` на `wordtrainer_e2e_test`, очередь `sync`,
 `SPEECH_ENABLED=false`, `IMAGE_DRIVER=fake` (фото не покупались), модели боя: ступени gpt-5.4, починки Luna, судья
 gpt-5.4-mini. Итог: **оба дня 2 собраны без «ещё раз»; одно ожидание наряда не выполнено — после починок судья v1.2 оставлял
 `partner.names_filler_meaning` на репликах, которые ничего не называют.** Причина — вид ответа судьи, не чтение: исправлено
@@ -748,7 +748,7 @@ lezione» к «interruzioni in classe», «nelle lezioni» к «durante le lezio
   (`partner.names_filler`) — в конце очереди, в четыре починки не вошли; `vocab.stop_word` v5 «evening». ru→ro:
   `check.verbatim` x5 (починка не помогла), x9 (сверх бюджета); ru→en — `check.verbatim` x8, x9.
 
-**Что изменено (код, `9a27d733`).** `lesson_seam_judge.v1.2.md` → `v1.3.md` (`git mv`; реестр — sha256 `70cfd12a…`, наряд GEN-4c-2);
+**Что изменено (код, `2f982468`).** `lesson_seam_judge.v1.2.md` → `v1.3.md` (`git mv`; реестр — sha256 `70cfd12a…`, наряд GEN-4c-2);
 `PlanSchemas::seamJudge` — `replies: [{id ∈ отправленных, names_a_value: boolean}]`; `LessonSeamJudge` читает вердикт каждой
 реплики (первый вердикт id — в счёт, без да/нет — не вердикт; реплика без вердикта — «не называет»); `FakePlanModel` —
 `JUDGE_VERSION` v1.3 и ответ по умолчанию в новом виде; тесты — `SeamJudgeRepliesTest` (вид ответа, 7 случаев разбора),
@@ -829,7 +829,7 @@ ok ×2, deptrac 0 (uncovered 3 — как в main), PHPStan 0, Pest 3 132 passed
 ___.»). Теперь правило сверяет **только каркас цели** — словами, которые он говорит (DECISIONS п. **456**; как п. 331 GEN-3,
 с которым правило разошлось в GEN-4).
 
-**Дифф правила** (коммит `c6b4a096`; `FrameKnownRepeat`, новое `FrameText::targetIdentity` — чтение `FrameWords` с артиклями: регистр, знаки, оба
+**Дифф правила** (коммит `9a31343e`; `FrameKnownRepeat`, новое `FrameText::targetIdentity` — чтение `FrameWords` с артиклями: регистр, знаки, оба
 апострофа и сокращения пакета цели не в счёт, окно на своём месте):
 
 ```diff
@@ -914,3 +914,45 @@ $2.0 (кап `gate.php` — $7.4042). ElevenLabs и фото — 0.
 повторов второго чтения судьи. `tools/gen4c-replay.php`: починка получает записанный ответ только для своей карточки;
 `REPLAY_JUDGE_FROM` отдаёт ответ судьи вызову с теми же предложениями и репликами (иначе — живой);
 `REPLAY_DIALOGUE_RECORDED`, `REPLAY_DIALOGUE_FROM`, `REPLAY_LESSON`.
+
+### Выкат — 30.09.2026, 21:44–21:46 UTC (команда Дена «вливай»)
+
+GEN-4c, GEN-4c-2 и GEN-4c-3 — в main и на бою: main `08dc37fd` → **`8909f5b9`**, `/health` — `8909f5b9`.
+
+**Перенос на main.** За время наряда main ушёл вперёд: `2f70ef0c` (сняты PNG) и слияние CLIENT-START `08dc37fd` — только
+`mobile/` и `docs/`, с веткой ни одного общего файла. Ветка перенесена на main (`git rebase main`, без конфликтов):
+- `dfe45940` — GEN-4c, код;
+- `58ad06f7` — отчёт GEN-4c;
+- `2f982468` — судья v1.3;
+- `4860e6ee` — «Проверка на дне 2»;
+- `9a31343e` — `frame.known_repeat` по цели;
+- `8909f5b9` — отчёт GEN-4c-3.
+
+Хеши до переноса (`df11668e`, `ff758e8b`, `9a27d733`, `946dd7b4`, `c6b4a096`, `48eaae8b`) в тексте выше заменены.
+
+**Ворота после переноса.** `backend2` побайтно тот же, что прошёл ворота GEN-4c-3 (`composer check`, Pest 3 135) — дифф пуст.
+Объединённый `mobile`: `flutter analyze` чисто. `session_listen_cards_test.dart` — 12 из 13; падает 34-6 («Found 0 widgets with
+text "Is the pain sharp…"», строка 358) — ровно так же, как на main до GEN-4c: это одно из 12 давних клиентских падений (§12).
+
+**Порядок выката.**
+1. Бэкап боя: `DB=wordtrainer scripts/db-backup.sh --safety` → `wordtrainer-20261001-004451.sql.gz` (16 МБ).
+2. Стоп horizon — 21:45:04.
+3. `git merge --ff-only gen-4c`.
+4. `scripts/stamp-build.sh`.
+5. Старт horizon — 21:45:06.
+
+Миграций нет. `wt_app` (`artisan serve`, opcache с `validate_timestamps`) и `wt_scheduler` (`schedule:work`, свежий процесс
+каждую минуту) подхватывают код сами. Кэша конфига нет. В момент выката на бою сборок не шло: сцены — `pending` от 19.09 и
+`ready`, вызовов модели за 30 минут не было, очереди Redis пусты.
+
+**Проверка.**
+- `/api/v1/health` — `8909f5b9`.
+- `PlanPromptFiles::judgeVersion()` — `lesson_seam_judge.v1.3`.
+- `queue.connections.redis.retry_after` — 2 640, `plan.build_stale_seconds` — 2 640.
+- `horizon:status` — running (supervisor-1, `redis:default`).
+
+**Снесено.** Worktree `../gen-4c` и ветка `gen-4c` (влита). Стенд `wt_gen4c` и базы `wordtrainer_gen4c*` сняты раньше. Фото
+сцен e2e из `storage` ветки — уже в `storage` main, побайтно.
+
+**Смотреть на бою.** Первые живые дни с новыми правилами — `plan_check_counters` по `vocab.from_placeholder`,
+`partner.yes_no_missing` / `partner.yes_no_extra`, `partner.names_filler_meaning` (судья v1.3) и `frame.known_repeat` (по цели).
