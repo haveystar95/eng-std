@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/api_client.dart';
-import 'package:eng_std/data/app_version.dart';
 import 'package:eng_std/data/audio_mixer.dart';
 import 'package:eng_std/data/line_audio.dart';
 import 'package:eng_std/data/plan/conversation/conversation_models.dart';
@@ -70,10 +69,11 @@ void main() {
       final talk = PlanConversation.fromJson(planFixture('conversation_line_native_day'));
       await rows(tester, talk.targets);
 
-      expect(find.text(ru.planWindowJoin('Ich brauche einen Termin.', 'Мне нужна запись на приём.')), findsOneWidget);
+      // The lesson's line as it came, its native half set by the learner's typography (CLIENT-22-1 §2).
+      expect(find.text(ru.planWindowJoin('Ich brauche einen Termin.', nt('Мне нужна запись на приём.'))), findsOneWidget);
       expect(find.textContaining('Мне нужно запись'), findsNothing);
       for (final t in talk.targets.where((t) => t.exampleTarget != null && t.lineNative != null)) {
-        expect(find.text(ru.planWindowJoin(t.lessonLine, t.lineNative!)), findsOneWidget, reason: t.ref);
+        expect(find.text(ru.planWindowJoin(t.lessonLine, nt(t.lineNative!))), findsOneWidget, reason: t.ref);
       }
     });
 
@@ -191,7 +191,7 @@ void main() {
       await tester.pump();
       for (final p in plan.rescueKit) {
         expect(find.text(p.textTarget), findsOneWidget, reason: p.textTarget);
-        expect(find.text(p.textNative), findsOneWidget, reason: p.textNative);
+        expect(find.text(nt(p.textNative)), findsOneWidget, reason: p.textNative);
       }
       for (var i = 0; i < 6; i++) {
         expect(find.byKey(ValueKey('plan-rescue-play-$i')), findsOneWidget, reason: 'a circle that says line $i');
@@ -231,7 +231,7 @@ void main() {
 
       expect(find.text('ДЕНЬ 2'), findsOneWidget);
       expect(find.textContaining('ДОГОНЯЕМ'), findsNothing);
-      expect(find.textContaining('по подписке'), findsWidgets);
+      expect(find.textContaining(nbTypo('по подписке')), findsWidgets);
       expect(find.text(nbTypo('Откроется с подпиской')), findsOneWidget);
       final button = find.byKey(const ValueKey('day-plate-subscription'));
       expect(button, findsOneWidget);
@@ -275,7 +275,7 @@ void main() {
       expect(find.byKey(const ValueKey('session-locked-subscription')), findsOneWidget);
       expect(find.text(nbTypo('Откроется с подпиской')), findsOneWidget);
       expect(find.byType(SnackBar), findsNothing);
-      expect(find.text('День не загрузился'), findsNothing);
+      expect(find.text(nbTypo('День не загрузился')), findsNothing);
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 5));
     });
@@ -299,7 +299,7 @@ void main() {
         child: planGoldenShell(PlanEntryScreen(now: () => DateTime(2026, 9, 12, 12))),
       ));
       await tester.pump();
-      await tester.tap(find.text('К врачу с ребёнком, первый раз в местной клинике'));
+      await tester.tap(find.text(nbTypo('К врачу с ребёнком, первый раз в местной клинике')));
       await tester.pump();
       for (var i = 0; i < 3; i++) {
         await tester.tap(find.text('Далее'));
@@ -529,7 +529,6 @@ Future<void> _openSession(WidgetTester tester, SessionBackend backend) async {
       ...accountOverrides(auth: () => ScriptedAuth(restored: denUser())),
       lineAudioCacheProvider.overrideWithValue(LineAudioCache(directory: Directory.systemTemp)),
       speechRecognizerProvider.overrideWithValue(SilentRecognizer()),
-      appVersionProvider.overrideWith((ref) async => null),
     ],
     child: MaterialApp(
       theme: buildAppTheme(),

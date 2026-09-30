@@ -8,6 +8,7 @@ import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import '../../support/nbsp.dart';
 
 /// Listening (12g/12h) and cloze (12i/12j) render/behaviour — the two modes the server only started
 /// emitting once `enabled_modes` gained them. Device-batched for the full loop; pinned here so the
@@ -69,7 +70,7 @@ void main() {
     // The term is heard, never shown.
     expect(find.text('withdraw cash'), findsNothing);
     // Instruction + slow-replay control.
-    expect(find.text('прослушай и напиши по-английски'), findsOneWidget);
+    expect(find.text(nbTypo('прослушай и напиши по-английски')), findsOneWidget);
     expect(find.text('Замедленно'), findsOneWidget);
 
     // Autoplay is kept off the transition's first frame (F20), so it hasn't fired yet…

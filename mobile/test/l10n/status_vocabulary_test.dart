@@ -72,26 +72,26 @@ void main() {
 
     test('each status has exactly one word, and they are the canonical five', () {
       expect(wordStatusLabel(ru, WordStatus.toSort), 'Разобрать');
-      expect(wordStatusLabel(ru, WordStatus.inWork), 'В работе');
+      expect(wordStatusLabel(ru, WordStatus.inWork), nbTypo('В работе'));
       expect(wordStatusLabel(ru, WordStatus.mastered), 'Освоено');
       expect(wordStatusLabel(ru, WordStatus.paused), 'Отложено');
     });
 
     test('the ladder is stated as «Ступень X из 5», with the rung named', () {
-      expect(ladderPositionLabel(ru, LearningLadder.stepIntro), nb('Ступень 1 из 5: знакомство'));
+      expect(ladderPositionLabel(ru, LearningLadder.stepIntro), nbTypo('Ступень 1 из 5: знакомство'));
       // Both recognition steps are ONE rung to a learner — the count is about how far the word has
       // come, and the direction a recognition was asked in is not that.
       expect(
         ladderPositionLabel(ru, LearningLadder.stepRecognitionForward),
-        nb('Ступень 2 из 5: узнавание'),
+        nbTypo('Ступень 2 из 5: узнавание'),
       );
       expect(
         ladderPositionLabel(ru, LearningLadder.stepRecognitionReverse),
-        nb('Ступень 2 из 5: узнавание'),
+        nbTypo('Ступень 2 из 5: узнавание'),
       );
-      expect(ladderPositionLabel(ru, LearningLadder.stepAssembly), nb('Ступень 3 из 5: сборка'));
-      expect(ladderPositionLabel(ru, LearningLadder.stepTyping), nb('Ступень 4 из 5: написание'));
-      expect(ladderPositionLabel(ru, LearningLadder.stepDictation), nb('Ступень 5 из 5: диктант'));
+      expect(ladderPositionLabel(ru, LearningLadder.stepAssembly), nbTypo('Ступень 3 из 5: сборка'));
+      expect(ladderPositionLabel(ru, LearningLadder.stepTyping), nbTypo('Ступень 4 из 5: написание'));
+      expect(ladderPositionLabel(ru, LearningLadder.stepDictation), nbTypo('Ступень 5 из 5: диктант'));
     });
 
     test('a word off the ladder has a status and no position', () {

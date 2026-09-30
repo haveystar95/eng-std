@@ -12,6 +12,7 @@ import 'package:eng_std/features/plan/session/parts/session_mic_panel.dart' show
 import 'package:eng_std/features/plan/session/session_mic.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/session_harness.dart';
 
 /// SPEAK MYSELF (work order SESSION-1c §4, canvas series 35): the answer judged by meaning with its frame hint (by
@@ -132,7 +133,7 @@ void main() {
       });
       expect(spans.every((s) => s.style!.color == AppColors.paper), isTrue, reason: 'цветом бумаги, не серым');
       final judge = find.byKey(const ValueKey('speak-judge-line'));
-      expect(find.text('Ты сказал не про время.'), findsOneWidget);
+      expect(find.text(nbTypo('Ты сказал не про время.')), findsOneWidget);
       final judgeText = tester.widget<Text>(judge);
       expect(judgeText.style!.color, AppColors.ink, reason: 'чернилами');
       expect(judgeText.style!.fontSize, 15);
@@ -278,7 +279,7 @@ void main() {
         await sayDebug(tester, own.textTarget.replaceAll(RegExp(r'[,.?!]'), ''));
         await tester.pump(const Duration(milliseconds: 250));
         expect(tester.widget<SessionMarkedText>(find.byKey(const ValueKey('echo-text'))).text, own.textTarget);
-        expect(find.text(own.textNative), findsOneWidget, reason: 'the own line\'s translation');
+        expect(find.text(nt(own.textNative)), findsOneWidget, reason: 'the own line\'s translation');
         expect(find.text('Where does it hurt?'), findsNothing);
         expect(find.text('Где болит?'), findsNothing);
         await settleCard(tester);
@@ -305,7 +306,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 3000));
       await tester.pump();
       expect(find.byKey(const ValueKey('echo-pause-ring')), findsNothing);
-      expect(find.text('тап — говорить'), findsOneWidget);
+      expect(find.text(nbTypo('тап — говорить')), findsOneWidget);
       expect(find.text(line.textTarget), findsNothing);
 
       // The line is on the screen, so it is said as it stands (`speech_mode: repeat`, FIX-2 §2): every content word,
@@ -319,8 +320,8 @@ void main() {
       expect([for (final m in text.marks) text.text.substring(m.start, m.end)], said.split(' '));
       // Under the eyebrow stands the line's own TRANSLATION. «совпавшее — шалфеем» is the canvas telling its reader
       // what the sage marks mean; it was on the card for a while, and it is not a sentence the learner is told.
-      expect(find.text(line.textNative), findsOneWidget);
-      expect(find.text('совпавшее — шалфеем'), findsNothing);
+      expect(find.text(nt(line.textNative)), findsOneWidget);
+      expect(find.text(nbTypo('совпавшее — шалфеем')), findsNothing);
       await settleCard(tester);
       expect(probe.nexts, 0, reason: 'the revealed line waits for «Next»');
       await tapText(tester, 'Дальше');
@@ -390,7 +391,7 @@ void main() {
       expect(p.ownLine.textTarget, 'Do we need a follow-up appointment?');
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
       expect(find.text('Повтори свою реплику'), findsOneWidget);
-      expect(find.text('Нам нужно прийти на повторный приём?'), findsOneWidget, reason: 'the translation is the meaning');
+      expect(find.text(nbTypo('Нам нужно прийти на повторный приём?')), findsOneWidget, reason: 'the translation is the meaning');
       expect(find.text(p.ownLine.textTarget), findsNothing, reason: 'the English line is closed');
       expect(find.byKey(const ValueKey('retell-wave')), findsOneWidget);
       expect(probe.mics.single.localeId, 'en_US', reason: 'said in the target language');
@@ -421,7 +422,7 @@ void main() {
       await pumpCard(tester, probeEnv(card, probe));
       await sayDebug(tester, 'hello');
       expect(probe.answers, isEmpty);
-      expect(find.text('не расслышал, ещё раз'), findsOneWidget);
+      expect(find.text(nbTypo('не расслышал, ещё раз')), findsOneWidget);
       await sayDebug(tester, 'nothing like it');
       expect(results(probe), [SessionResult.skipped]);
       expect(probe.answers.single.attempts, 2);
@@ -447,7 +448,7 @@ void main() {
         await pumpCard(tester, probeEnv(speakAt(2), probe, replay: replay));
         await sayDebug(tester, 'It hurts in my back');
         await tester.pump();
-        expect(find.text('по смыслу ✓'), findsNothing, reason: 'replay: $replay');
+        expect(find.text(nbTypo('по смыслу ✓')), findsNothing, reason: 'replay: $replay');
         expect(find.byKey(const ValueKey('speak-own')), findsOneWidget);
         expect(find.text('Началось три дня назад.'), findsNothing, reason: 'перевода под своей репликой нет');
         await settleCard(tester);
@@ -456,7 +457,7 @@ void main() {
 
     testWidgets('the note «replay, not graded» is gone: a replay grades like an ordinary walk', (tester) async {
       await pumpCard(tester, probeEnv(speakAt(2), CardProbe(), replay: true));
-      expect(find.text('повтор без оценки'), findsNothing);
+      expect(find.text(nbTypo('повтор без оценки')), findsNothing);
       await settleCard(tester);
     });
   });

@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/ui/mic_button.dart';
 
+import '../support/nbsp.dart';
+
 /// ОДНА КНОПКА МИКРОФОНА НА ТРИ КАРТОЧКИ — наряд SPEECH-2, Ч.1.
 void main() {
   Widget host(MicState state, {VoidCallback? onTap}) => MaterialApp(
@@ -25,7 +27,7 @@ void main() {
       await tester.pumpWidget(host(state));
       await tester.pump();
 
-      expect(find.text(caption), findsOneWidget, reason: state.name);
+      expect(find.text(nbTypo(caption)), findsOneWidget, reason: state.name);
     }
   });
 

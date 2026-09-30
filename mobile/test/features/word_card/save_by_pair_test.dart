@@ -15,6 +15,8 @@ import 'package:eng_std/features/word_card/word_card_screen.dart';
 import 'package:eng_std/features/word_card/word_card_subject.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+
+import '../../support/nbsp.dart';
 import 'package:eng_std/ui/ui.dart' show PairBadge;
 
 /// «Одна коллекция — одна пара» as the SAVE path sees it (A-3, ч.2; DECISIONS пп. 81, 141, 142).
@@ -150,7 +152,7 @@ Future<void> _pump(
 }
 
 Future<void> _openSheet(WidgetTester tester) async {
-  await tester.tap(find.bySemanticsLabel('Добавить в коллекцию'));
+  await tester.tap(find.bySemanticsLabel(nbTypo('Добавить в коллекцию')));
   await tester.pumpAndSettle();
 }
 
@@ -215,11 +217,11 @@ void main() {
 
       // The word is already in a collection, so the card is in its saved state and the way to the
       // sheet is the quiet line under it (кадр 07).
-      await tester.tap(find.text('Добавить в другую коллекцию'));
+      await tester.tap(find.text(nbTypo('Добавить в другую коллекцию')));
       await tester.pumpAndSettle();
-      expect(find.text('Уже в коллекции «Работа»'), findsOneWidget);
+      expect(find.text(nbTypo('Уже в коллекции «Работа»')), findsOneWidget);
 
-      await tester.tap(find.text('Уже в коллекции «Работа»'));
+      await tester.tap(find.text(nbTypo('Уже в коллекции «Работа»')));
       await tester.pumpAndSettle();
       expect(api.addCalls, 0, reason: 'a tap on it must not spend a round trip');
     });
@@ -304,8 +306,8 @@ void main() {
       expect(find.text('+ Сохранённые'), findsNothing);
       expect(
         find.text(
-          '«Сохранённые» — коллекция другой пары. '
-          'Выберите коллекцию этой пары или создайте новую.',
+          nbTypo('«Сохранённые» — коллекция другой пары. '
+          'Выберите коллекцию этой пары или создайте новую.'),
         ),
         findsOneWidget,
       );
@@ -342,8 +344,8 @@ void main() {
       expect(find.text('Слово другого языка'), findsOneWidget);
       expect(
         find.text(
-          'Эта коллекция изучает Polski, а слово — на English. '
-          'Одна коллекция — одна пара, поэтому нужна коллекция другой пары.',
+          nbTypo('Эта коллекция изучает Polski, а слово — на English. '
+          'Одна коллекция — одна пара, поэтому нужна коллекция другой пары.'),
         ),
         findsOneWidget,
       );
@@ -372,7 +374,7 @@ void main() {
       // support side is the pill's.
       expect(api.created, [(title: 'English → Русский', source: 'ru', target: 'en')]);
       expect(api.lastCollectionId, 'MADE');
-      expect(find.text('Сохранено в «Polski → Русский» · в очереди на разбор'), findsWidgets);
+      expect(find.text(nbTypo('Сохранено в «Polski → Русский» · в очереди на разбор')), findsWidgets);
     });
 
     testWidgets('a refusal is never silent — declining it leaves the card as it was', (
@@ -392,7 +394,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(api.created, isEmpty);
-      expect(find.textContaining('Сохранено в коллекцию'), findsNothing);
+      expect(find.textContaining(nbTypo('Сохранено в коллекцию')), findsNothing);
       expect(find.text('+ Сохранённые'), findsOneWidget);
     });
   });

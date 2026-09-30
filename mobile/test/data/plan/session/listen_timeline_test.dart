@@ -16,23 +16,31 @@ void main() {
 
   // CATCHES: marks placed by line instead of by exchange, a rescue exchange (the learner first) split in two, the
   // length ignoring `total_ms`.
-  test('the fixture visit: 16 lines, 8 exchanges, marks at the end of every exchange, 40.81 s', () {
-    final t = ListenTimeline.of(visit(raw()));
+  // The numbers are the fixture's own (наряд CLIENT-22-1 §4): the lesson's audio is re-voiced with every generation, so
+  // the lengths are read off the raw payload here — `total_ms` and each line's `duration_ms` — and never written out.
+  test('the fixture visit: 16 lines, 8 exchanges, marks at the end of every exchange, the length from total_ms', () {
+    final json = raw();
+    final t = ListenTimeline.of(visit(json));
+    final payload = _visitJson(json);
+    final durations = [for (final l in (payload['lines'] as List).cast<Map<String, dynamic>>()) (l['audio'] as Map)['duration_ms'] as int];
+    final total = payload['total_ms'] as int;
+    final starts = [for (var i = 0; i < durations.length; i++) durations.take(i).fold(0, (a, b) => a + b)];
+
     expect(t.lines, hasLength(16));
     expect([for (final l in t.lines) l.ref].take(4), ['x1', 'x1b', 'x2', 'x2b']);
     expect(t.exchanges, 8);
     expect([for (final m in t.marks) m.step], [1, 2, 3, 4, 5, 6, 7, 8]);
     expect([for (final m in t.marks) m.lastLine], [1, 3, 5, 7, 9, 11, 13, 15]);
-    expect(t.totalMs, 40810);
-    expect(t.starts!.take(3), [0, 3710, 5600]);
-    expect(t.marks.first.at, closeTo((3710 + 1890) / 40810, 1e-9));
+    expect(t.totalMs, total);
+    expect(t.starts, starts, reason: 'each line starts where the lines before it end');
+    expect(t.marks.first.at, closeTo((durations[0] + durations[1]) / total, 1e-9));
     expect(t.marks.last.at, closeTo(1, 1e-9));
     expect(t.endsExchange(1), isTrue);
     expect(t.endsExchange(2), isFalse);
     expect(t.exchangeOrdinal(0), 1);
     expect(t.exchangeOrdinal(11), 6);
-    expect(t.progress(1, const Duration(milliseconds: 890)), closeTo((3710 + 890) / 40810, 1e-9));
-    expect(t.elapsed(2, Duration.zero), const Duration(milliseconds: 5600));
+    expect(t.progress(1, Duration(milliseconds: durations[1] ~/ 2)), closeTo((starts[1] + durations[1] ~/ 2) / total, 1e-9));
+    expect(t.elapsed(2, Duration.zero), Duration(milliseconds: starts[2]));
   });
 
   test('lengths unknown — the marks stand evenly, the bar moves by lines, no clock', () {
@@ -51,4 +59,11 @@ void main() {
     expect(t.progress(0, const Duration(seconds: 5)), closeTo(0.5 / 16, 1e-9));
     expect(t.elapsed(3, Duration.zero), isNull);
   });
+}
+
+/// The raw `listen_dialogue` payload of [json] — the visit the timeline reads.
+Map<String, dynamic> _visitJson(Map<String, dynamic> json) {
+  final listen = (json['stages'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['stage'] == 'listen');
+  final card = (listen['cards'] as List).cast<Map<String, dynamic>>().firstWhere((c) => c['kind'] == 'listen_dialogue');
+  return card['payload'] as Map<String, dynamic>;
 }

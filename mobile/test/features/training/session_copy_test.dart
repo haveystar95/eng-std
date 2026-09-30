@@ -8,6 +8,7 @@ import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import '../../support/nbsp.dart';
 
 /// What the card SAYS — the two lines the device caught telling the learner the wrong thing.
 ///
@@ -107,8 +108,8 @@ void main() {
       await tester.tap(find.text('heat'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Не то — верный ответ отмечен выше'), findsOneWidget);
-      expect(find.text('Не то — правильная форма ниже'), findsNothing);
+      expect(find.text(nbTypo('Не то — верный ответ отмечен выше')), findsOneWidget);
+      expect(find.text(nbTypo('Не то — правильная форма ниже')), findsNothing);
     });
 
     testWidgets('a rung-1 identity card points UP as well', (tester) async {
@@ -118,7 +119,7 @@ void main() {
       await tester.tap(find.text('жара'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Не то — верный ответ отмечен выше'), findsOneWidget);
+      expect(find.text(nbTypo('Не то — верный ответ отмечен выше')), findsOneWidget);
     });
 
     testWidgets('a typed card keeps the old line — the form really is below', (tester) async {
@@ -129,8 +130,8 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
-      expect(find.text('Не то — правильная форма ниже'), findsOneWidget);
-      expect(find.text('Не то — верный ответ отмечен выше'), findsNothing);
+      expect(find.text(nbTypo('Не то — правильная форма ниже')), findsOneWidget);
+      expect(find.text(nbTypo('Не то — верный ответ отмечен выше')), findsNothing);
     });
   });
 }

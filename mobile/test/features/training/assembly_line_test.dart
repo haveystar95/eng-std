@@ -9,6 +9,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/ui/ui.dart';
+import '../../support/nbsp.dart';
 
 /// The assembly line's EMPTY state — the one both assembling modes open on.
 ///
@@ -74,7 +75,7 @@ void main() {
     await tester.pumpWidget(host(scrambleCard()));
     await tester.pump();
 
-    expect(find.text('Собери из слов ниже'), findsOneWidget);
+    expect(find.text(nbTypo('Собери из слов ниже')), findsOneWidget);
 
     final line = tester.getSize(assemblyLine().first);
     final card = tester.getSize(find.byType(PaperCard).first);
@@ -91,7 +92,7 @@ void main() {
     await tester.pumpWidget(host(wordBankCard()));
     await tester.pump();
 
-    expect(find.text('Собери из слов ниже'), findsOneWidget);
+    expect(find.text(nbTypo('Собери из слов ниже')), findsOneWidget);
     expect(tester.getSize(assemblyLine().first).width, greaterThan(200));
   });
 
@@ -102,7 +103,7 @@ void main() {
     await tester.tap(find.text('Hey,').last);
     await tester.pump();
 
-    expect(find.text('Собери из слов ниже'), findsNothing);
+    expect(find.text(nbTypo('Собери из слов ниже')), findsNothing);
     expect(find.text('Hey,'), findsNWidgets(2)); // the chip's faded copy + the placed word
   });
 
@@ -110,11 +111,11 @@ void main() {
     await tester.pumpWidget(host(scrambleCard()));
     await tester.pump();
 
-    await tester.tap(find.text('Не помню'));
+    await tester.tap(find.text(nbTypo('Не помню')));
     await tester.pump();
 
     // The line is still empty, but the card is answered — telling the user to tap words now
     // would be instructions after the fact.
-    expect(find.text('Собери из слов ниже'), findsNothing);
+    expect(find.text(nbTypo('Собери из слов ниже')), findsNothing);
   });
 }

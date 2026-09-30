@@ -6,6 +6,8 @@ import 'package:eng_std/data/speech/speech_diagnostics.dart';
 import 'package:eng_std/features/profile/build_stamp.dart';
 import 'package:eng_std/l10n/app_localizations_ru.dart';
 
+import '../../support/nbsp.dart';
+
 /// ВЕРСИЯ И «ЖАЛОБА» — наряд DAY-GATE-1, Ч.0.4 и Ч.0.5.
 void main() {
   final l = AppLocalizationsRu();
@@ -18,7 +20,7 @@ void main() {
     test('несобранная скриптом сборка честно говорит «без метки»', () {
       final text = buildStampText(l, const AsyncValue.data('def5678'));
 
-      expect(text, contains('без метки'));
+      expect(text, contains(nbTypo('без метки')));
       expect(text, contains('def5678'));
     });
 

@@ -131,7 +131,7 @@ void main() {
         }),
       );
 
-      expect(find.text(nb('СЛОВА · 8 · 3 ПРОЙДЕНО · 1 ВЕРНЁТСЯ ЗАВТРА')), findsOneWidget);
+      expect(find.text(nbTypo('СЛОВА · 8 · 3 ПРОЙДЕНО · 1 ВЕРНЁТСЯ ЗАВТРА')), findsOneWidget);
       expect(find.descendant(of: find.byType(WindowPill), matching: find.textContaining(RegExp(r'\d'))), findsNothing);
     });
 
@@ -139,7 +139,7 @@ void main() {
     testWidgets('нулевые части не пишутся', (tester) async {
       await pumpDayWindow(tester, windowRoom('not_started'));
 
-      expect(find.text(nb('СЛОВА · 8')), findsOneWidget);
+      expect(find.text(nbTypo('СЛОВА · 8')), findsOneWidget);
     });
 
     // ПРАВИЛО (наряд DAY-UI-2 §1): «нет поля — честная ошибка».
@@ -171,7 +171,7 @@ void main() {
       await pumpDayWindow(tester, windowRoom('not_started'));
       final plate = find.byType(WindowPlate);
 
-      expect(find.descendant(of: plate, matching: find.text('Научишься $sentence')), findsOneWidget);
+      expect(find.descendant(of: plate, matching: find.text(nbTypo('Научишься $sentence'))), findsOneWidget);
       for (final goal in (windowOf(json)['day']['goals'] as List).cast<Map<String, dynamic>>()) {
         expect(find.descendant(of: plate, matching: find.text(goal['text'] as String)), findsNothing, reason: '${goal['text']}');
       }
@@ -186,7 +186,7 @@ void main() {
       final plate = find.byType(WindowPlate);
       final line = find.descendant(
         of: plate,
-        matching: find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains('Научился: $sentence')),
+        matching: find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains(nbTypo('Научился: $sentence'))),
       );
 
       expect(line, findsOneWidget);
@@ -503,7 +503,7 @@ void main() {
         return true;
       });
       expect(brass, ['lower back']);
-      expect(find.descendant(of: sheet, matching: find.text('не начато')), findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.text(nbTypo('не начато'))), findsOneWidget);
       expect(find.descendant(of: sheet, matching: counts), findsNothing);
     });
 
@@ -521,7 +521,7 @@ void main() {
       await revealInWindow(tester, find.text('worse'));
       await openWordSheet(tester, 'worse');
 
-      expect(find.descendant(of: find.byType(WindowWordSheet), matching: find.text('пройдено · вернётся в день 7')), findsOneWidget);
+      expect(find.descendant(of: find.byType(WindowWordSheet), matching: find.text(nbTypo('пройдено · вернётся в день 7'))), findsOneWidget);
     });
 
     // ПРАВИЛО (таблица «Тайминг · серия 23»): шит поднимается 320 мс ease-out-cubic, фон затемняется

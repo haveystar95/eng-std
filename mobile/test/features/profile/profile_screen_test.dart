@@ -9,6 +9,7 @@ import 'package:eng_std/data/plan/notify_permission.dart';
 import 'package:eng_std/data/start/account_device_store.dart';
 import 'package:eng_std/features/profile/account_providers.dart';
 import 'package:eng_std/features/profile/profile_screen.dart';
+import 'package:eng_std/ui/dock_button.dart';
 
 import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
@@ -87,7 +88,7 @@ void main() {
     expect(inRow('profile-native', 'Русский'), findsOneWidget);
     expect(find.text('Выйти'), findsOneWidget);
     expect(find.text('Удалить аккаунт'), findsOneWidget);
-    expect(find.text('1.0.0 (22)'), findsOneWidget);
+    expect(find.text(kFakeBuildVersion), findsOneWidget, reason: 'the footer says what the device reports');
     expect(find.textContaining('Кто ты'), findsNothing);
     expect(find.textContaining('клиент'), findsNothing, reason: 'the build line lives behind the dev door only');
   });
@@ -141,6 +142,21 @@ void main() {
     await tester.enterText(find.byKey(const ValueKey('name-field')), '');
     await tester.pump();
     expect(find.text('Как тебя зовут'), findsOneWidget);
+
+    // «Готово» sleeps while the name is empty or only spaces (наряд CLIENT-22-1 §3): a tap and the keyboard's «done» do
+    // nothing, the sheet stays.
+    DockButton done() => tester.widget<DockButton>(find.byKey(const ValueKey('name-done')));
+    expect(done().enabled, isFalse);
+    await tester.tap(find.byKey(const ValueKey('name-done')));
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('name-sheet')), findsOneWidget);
+    await tester.enterText(find.byKey(const ValueKey('name-field')), '   ');
+    await tester.pump();
+    expect(done().enabled, isFalse, reason: 'spaces are no name');
+    await tester.enterText(find.byKey(const ValueKey('name-field')), 'М');
+    await tester.pump();
+    expect(done().enabled, isTrue, reason: 'the first character wakes it');
 
     await tester.enterText(find.byKey(const ValueKey('name-field')), 'Мила');
     await tester.tap(find.byKey(const ValueKey('name-done')));

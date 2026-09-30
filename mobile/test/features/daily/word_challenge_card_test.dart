@@ -67,9 +67,9 @@ void main() {
       expect(find.text('неохотный'), findsOneWidget);
       expect(find.text('надёжный'), findsOneWidget);
       expect(find.text('заметный'), findsOneWidget);
-      expect(find.text(nb('угадано 6 подряд')), findsOneWidget);
+      expect(find.text(nbTypo('угадано 6 подряд')), findsOneWidget);
       // Nothing is revealed while the question stands.
-      expect(find.textContaining('Он неохотно уходил'), findsNothing);
+      expect(find.textContaining(nbTypo('Он неохотно уходил')), findsNothing);
     });
 
     testWidgets('a run of nothing is not «угадано 0 подряд»', (tester) async {
@@ -91,9 +91,9 @@ void main() {
       await pump(tester, challenge(streak: 7, chosen: 'неохотный'));
 
       expect(find.text('Знаешь!'), findsOneWidget);
-      expect(find.text('reluctant — неохотный'), findsOneWidget);
-      expect(find.text('He was reluctant to leave — Он неохотно уходил'), findsOneWidget);
-      expect(find.text(nb('угадано 7 подряд')), findsOneWidget);
+      expect(find.text(nbTypo('reluctant — неохотный')), findsOneWidget);
+      expect(find.text('He was reluctant to leave$nbsp— Он неохотно уходил'), findsOneWidget);
+      expect(find.text(nbTypo('угадано 7 подряд')), findsOneWidget);
       expect(find.text('Учить'), findsOneWidget);
       expect(find.text('Завтра новое'), findsOneWidget);
       // The options are gone — the card is an answer now, not a question.
@@ -106,7 +106,7 @@ void main() {
       expect(learned, 1);
 
       await pump(tester, challenge(chosen: 'неохотный'), enrolled: true);
-      expect(find.text('Слово в очереди'), findsOneWidget);
+      expect(find.text(nbTypo('Слово в очереди')), findsOneWidget);
       expect(find.text('Учить'), findsNothing);
     });
 
@@ -124,8 +124,8 @@ void main() {
     ) async {
       await pump(tester, challenge(chosen: 'надёжный'));
 
-      expect(find.text('reluctant — неохотный'), findsOneWidget);
-      expect(find.text('Вы выбрали «надёжный» — это reliable'), findsOneWidget);
+      expect(find.text(nbTypo('reluctant — неохотный')), findsOneWidget);
+      expect(find.text(nbTypo('Вы выбрали «надёжный» — это reliable')), findsOneWidget);
       expect(find.text('серия сброшена'), findsOneWidget);
       // The same two buttons as a hit: a mistake is not a special scenario.
       expect(find.text('Учить'), findsOneWidget);
@@ -148,8 +148,8 @@ void main() {
       );
       await pump(tester, c);
 
-      expect(find.textContaining('Вы выбрали'), findsNothing);
-      expect(find.text('reluctant — неохотный'), findsOneWidget);
+      expect(find.textContaining(nbTypo('Вы выбрали')), findsNothing);
+      expect(find.text(nbTypo('reluctant — неохотный')), findsOneWidget);
     });
   });
 

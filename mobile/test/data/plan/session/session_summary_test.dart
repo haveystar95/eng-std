@@ -101,23 +101,23 @@ void main() {
     answer(json, 'dialogue', 8, 'hinted', response: {'mode': 'voice_hint'});
     answer(json, 'dialogue', 11, 'passed', response: {'mode': 'voice_blind'});
     expect(linesOf(json, PlanStage.dialogue), nbAll([
-      '8 реплик, 6 с первого раза',
-      'сказал вслух 6 своих реплик', // four answers by voice and the two «спроси сам»; the chip is not aloud
-      'переспросил — врач повторил медленнее',
+      nbTypo('8 реплик, 6 с первого раза'),
+      nbTypo('сказал вслух 6 своих реплик'), // four answers by voice and the two «спроси сам»; the chip is not aloud
+      nbTypo('переспросил — врач повторил медленнее'),
     ]));
 
     // The phone does not recount: the same cards under the server's own numbers read the server's way.
     final other = raw();
     summarize(other, 'dialogue', total: 8, done: 5, firstTry: 2);
     passAll(other, 'dialogue');
-    expect(linesOf(other, PlanStage.dialogue).first, nb('8 реплик, 2 с первого раза'));
+    expect(linesOf(other, PlanStage.dialogue).first, nbTypo('8 реплик, 2 с первого раза'));
 
     // Two rescues read as the frame reads them; no rescue walked — two lines.
     final twice = raw();
     summarize(twice, 'dialogue', total: 8, done: 8, firstTry: 8);
     passAll(twice, 'dialogue');
     cardsOf(twice, 'dialogue').add({...cardsOf(twice, 'dialogue').firstWhere((c) => c['kind'] == 'dialogue_rescue'), 'id': 'ulid-rescue-2', 'position': 14});
-    expect(linesOf(twice, PlanStage.dialogue).last, 'дважды переспросил — врач повторил медленнее');
+    expect(linesOf(twice, PlanStage.dialogue).last, nbTypo('дважды переспросил — врач повторил медленнее'));
     final none = raw();
     summarize(none, 'dialogue', total: 8, done: 8, firstTry: 8);
     passAll(none, 'dialogue');
@@ -141,24 +141,24 @@ void main() {
     summarize(json, 'speak', total: 7, done: 7, firstTry: 5, returns: 2);
 
     expect(linesOf(json, PlanStage.words), nbAll([
-      '8 слов, 6 с первого раза',
-      '1 вернётся завтра',
-      'Эти слова ты теперь узнаёшь — дальше они встретятся во фразах',
+      nbTypo('8 слов, 6 с первого раза'),
+      nbTypo('1 вернётся завтра'),
+      nbTypo('Эти слова ты теперь узнаёшь — дальше они встретятся во фразах'),
     ]));
     expect(linesOf(json, PlanStage.phrases), nbAll([
-      '6 фраз, 5 с первого раза',
-      'завтра ничего не вернётся',
-      'Фразы собраны и сказаны вслух — в диалоге они пригодятся',
+      nbTypo('6 фраз, 5 с первого раза'),
+      nbTypo('завтра ничего не вернётся'),
+      nbTypo('Фразы собраны и сказаны вслух — в диалоге они пригодятся'),
     ]));
     expect(linesOf(json, PlanStage.listen), nbAll([
-      '6 вопросов, 4 с первого раза',
-      'завтра ничего не вернётся',
-      'Реплики собеседника ты понимаешь на слух',
+      nbTypo('6 вопросов, 4 с первого раза'),
+      nbTypo('завтра ничего не вернётся'),
+      nbTypo('Реплики собеседника ты понимаешь на слух'),
     ]));
     expect(linesOf(json, PlanStage.speak), nbAll([
-      '7 реплик, 5 с первого раза',
-      '2 вернутся завтра',
-      'Свои реплики ты сказал сам — дальше живой разговор',
+      nbTypo('7 реплик, 5 с первого раза'),
+      nbTypo('2 вернутся завтра'),
+      nbTypo('Свои реплики ты сказал сам — дальше живой разговор'),
     ]));
 
     // A stage the server sent no summary for says nothing about volume — the phone has no number of its own.
@@ -166,8 +166,8 @@ void main() {
     passAll(quiet, 'words');
     windowStage(quiet, 'words').remove('summary');
     expect(linesOf(quiet, PlanStage.words), nbAll([
-      'завтра ничего не вернётся',
-      'Эти слова ты теперь узнаёшь — дальше они встретятся во фразах',
+      nbTypo('завтра ничего не вернётся'),
+      nbTypo('Эти слова ты теперь узнаёшь — дальше они встретятся во фразах'),
     ]));
   });
 
@@ -180,15 +180,15 @@ void main() {
     final rehearsal = raw('day-rehearsal');
     summarize(rehearsal, 'recall', total: 10, done: 10, firstTry: 10);
     passAll(rehearsal, 'recall');
-    expect(linesOf(rehearsal, PlanStage.recall), nbAll(['10 реплик из 2 сцен', 'Реплики на месте — дальше разговор целиком']));
+    expect(linesOf(rehearsal, PlanStage.recall), nbAll([nbTypo('10 реплик из 2 сцен'), nbTypo('Реплики на месте — дальше разговор целиком')]));
 
     // The review as the server deals it: its cards under `repetition` (BACK-TAILS-2 §3).
     final review = raw('day-review');
     summarize(review, 'repetition', total: 7, done: 7, firstTry: 6);
     passAll(review, 'repetition');
     expect(linesOf(review, PlanStage.repetition), nbAll([
-      '7 карточек, 6 с первого раза',
-      'завтра ничего не вернётся',
+      nbTypo('7 карточек, 6 с первого раза'),
+      nbTypo('завтра ничего не вернётся'),
       'Всё, что возвращалось, сказано ещё раз',
     ]));
   });
@@ -205,8 +205,8 @@ void main() {
     final words = day.stageOf(PlanStage.words)!.cards;
     final sameUnit = words.firstWhere((c) => c.position == 3).unit.ref == words.firstWhere((c) => c.position == 5).unit.ref;
     expect(returns, (words: sameUnit ? 1 : 2, phrases: 1, exchanges: 1));
-    expect(SessionTexts.dayReturns(l, (words: 2, phrases: 2, exchanges: 1)), nb('5 карточек: 2 слова, 2 фразы и 1 реплика.'));
-    expect(SessionTexts.dayReturns(l, (words: 1, phrases: 0, exchanges: 0)), nb('1 карточка: 1 слово.'));
+    expect(SessionTexts.dayReturns(l, (words: 2, phrases: 2, exchanges: 1)), nbTypo('5 карточек: 2 слова, 2 фразы и 1 реплика.'));
+    expect(SessionTexts.dayReturns(l, (words: 1, phrases: 0, exchanges: 0)), nbTypo('1 карточка: 1 слово.'));
     expect(SessionTexts.dayReturns(l, (words: 0, phrases: 0, exchanges: 0)), isNull);
     expect(SessionSummaries.dayReturns(SessionQueue(SessionDay.fromJson(raw()).stages)), (words: 0, phrases: 0, exchanges: 0));
   });

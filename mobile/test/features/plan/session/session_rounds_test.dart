@@ -5,6 +5,7 @@ import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/features/plan/session/parts/session_bits.dart';
 
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
+import '../../../support/nbsp.dart';
 import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 
@@ -41,13 +42,13 @@ void main() {
       await pumpCard(tester, probeEnv(card, probe, day: day));
       for (final round in payload.rounds) {
         expect(slotOf(tester), payload.frame.filler(round.fillerIndex)!.target);
-        expect(find.text(round.taskNative), findsOneWidget, reason: 'the round\'s own task');
+        expect(find.text(nt(round.taskNative)), findsOneWidget, reason: 'the round\'s own task');
         await sayDebug(tester, round.expectedText);
         await tester.pump();
         expect(probe.answers, isEmpty, reason: 'no answer before the last round');
         await tester.pump(const Duration(milliseconds: 700));
       }
-      expect(find.text('а теперь со своим словом'), findsOneWidget);
+      expect(find.text(nbTypo('а теперь со своим словом')), findsOneWidget);
       await sayDebug(tester, '${payload.frame.parts.before} my elbow');
       await tester.pump();
       expect(results(probe), [SessionResult.passed]);
@@ -105,7 +106,7 @@ void main() {
     await sayDebug(tester, keep['expected_text'] as String);
     await tester.pump();
 
-    expect(find.text('а теперь со своим словом'), findsNothing, reason: 'there is no own round to announce');
+    expect(find.text(nbTypo('а теперь со своим словом')), findsNothing, reason: 'there is no own round to announce');
     expect(probe.judged, isEmpty, reason: 'nothing on this card is the judge\'s');
     expect(results(probe), [SessionResult.passed]);
     expect(probe.answers.single.response?.fillerIndex, keep['filler_index'], reason: 'the meaning actually said');
@@ -132,7 +133,7 @@ void main() {
     await tester.pump();
     expect(probe.answers, isEmpty, reason: 'the own word is still to come');
     await tester.pump(const Duration(milliseconds: 700));
-    expect(find.text('а теперь со своим словом'), findsOneWidget);
+    expect(find.text(nbTypo('а теперь со своим словом')), findsOneWidget);
 
     await sayDebug(tester, 'It hurts in his knee');
     await tester.pump();

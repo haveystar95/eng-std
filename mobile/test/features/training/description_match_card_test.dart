@@ -12,6 +12,7 @@ import 'package:eng_std/data/review_queue.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import '../../support/nbsp.dart';
 
 /// `description_match`: read what a word MEANS, in the language being learned, and tap the word.
 ///
@@ -170,14 +171,14 @@ void main() {
       }
       // The example's translation is on the card object but must not be printed as the question:
       // this is the one card in the session that shows no Russian at all.
-      expect(find.text('Они прислали счёт по почте.'), findsNothing);
+      expect(find.text(nbTypo('Они прислали счёт по почте.')), findsNothing);
     });
 
     testWidgets('names its own task — not «выбери английский эквивалент»', (tester) async {
       await tester.pumpWidget(host(card()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('ВЫБЕРИ СЛОВО ПО ОПИСАНИЮ'), findsOneWidget);
+      expect(find.textContaining(nbTypo('ВЫБЕРИ СЛОВО ПО ОПИСАНИЮ')), findsOneWidget);
     });
 
     testWidgets('a correct tap is CORRECT and uploads the WORD', (tester) async {

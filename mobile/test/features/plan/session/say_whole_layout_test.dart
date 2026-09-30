@@ -7,6 +7,7 @@ import 'package:eng_std/features/plan/session/parts/session_tiles.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../../support/plan_goldens.dart' show setUpPlanGoldens;
+import '../../../support/nbsp.dart';
 import '../../../support/session_harness.dart';
 
 /// «СКАЖИ ЦЕЛИКОМ» (32-7, наряд FIX-1 §6) — ПОЛЕ КАРТОЧКИ НА НИЗКОМ ТЕЛЕФОНЕ. Лист, ряд плашек-состояний и
@@ -64,7 +65,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 700));
       }
-      expect(find.text('а теперь со своим словом'), findsOneWidget);
+      expect(find.text(nbTypo('а теперь со своим словом')), findsOneWidget);
       expect(tester.takeException(), isNull, reason: 'the own round: no overflow');
 
       const long = 'It hurts in a very long place we have been talking about since the old house by the river';
@@ -74,12 +75,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 2010));
       await tester.pump();
       expect(probe.judged, [long]);
-      expect(find.text('Ты сказал не про время — назови, когда это началось.'), findsOneWidget);
+      expect(find.text(nbTypo('Ты сказал не про время — назови, когда это началось.')), findsOneWidget);
       // ПРАВИЛО (правка прохода 21.09, наряд CLIENT-CONV-1b): под отказом — «услышал: …» с тем, что распознал телефон;
       // «Пропустить» на 32-7 — латунная ссылка (§1.8 отчёта 1a).
       expect(find.text('услышал: $long'), findsOneWidget, reason: 'the heard line under the refusal');
       final heard = tester.getRect(find.byKey(const ValueKey('session-heard-text')));
-      expect(heard.top, greaterThanOrEqualTo(tester.getRect(find.text('Ты сказал не про время — назови, когда это началось.')).bottom));
+      expect(heard.top, greaterThanOrEqualTo(tester.getRect(find.text(nbTypo('Ты сказал не про время — назови, когда это началось.'))).bottom));
       expect(tester.widget<Text>(find.byKey(const ValueKey('session-skip'))).style!.color, AppColors.brassInk);
       expect(tester.takeException(), isNull, reason: 'the judge\'s reason: no overflow');
       await settleCard(tester);
@@ -109,7 +110,7 @@ void main() {
     await sayDebug(tester, 'It hurts in his elbow');
     await tester.pump();
     expect(probe.judged, ['It hurts in his elbow']);
-    expect(find.text('Каркас не прозвучал.'), findsOneWidget);
+    expect(find.text(nbTypo('Каркас не прозвучал.')), findsOneWidget);
     expect(tester.widget<Text>(find.byKey(const ValueKey('session-heard-text'))).data, 'услышал: it hurts in hiss elbow');
     await settleCard(tester);
   });

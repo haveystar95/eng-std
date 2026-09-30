@@ -134,7 +134,7 @@ void main() {
       await db.setMeta(SearchHistory.metaKey, '[{"w":"hollow","t":"пустой","c":"B2"}]');
       await _pump(tester, api, db: db);
 
-      expect(find.text('Вы искали'.toUpperCase()), findsOneWidget);
+      expect(find.text(nbTypo('Вы искали').toUpperCase()), findsOneWidget);
       expect(find.widgetWithText(DictionaryRow, 'hollow'), findsOneWidget);
     });
 
@@ -146,7 +146,7 @@ void main() {
       await db.setMeta(SearchHistory.metaKey, '[{"w":"hollow","t":"пустой","c":"B2"}]');
       await _pump(tester, api, db: db);
 
-      expect(find.text('Вы искали'.toUpperCase()), findsOneWidget);
+      expect(find.text(nbTypo('Вы искали').toUpperCase()), findsOneWidget);
       expect(find.text('hollow'), findsOneWidget);
       expect(find.text('пустой'), findsOneWidget);
       expect(find.text('B2'), findsOneWidget);
@@ -270,7 +270,7 @@ void main() {
       // The answer to «what does this mean» is already on screen, free. Only the rest is for sale.
       expect(find.text('возмещение'), findsOneWidget);
       expect(find.text('Собрать карточку'), findsOneWidget);
-      expect(find.textContaining('Значение и пример'), findsOneWidget);
+      expect(find.textContaining(nbTypo('Значение и пример')), findsOneWidget);
       // The photo is NOT sold here: it is a Pexels search dispatched by the SAVE, so a build that
       // promised one left the learner waiting for a picture this step never asked for (телефон,
       // 24.08).
@@ -403,8 +403,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AiLimitCard), findsOneWidget);
-      expect(find.text(nb('5 из 5 на сегодня')), findsOneWidget);
-      expect(find.text('Сборки с моделью вернутся в полночь'), findsOneWidget);
+      expect(find.text(nbTypo('5 из 5 на сегодня')), findsOneWidget);
+      expect(find.text(nbTypo('Сборки с моделью вернутся в полночь')), findsOneWidget);
       // The free half of the answer is unaffected by the cap, so it stays: withholding it would
       // punish the learner for the app's own accounting.
       expect(find.text('возмещение'), findsOneWidget);

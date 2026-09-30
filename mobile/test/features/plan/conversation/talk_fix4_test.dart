@@ -95,8 +95,8 @@ void main() {
       final card = byKey('talk-scene-card');
       expect(card, findsOneWidget);
       expect(tester.getRect(card).top, greaterThan(tester.getRect(turn(goodbye.index)).bottom), reason: 'под прощанием');
-      expect(find.descendant(of: card, matching: find.text(nb('СЦЕНА 2 ИЗ 2'))), findsOneWidget);
-      expect(find.descendant(of: card, matching: find.text('Приём у врача')), findsOneWidget);
+      expect(find.descendant(of: card, matching: find.text(nbTypo('СЦЕНА 2 ИЗ 2'))), findsOneWidget);
+      expect(find.descendant(of: card, matching: find.text(nbTypo('Приём у врача'))), findsOneWidget);
       expect(find.descendant(of: card, matching: find.text('врач')), findsOneWidget);
       final next = change.targetsOf(scene2);
       expect(next, hasLength(3));
@@ -107,7 +107,7 @@ void main() {
       expect(row, findsNothing, reason: 'ряд скрыт, пока переход не принят');
       expect(byKey('talk-caption'), findsNothing);
       expect(byKey('talk-rescue'), findsNothing);
-      expect(find.text('Запись к врачу · регистратор'), findsOneWidget, reason: 'полоса сцены ещё старая');
+      expect(find.text(nbTypo('Запись к врачу · регистратор')), findsOneWidget, reason: 'полоса сцены ещё старая');
 
       // The goodbye said — the card still waits.
       await finishLine(tester, stand);
@@ -118,8 +118,8 @@ void main() {
       await tester.pump();
       expect(byKey('talk-scene-card'), findsNothing);
       expect(byKey('talk-scene-divider-$scene2'), findsOneWidget);
-      expect(find.text('СЦЕНА 2 · ПРИЁМ У ВРАЧА · ВРАЧ'), findsOneWidget);
-      expect(find.text('Приём у врача · врач'), findsOneWidget, reason: 'полоса сцены — новая');
+      expect(find.text(nbTypo('СЦЕНА 2 · ПРИЁМ У ВРАЧА · ВРАЧ')), findsOneWidget);
+      expect(find.text(nbTypo('Приём у врача · врач')), findsOneWidget, reason: 'полоса сцены — новая');
       expect(turn(greeting.index), findsNothing, reason: 'первая реплика — через 300 мс');
 
       await tester.pump(const Duration(milliseconds: 300));
@@ -132,7 +132,7 @@ void main() {
 
       await finishLine(tester, stand);
       expect(stand.talk.phase, TalkPhase.yourTurn);
-      expect(find.descendant(of: plate, matching: find.text(change.hints.sentence!)), findsOneWidget);
+      expect(find.descendant(of: plate, matching: find.text(nt(change.hints.sentence!))), findsOneWidget);
       expect(tester.getRect(plate).top, greaterThan(tester.getRect(turn(greeting.index)).bottom), reason: 'под репликой новой роли');
       await settleTalk(tester);
     });
@@ -290,19 +290,19 @@ void main() {
       await tester.pumpAndSettle();
       final sheet = byKey('talk-construction-sheet');
       expect(sheet, findsOneWidget);
-      expect(find.descendant(of: sheet, matching: find.text('Конструкции в разговоре')), findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.text(nbTypo('Конструкции в разговоре'))), findsOneWidget);
       final scene = talk.targetsOf(scene1);
       expect(scene, hasLength(4));
       final notes = {
         for (final t in scene)
           t.ref: switch (t.state) {
-            TalkTargetState.said => 'ты сказал: ${t.saidWith(t.valueTarget)}',
-            TalkTargetState.almost => 'почти — скажи целиком: ${t.lessonLine}',
-            TalkTargetState.none => 'из урока: ${t.lessonLine}',
+            TalkTargetState.said => '${nbTypo('ты сказал:')} ${t.saidWith(t.valueTarget)}',
+            TalkTargetState.almost => '${nbTypo('почти — скажи целиком:')} ${t.lessonLine}',
+            TalkTargetState.none => '${nbTypo('из урока:')} ${t.lessonLine}',
           },
       };
-      expect(notes['p3'], 'почти — скажи целиком: The pain is sharp when he bends.');
-      expect(notes['p4'], "из урока: He doesn't have a fever.");
+      expect(notes['p3'], '${nbTypo('почти — скажи целиком:')} The pain is sharp when he bends.');
+      expect(notes['p4'], "${nbTypo('из урока:')} He doesn't have a fever.");
       final tops = <double>[];
       for (final t in scene) {
         final card = find.descendant(of: sheet, matching: byKey('talk-construction-card-${t.sceneId}-${t.ref}'));
@@ -370,12 +370,12 @@ void main() {
         ..holdMove = hold;
       final stand = await pumpTalk(tester, probe, recognizer: ListeningRecognizer());
       final sentence = opened.hints.sentence!;
-      expect(sentence, 'У него болит поясница.');
+      expect(sentence, 'У него болит поясница.', reason: 'the model holds the server\'s sentence as it came');
       expect(stand.talk.phase, TalkPhase.agentSpeaking);
       expect(plate, findsNothing, reason: 'пока роль говорит');
 
       await finishLine(tester, stand);
-      expect(find.descendant(of: plate, matching: find.text(sentence)), findsOneWidget, reason: 'ждём');
+      expect(find.descendant(of: plate, matching: find.text(nt(sentence))), findsOneWidget, reason: 'ждём');
       expect(find.textContaining('Скажи, что'), findsNothing);
       expect(byKey('talk-hint'), findsNothing, reason: 'при плашке «Подсказать» нет');
       final line = tester.getRect(turn(1));
@@ -400,7 +400,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       await finishLine(tester, stand);
-      expect(find.descendant(of: plate, matching: find.text(sentence)), findsOneWidget, reason: 'после «Sorry?»');
+      expect(find.descendant(of: plate, matching: find.text(nt(sentence))), findsOneWidget, reason: 'после «Sorry?»');
       expect(tester.getRect(plate).top, greaterThan(tester.getRect(turn(3)).bottom), reason: 'под последней репликой роли');
 
       final target = opened.targets.firstWhere((t) => t.sceneId == opened.hints.sceneId && t.ref == opened.hints.ref);
@@ -431,12 +431,12 @@ void main() {
       expect(own.textTarget, 'The pain is sharp when she bends.');
       final judge = byKey('talk-judge-almost');
       expect(judge, findsOneWidget);
-      expect(find.text('Почти — скажи целиком'), findsOneWidget);
+      expect(find.text(nbTypo('Почти — скажи целиком')), findsOneWidget);
       expect(tester.getRect(judge).top, greaterThan(tester.getRect(turn(own.index)).bottom), reason: 'под своим пузырём');
       expect(tester.getRect(judge).bottom, lessThan(tester.getRect(turn(own.index + 1)).top), reason: 'до ответа роли');
 
       await finishLine(tester, stand);
-      expect(find.descendant(of: plate, matching: find.text('Боль острая, когда он наклоняется.')), findsOneWidget);
+      expect(find.descendant(of: plate, matching: find.text(nbTypo('Боль острая, когда он наклоняется.'))), findsOneWidget);
       expect(tester.widget<Text>(byKey('talk-hint-line')).data, 'The pain is sharp when he bends.', reason: 'сразу две строки');
       expect(tester.widget<Text>(byKey('talk-hint-line')).style?.fontFamily, AppFonts.literata);
       await settleTalk(tester);
@@ -465,7 +465,7 @@ void main() {
       expect(byKey('talk-rescue'), findsOneWidget);
       await tester.tap(hint);
       await tester.pump();
-      expect(find.descendant(of: plate, matching: find.text('У него болит поясница.')), findsOneWidget, reason: 'та же фраза урока');
+      expect(find.descendant(of: plate, matching: find.text(nbTypo('У него болит поясница.'))), findsOneWidget, reason: 'та же фраза урока');
       expect(hint, findsNothing, reason: 'кнопка ушла');
       await settleTalk(tester);
 
@@ -480,7 +480,7 @@ void main() {
       await finishLine(tester, almost);
       await tester.tap(byKey('talk-hint'));
       await tester.pump();
-      expect(find.descendant(of: plate, matching: find.text('Боль острая, когда он наклоняется.')), findsOneWidget);
+      expect(find.descendant(of: plate, matching: find.text(nbTypo('Боль острая, когда он наклоняется.'))), findsOneWidget);
       expect(tester.widget<Text>(byKey('talk-hint-line')).data, 'The pain is sharp when he bends.');
       await settleTalk(tester);
     });
@@ -524,7 +524,7 @@ void main() {
       final sheet = byKey('talk-end-sheet');
       expect(sheet, findsOneWidget);
       expect(find.descendant(of: sheet, matching: find.text('Разговор окончен')), findsOneWidget);
-      expect(find.descendant(of: sheet, matching: find.text(nb('1 минута'))), findsOneWidget, reason: 'минуты сервера');
+      expect(find.descendant(of: sheet, matching: find.text(nbTypo('1 минута'))), findsOneWidget, reason: 'минуты сервера');
       expect(tester.getSize(sheet).width, 390, reason: 'во всю ширину');
       expect(row, findsNothing, reason: 'ряда над листом нет');
       expect(byKey('talk-ribbon'), findsOneWidget, reason: 'лента видна над листом');
@@ -541,15 +541,15 @@ void main() {
     testWidgets('37-12b: репетиция — «Ещё вспомнил», строки про время нет', (tester) async {
       final talk = rehearsalTalk(RehearsalStep.ended);
       await pumpSummary(tester, talk);
-      expect(find.text('Ты готов к разговору'), findsOneWidget);
+      expect(find.text(nbTypo('Ты готов к разговору')), findsOneWidget);
       expect(byKey('talk-summary-by-time'), findsNothing);
       final extra = talk.summary!.extraSaid.single;
       expect(find.text('ЕЩЁ ВСПОМНИЛ'), findsOneWidget);
       final card = byKey('talk-construction-card-${extra.sceneId}-${extra.ref}');
       await tester.ensureVisible(card);
-      expect(find.descendant(of: card, matching: find.text('ты сказал: I gave him paracetamol.')), findsOneWidget);
+      expect(find.descendant(of: card, matching: find.text('${nbTypo('ты сказал:')} I gave him paracetamol.')), findsOneWidget);
       expect((tester.widget<Container>(card).decoration! as BoxDecoration).color, AppColors.sessionSageWash);
-      expect(tester.getRect(byKey('talk-summary-extra')).top, greaterThan(tester.getRect(find.text('КОНСТРУКЦИИ В РАЗГОВОРЕ')).bottom));
+      expect(tester.getRect(byKey('talk-summary-extra')).top, greaterThan(tester.getRect(find.text(nbTypo('КОНСТРУКЦИИ В РАЗГОВОРЕ'))).bottom));
 
       final none = rehearsalTalk(RehearsalStep.ended, (json) => (json['summary'] as Map<String, dynamic>)['extra_said'] = <Object>[]);
       await pumpSummary(tester, none);
@@ -575,14 +575,14 @@ void main() {
 
       await pumpSummary(tester, rehearsalTalk(RehearsalStep.ended, (json) => byLimit(json, returns: true)));
       final line = byKey('talk-summary-by-time');
-      expect(tester.widget<Text>(line).data, 'Разговор закончился по времени — несказанное вернётся');
-      expect(tester.getRect(line).top, greaterThan(tester.getRect(find.text('КОНСТРУКЦИИ В РАЗГОВОРЕ')).bottom));
+      expect(tester.widget<Text>(line).data, nbTypo('Разговор закончился по времени — несказанное вернётся'));
+      expect(tester.getRect(line).top, greaterThan(tester.getRect(find.text(nbTypo('КОНСТРУКЦИИ В РАЗГОВОРЕ'))).bottom));
       final first = rehearsalTalk(RehearsalStep.ended).summary!.phrases.first;
       expect(tester.getRect(line).bottom, lessThan(tester.getRect(byKey('talk-construction-card-${first.sceneId}-${first.ref}')).top));
       expect(find.text('вернётся завтра'), findsOneWidget);
 
       await pumpSummary(tester, rehearsalTalk(RehearsalStep.ended, (json) => byLimit(json, returns: false)));
-      expect(tester.widget<Text>(byKey('talk-summary-by-time')).data, 'Разговор закончился по времени');
+      expect(tester.widget<Text>(byKey('talk-summary-by-time')).data, nbTypo('Разговор закончился по времени'));
       expect(find.text('повтори перед разговором'), findsOneWidget);
     });
 
@@ -626,7 +626,7 @@ void main() {
       await _openSession(tester, db: db, backend: backend, talk: probe);
 
       // 37-5b first: the constructions by scene; the receptionist is a woman on e2e (`partner_gender`, FIX-4c §3).
-      expect(find.text('СЦЕНА 1 · ЗАПИСЬ К ВРАЧУ · РЕГИСТРАТОР'), findsOneWidget);
+      expect(find.text(nbTypo('СЦЕНА 1 · ЗАПИСЬ К ВРАЧУ · РЕГИСТРАТОР')), findsOneWidget);
       expect(find.text(nbTypo('Регистратор начнёт первой. Отвечай и спрашивай сам.')), findsOneWidget);
       await tester.tap(byKey('talk-entry-start'));
       await tester.pump();
@@ -648,7 +648,7 @@ void main() {
       await tester.tap(byKey('talk-summary-action'));
       await tester.pump();
       expect(byKey('talk-summary-title'), findsOneWidget);
-      expect(find.text('Ты готов к разговору'), findsOneWidget);
+      expect(find.text(nbTypo('Ты готов к разговору')), findsOneWidget);
       expect(find.textContaining('День пройден'), findsNothing, reason: 'итог дня — после итога разговора');
 
       // The second tap of a double tap on «Итог» lands where «Дальше» now stands — and does not reach it.

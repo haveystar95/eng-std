@@ -65,7 +65,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Разговор окончен'), findsOneWidget);
-    expect(find.text(nb('Слов прозвучало: 3 из 3')), findsOneWidget);
+    expect(find.text(nbTypo('Слов прозвучало: 3 из 3')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     // Unmount to cancel the countdown/animation timers.

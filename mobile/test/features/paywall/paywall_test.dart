@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/feature_flags.dart';
 import 'package:eng_std/features/paywall/paywall_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import '../../support/nbsp.dart';
 
 /// A3.9 paywall (кадры 2.13/4ж): opens only behind the flag, defaults to the year plan, and rewrites
 /// the auto-renew legal line when the period switches.
@@ -50,8 +51,8 @@ void main() {
     expect(find.text(r'$29.99'), findsOneWidget);
     expect(find.text(r'$4.99'), findsOneWidget);
     // Year is the default → the legal line is the yearly one.
-    expect(find.textContaining('за год списываются'), findsOneWidget);
-    expect(find.textContaining('в месяц списываются'), findsNothing);
+    expect(find.textContaining(nbTypo('за год списываются')), findsOneWidget);
+    expect(find.textContaining(nbTypo('в месяц списываются')), findsNothing);
   });
 
   testWidgets('switching to the monthly card rewrites the legal line', (tester) async {
@@ -63,8 +64,8 @@ void main() {
     await tester.tap(find.text('Месяц'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('в месяц списываются'), findsOneWidget);
-    expect(find.textContaining('за год списываются'), findsNothing);
+    expect(find.textContaining(nbTypo('в месяц списываются')), findsOneWidget);
+    expect(find.textContaining(nbTypo('за год списываются')), findsNothing);
   });
 
   testWidgets('flag off: showPaywall is a no-op (nothing opens)', (tester) async {

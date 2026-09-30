@@ -132,7 +132,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(ttsCalls, contains('stop'));
-    expect(find.text(nb('2 из 2')), findsOneWidget, reason: 'and it still advanced');
+    expect(find.text(nbTypo('2 из 2')), findsOneWidget, reason: 'and it still advanced');
 
     await close(tester);
   });

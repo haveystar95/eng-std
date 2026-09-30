@@ -132,8 +132,8 @@ void main() {
     expect(find.text('Cafe'), findsOneWidget);
     expect(find.text('Job interview'), findsOneWidget);
     // «N слов · CEFR» line (кадр 2.8).
-    expect(find.text(nb('16 слов · A2')), findsOneWidget);
-    expect(find.text(nb('22 слова · B1–B2')), findsOneWidget);
+    expect(find.text(nbTypo('16 слов · A2')), findsOneWidget);
+    expect(find.text(nbTypo('22 слова · B1–B2')), findsOneWidget);
   });
 
   testWidgets('premium set shows the lock badge; free set does not', (tester) async {
@@ -154,9 +154,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Preview sheet: the premium CTA.
-    expect(find.text('Доступно с Premium'), findsOneWidget);
+    expect(find.text(nbTypo('Доступно с Premium')), findsOneWidget);
 
-    await tester.tap(find.text('Доступно с Premium'));
+    await tester.tap(find.text(nbTypo('Доступно с Premium')));
     await tester.pumpAndSettle();
 
     // Paywall is up — title names the set, «Продолжить» present.
@@ -173,8 +173,8 @@ void main() {
     await tester.tap(find.text('Cafe'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Добавить в мои'), findsOneWidget);
-    expect(find.text('Доступно с Premium'), findsNothing);
+    expect(find.text(nbTypo('Добавить в мои')), findsOneWidget);
+    expect(find.text(nbTypo('Доступно с Premium')), findsNothing);
     // «Что внутри» teaser: term — translation rows + «и ещё N слов» (16 total − 3 shown = 13).
     expect(find.text('appointment'), findsOneWidget);
     expect(find.text('приём у врача'), findsOneWidget);
@@ -196,7 +196,7 @@ void main() {
       expect(find.text('appointment'), findsOneWidget);
       expect(find.textContaining('ещё 19'), findsOneWidget); // 22 − 3
       // …and the lock is only on adding.
-      expect(find.text('Доступно с Premium'), findsOneWidget);
+      expect(find.text(nbTypo('Доступно с Premium')), findsOneWidget);
     },
   );
 
@@ -210,7 +210,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('appointment'), findsNothing);
-    expect(find.text('Добавить в мои'), findsOneWidget);
+    expect(find.text(nbTypo('Добавить в мои')), findsOneWidget);
   });
 
   testWidgets('preview 404 (endpoint missing): skeleton collapses to no list', (tester) async {
@@ -233,7 +233,7 @@ void main() {
     // No skeleton bars left hanging, no list — just the sheet + its CTA.
     expect(find.text('appointment'), findsNothing);
     expect(find.text('Что внутри'.toUpperCase()), findsNothing);
-    expect(find.text('Добавить в мои'), findsOneWidget);
+    expect(find.text(nbTypo('Добавить в мои')), findsOneWidget);
   });
 
   group('справочник на карточке стора (наряд A-4.1 Ч.2)', () {
