@@ -23,9 +23,17 @@ class EntryPreviewStep extends StatelessWidget {
     required this.summary,
     required this.onRetry,
     required this.onEditGoal,
+    this.onSubscription,
+    this.onClose,
   });
 
   final EntryState state;
+
+  /// «Подписка» on «Второй план — по подписке» — the profile's subscription group until PAY-1 brings the paywall.
+  final VoidCallback? onSubscription;
+
+  /// «К плану» on «Не больше трёх планов сразу».
+  final VoidCallback? onClose;
 
   /// «7 дней · английский · средний · приём 17 сентября» — одна строка под заголовком.
   final String summary;
@@ -54,6 +62,17 @@ class EntryPreviewStep extends StatelessWidget {
           sub: l.planEntryPreviewUnclearSub,
           action: l.planEntryPreviewUnclearCta,
           onAction: onEditGoal,
+        ),
+      ),
+      // 402 / 409 of `POST /plans` (ACC-1 §2): a stand-in until PAY-1 brings the paywall — the rule said once, one way on.
+      EntryBuildPhase.refused => _Page(
+        title: state.refusal == EntryRefusal.activeLimit ? l.planEntryActiveLimitTitle : l.planEntrySubscriptionTitle,
+        summary: summary,
+        body: Align(
+          alignment: Alignment.centerLeft,
+          child: state.refusal == EntryRefusal.activeLimit
+              ? _NoticeButton(key: const ValueKey('entry-refused-close'), label: l.planEntryToTab, onTap: onClose)
+              : _NoticeButton(key: const ValueKey('entry-refused-subscription'), label: l.planPlateSubscription, onTap: onSubscription),
         ),
       ),
       EntryBuildPhase.failed => _Page(
@@ -320,30 +339,43 @@ class _Notice extends StatelessWidget {
       const SizedBox(height: 8),
       Text(sub, style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, height: 1.45, color: AppColors.secondary)),
       const SizedBox(height: 20),
-      Semantics(
-        button: true,
-        label: action,
-        child: Material(
-          color: AppColors.ink,
-          borderRadius: BorderRadius.circular(14),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () {
-              AppHaptics.light();
-              onAction();
-            },
-            child: Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              alignment: Alignment.center,
-              child: Text(
-                action,
-                style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.paper),
-              ),
-            ),
+      _NoticeButton(label: action, onTap: onAction),
+    ],
+  );
+}
+
+/// The notice's one action — ink 44, radius 14 (22-4c, 22-4d, and the refusals of `POST /plans`).
+class _NoticeButton extends StatelessWidget {
+  const _NoticeButton({super.key, required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: label,
+    child: Material(
+      color: AppColors.ink,
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap == null
+            ? null
+            : () {
+                AppHaptics.light();
+                onTap!();
+              },
+        child: Container(
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.paper),
           ),
         ),
       ),
-    ],
+    ),
   );
 }

@@ -1,98 +1,178 @@
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/data/local/app_database.dart';
-import 'package:eng_std/data/models.dart';
+import 'package:eng_std/data/plan/notify_permission.dart';
 import 'package:eng_std/data/plan/plan_notifications.dart';
 import 'package:eng_std/data/plan/push_registration.dart';
-import 'package:eng_std/data/providers.dart';
+import 'package:eng_std/features/plan/notify_prompt.dart';
 import 'package:eng_std/features/plan/plan_notifications_host.dart';
 import 'package:eng_std/features/plan/plan_providers.dart';
 import 'package:eng_std/features/plan/plan_sheets.dart';
 import 'package:eng_std/features/profile/profile_screen.dart';
-import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
+import '../../support/start_harness.dart';
 
 /// ПРАВИЛА, КОТОРЫЕ НЕ ВИДНО НА СНИМКЕ — моменты, а не состояния (наряды PLAN-UI, PLAN-UI-3).
 void main() {
   setUpAll(setUpPlanGoldens);
 
-  AppDatabase memoryDb(Ref ref) {
-    final db = AppDatabase.forTesting(NativeDatabase.memory());
-    ref.onDispose(db.close);
-
-    return db;
-  }
-
-  group('разрешение на уведомления — один раз, после «Начать»', () {
-    // ПРАВИЛО (наряд PLAN-UI-3 §4): системный вопрос задаётся ОДИН раз — после «Начать» на
-    // превью, — и следом регистрируется push-токен.
-    // ЛОВИТ: вопрос на каждом новом плане (второй «Начать» снова поднимает алерт iOS) и
-    // регистрацию токена без разрешения или без вопроса вовсе.
-    testWidgets('второй «Начать» не спрашивает снова, токен регистрируется один раз', (tester) async {
-      final notifications = _CountingNotifications();
-      final push = _CountingPush();
-      await tester.pumpWidget(
+  group('43-1 — напоминания: предразрешение после итога дня', () {
+    // Ведущая кнопка за итогом дня: как «Дальше» зовёт лист, закрыв день [n].
+    Widget host({required FakeNotifyProbe probe, required _CountingNotifications notifications, required _CountingPush push}) =>
         ProviderScope(
           overrides: [
-            appDatabaseProvider.overrideWith(memoryDb),
+            ...accountOverrides(auth: () => ScriptedAuth(restored: denUser()), probe: probe),
             planNotificationsProvider.overrideWithValue(notifications),
             pushRegistrationProvider.overrideWithValue(push),
           ],
-          child: MaterialApp(
-            home: Scaffold(
+          child: planGoldenShell(
+            Scaffold(
               body: Consumer(
-                builder: (context, ref, _) =>
-                    TextButton(onPressed: () => askPlanNotificationsOnce(ref), child: const Text('после «Начать»')),
+                builder: (context, ref, _) => Column(
+                  children: [
+                    for (final day in [1, 2, 3])
+                      TextButton(
+                        onPressed: () => offerReminders(context, ref, closedDay: day),
+                        child: Text('после дня $day'),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      );
-      for (var i = 0; i < 2; i++) {
-        await tester.runAsync(() async {
-          await tester.tap(find.text('после «Начать»'));
-          await Future<void>.delayed(const Duration(milliseconds: 300));
-        });
-        await tester.pump();
-      }
+        );
 
-      expect(notifications.requests, 1, reason: 'системный вопрос — один раз на телефон');
-      expect(push.registrations, 1, reason: 'токен — сразу после разрешения, один раз');
+    Future<void> closeDay(WidgetTester tester, int day) async {
+      await tester.tap(find.text('после дня $day'));
+      await tester.pumpAndSettle();
+    }
+
+    // The answer runs through platform channels (the time zone for the push address) that answer in real time: a few
+    // real waits, each followed by a frame that runs what they woke.
+    Future<void> answer(WidgetTester tester, String label) async {
+      await tester.tap(find.text(label));
+      for (var i = 0; i < 4; i++) {
+        await tester.pumpAndSettle();
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      }
+      await tester.pumpAndSettle();
+    }
+
+    // ПРАВИЛО (наряд CLIENT-START §4, кадр 43-1): лист — после итога дня 1; «Не сейчас» — ещё раз после дня 2, дальше
+    // никогда; системный вопрос iOS не задаётся, пока человек не сказал «Напоминать».
+    // ЛОВИТ: лист на каждом дне, лист, который после второго «Не сейчас» возвращается, и алерт iOS без согласия.
+    testWidgets('«Не сейчас» — ещё раз после дня 2, и больше никогда', (tester) async {
+      final notifications = _CountingNotifications();
+      final push = _CountingPush();
+      await tester.pumpWidget(host(probe: FakeNotifyProbe(), notifications: notifications, push: push));
+      await tester.pumpAndSettle();
+
+      await closeDay(tester, 1);
+      expect(find.byKey(const ValueKey('notify-ask')), findsOneWidget);
+      expect(find.text(nbTypo('Напомнить про день 2 завтра в 19:00?')), findsOneWidget);
+      await answer(tester, nbTypo('Не сейчас'));
+      expect(find.byKey(const ValueKey('notify-ask')), findsNothing);
+
+      await closeDay(tester, 2);
+      expect(find.byKey(const ValueKey('notify-ask')), findsOneWidget, reason: 'второй и последний раз — после дня 2');
+      await answer(tester, nbTypo('Не сейчас'));
+
+      await closeDay(tester, 3);
+      expect(find.byKey(const ValueKey('notify-ask')), findsNothing, reason: 'после двух «Не сейчас» — никогда');
+      expect(notifications.requests, 0, reason: 'системный вопрос — только после «Напоминать»');
+      expect(push.registrations, 0);
     });
 
-    // ПРАВИЛО: выключатель «Напоминания» в профиле — второе место, где человек сам просит
-    // уведомления; выключение ничего не спрашивает.
-    // ЛОВИТ: выключатель, который перестал поднимать разрешение после переезда на новый хост.
-    testWidgets('включение «Напоминаний» в профиле — поднимает', (tester) async {
+    // ПРАВИЛО: «Напоминать» открывает системный запрос, и, если разрешили, адрес push регистрируется существующей ручкой
+    // (`PUT /devices/push-token`); лист больше не приходит.
+    // ЛОВИТ: регистрацию токена без разрешения, повторный алерт iOS на следующем дне.
+    testWidgets('«Напоминать» — один системный вопрос, один токен; лист больше не приходит', (tester) async {
       final notifications = _CountingNotifications();
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            appDatabaseProvider.overrideWith(memoryDb),
-            authControllerProvider.overrideWith(_ProfileAuth.new),
-            planNotificationsProvider.overrideWithValue(notifications),
-          ],
-          child: const MaterialApp(
-            locale: Locale('ru'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: [Locale('ru')],
-            home: ProfileScreen(),
-          ),
-        ),
-      );
+      final push = _CountingPush();
+      await tester.pumpWidget(host(probe: FakeNotifyProbe(), notifications: notifications, push: push));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(Switch).first);
-      await tester.pumpAndSettle();
+      await closeDay(tester, 1);
+      await answer(tester, 'Напоминать');
       expect(notifications.requests, 1);
+      expect(push.registrations, 1);
 
-      await tester.tap(find.byType(Switch).first);
-      await tester.pumpAndSettle();
+      await closeDay(tester, 2);
+      expect(find.byKey(const ValueKey('notify-ask')), findsNothing);
       expect(notifications.requests, 1);
+    });
+
+    // ПРАВИЛО: iOS уже ответил (разрешил или запретил) — предразрешение не показывается: спрашивать не о чем.
+    // ЛОВИТ: лист «Напомнить?» человеку, у которого уведомления уже включены, или запрещены в Настройках.
+    for (final answered in [NotifyPermission.granted, NotifyPermission.denied]) {
+      testWidgets('iOS уже ответил (${answered.name}) — листа нет', (tester) async {
+        final notifications = _CountingNotifications();
+        await tester.pumpWidget(host(probe: FakeNotifyProbe(answered), notifications: notifications, push: _CountingPush()));
+        await tester.pumpAndSettle();
+
+        await closeDay(tester, 1);
+        expect(find.byKey(const ValueKey('notify-ask')), findsNothing);
+        expect(notifications.requests, 0);
+      });
+    }
+  });
+
+  group('выключатель «Напоминать о дне» в профиле (42-1)', () {
+    Widget profile(FakeNotifyProbe probe, _CountingNotifications notifications) => ProviderScope(
+      overrides: [
+        ...accountOverrides(auth: () => ScriptedAuth(restored: denUser()), probe: probe),
+        planNotificationsProvider.overrideWithValue(notifications),
+        pushRegistrationProvider.overrideWithValue(_CountingPush()),
+      ],
+      child: planGoldenShell(const ProfileScreen()),
+    );
+
+    Future<void> flip(WidgetTester tester) async {
+      await tester.runAsync(() async {
+        await tester.tap(find.byKey(const ValueKey('profile-reminders')));
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      });
+      await tester.pumpAndSettle();
+    }
+
+    // ПРАВИЛО: выключатель — второе место, где человек сам просит уведомления: iOS не спрашивали — включение поднимает
+    // системный вопрос; выключение ничего не спрашивает.
+    // ЛОВИТ: выключатель, который включается «на словах», а iOS так и не спросили.
+    testWidgets('iOS не спрашивали — включение поднимает системный вопрос, выключение — нет', (tester) async {
+      tester.view
+        ..devicePixelRatio = 2
+        ..physicalSize = const Size(390, 1400) * 2;
+      addTearDown(tester.view.reset);
+      final notifications = _CountingNotifications();
+      final probe = FakeNotifyProbe();
+      await tester.pumpWidget(profile(probe, notifications));
+      await tester.pumpAndSettle();
+
+      await flip(tester);
+      expect(notifications.requests, 1);
+      probe.value = NotifyPermission.granted;
+
+      await flip(tester);
+      expect(notifications.requests, 1);
+    });
+
+    // ПРАВИЛО: iOS запретил — выключатель сам ничего не включит; лист 42-4 говорит, где это меняется.
+    // ЛОВИТ: «включённый» выключатель при запрете в Настройках — напоминаний не будет, а экран говорит «будут».
+    testWidgets('iOS запретил — выключатель открывает лист, а не включает', (tester) async {
+      tester.view
+        ..devicePixelRatio = 2
+        ..physicalSize = const Size(390, 1400) * 2;
+      addTearDown(tester.view.reset);
+      final notifications = _CountingNotifications();
+      await tester.pumpWidget(profile(FakeNotifyProbe(NotifyPermission.denied), notifications));
+      await tester.pumpAndSettle();
+
+      await flip(tester);
+      expect(find.byKey(const ValueKey('reminders-sheet')), findsOneWidget);
+      expect(notifications.requests, 0);
     });
   });
 
@@ -156,13 +236,4 @@ class _CountingPush implements PushRegistration {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _ProfileAuth extends AuthController {
-  @override
-  Future<AppUser?> build() async => AppUser(
-    id: 'u1',
-    name: 'Денис',
-    profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
-  );
 }

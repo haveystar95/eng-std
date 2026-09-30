@@ -171,6 +171,44 @@ void main() {
     );
   });
 
+  // ── 21-3 · по подписке (ACC-1; наряд CLIENT-START §6) ─────────────────────────────────────
+  // Бесплатный план QA ru→ro снят с e2e чтением при включённом в процессе пейволле: дни 2–3 — `lock_reason:
+  // subscription`. На e2e его день 1 ещё собирается; правкой — тот же план назавтра: день 1 пройден, день 2 — сегодня.
+  // Кабинет дня 2 — его настоящий ответ (этапы заперты).
+  testWidgets('день по подписке — «Откроется с подпиской», «Подписка», латунные узлы маршрута', (tester) async {
+    Map<String, dynamic> dayAfter(Map<String, dynamic> json) {
+      final days = (json['days'] as List).cast<Map<String, dynamic>>();
+      final first = days.firstWhere((d) => d['number'] == 1);
+      first
+        ..['status'] = 'closed'
+        ..['lesson_status'] = 'ready'
+        ..['cards_total'] = 64
+        ..['cards_done'] = 64
+        ..['minutes_spent'] = 19
+        ..['slot'] = {'code': 'past', 'date': '2026-09-27', 'label_native': null}
+        ..['stages'] = [
+          for (final s in (first['stages'] as List).cast<Map<String, dynamic>>()) {...s, 'state': 'done'},
+        ];
+      final second = days.firstWhere((d) => d['number'] == 2);
+      second['slot'] = {'code': 'today', 'date': '2026-09-28', 'label_native': 'сегодня'};
+      json['current_day'] = second;
+      return json;
+    }
+
+    await expectPlanGolden(
+      tester,
+      tab(
+        PlanTabState(
+          plan: planFrom('current_subscription_building', dayAfter),
+          room: roomFrom('room_subscription_locked'),
+          finished: const [],
+        ),
+      ),
+      'plan/21-3-subscription',
+      size: const Size(390, 1500),
+    );
+  });
+
   // ── 21-4 · день закрыт ────────────────────────────────────────────────────────────────────
   group('день закрыт (кадры 21-4, 21-4c, 21-5)', () {
     PlanTabState closed() => PlanTabState(

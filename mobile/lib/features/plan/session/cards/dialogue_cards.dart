@@ -516,7 +516,7 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
             if (_ask && _reply) ...[_playingLine(l), const SizedBox(height: 14)],
             // An ask with a check holds its answer for the choice: while its own line sounds, before the check comes up,
             // «Дальше» would leave the card with the answer unsent — and the stage would deal the card again.
-            SessionDockButton(
+            DockButton(
               label: l.planSessionNext,
               enabled: _chip != null && _held == null,
               busy: env.advancing,
@@ -538,7 +538,7 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
           const SizedBox(height: 14),
           // While the reply is still sounding the check has not come up yet: «Дальше» here would leave the card with
           // the answer unsent, and the stage would deal it again.
-          SessionDockButton(
+          DockButton(
             label: l.planSessionNext,
             enabled: _held == null,
             busy: env.advancing,
@@ -568,7 +568,7 @@ class _DialogueAnswerCardState extends State<DialogueAnswerCard> with VoiceCardS
       ],
       if (_chosen != null && !_checkedRight) ...[
         const SizedBox(height: 8),
-        SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
+        DockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
       ],
     ];
   }
@@ -702,7 +702,7 @@ class _DialogueRescueCardState extends State<DialogueRescueCard> {
             ),
             const SizedBox(height: 14),
           ],
-          SessionDockButton(
+          DockButton(
             label: l.planSessionNext,
             busy: env.advancing,
             onTap: () {

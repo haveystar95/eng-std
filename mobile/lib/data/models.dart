@@ -650,12 +650,6 @@ class Profile {
   /// in [toJson] (staleness-safe, like the generation quota). Gates the practice-dialog entry.
   final String tier;
 
-  /// ISO-8601 instant the user finished first-run onboarding, or null if never — the server-side
-  /// onboarding gate (device-batch F1). Replaces the old per-device keychain flag: it's tied to the
-  /// account, so a relogin never re-onboards and a new account always does. Persisted in [toJson]
-  /// so the offline-restored user still gates correctly on a cold start.
-  final String? onboardedAt;
-
   /// The user's IANA timezone as the server knows it (F19). UTC until the client has sent a real
   /// zone. Informational on the client (the client sends the *device* zone; the server does the due
   /// rounding), kept for round-tripping the cached user.
@@ -671,15 +665,11 @@ class Profile {
     required this.cefrLevel,
     required this.dailyGoal,
     this.tier = 'free',
-    this.onboardedAt,
     this.timezone = 'UTC',
     this.gender,
   });
 
   bool get isPremium => tier == 'premium';
-
-  /// True once the account has completed onboarding (server truth).
-  bool get isOnboarded => onboardedAt != null;
 
   factory Profile.fromJson(Map<String, dynamic> j) => Profile(
     nativeLanguage: (j['native_language'] as String?) ?? 'ru',
@@ -687,7 +677,6 @@ class Profile {
     cefrLevel: (j['cefr_level'] as String?) ?? 'B1',
     dailyGoal: (j['daily_goal'] as int?) ?? 20,
     tier: (j['tier'] as String?) ?? 'free',
-    onboardedAt: j['onboarded_at'] as String?,
     timezone: (j['timezone'] as String?) ?? 'UTC',
     gender: j['gender'] as String?,
   );
@@ -702,7 +691,6 @@ class Profile {
     // restored user defaults to free and the premium-gated dialog button vanishes until a
     // re-login. The server still enforces the real gate (403), so mild staleness is safe.
     'tier': tier,
-    'onboarded_at': onboardedAt, // keep the onboarding gate correct on offline cold start
     // The voice of the learner's own lines: kept so a cold start does not ask a question already answered.
     'gender': gender,
   };
@@ -945,6 +933,11 @@ class AppUser {
   /// production со старым кэшем, не унесла его с собой.
   final bool qaTools;
 
+  /// WHAT THE ACCOUNT MAY DO — `GET /auth/me` → `access` (наряд ACC-1 §2): the profile's «ПОДПИСКА» group reads it
+  /// (42-1). Null — the server sent none (a sign-in answer; `/auth/me` always has it). Kept in the offline cache: a cold
+  /// start without the network still shows the plan the account had — the server enforces the real gate.
+  final AccountAccess? access;
+
   AppUser({
     required this.id,
     required this.name,
@@ -953,6 +946,7 @@ class AppUser {
     this.profile,
     this.quota,
     this.qaTools = false,
+    this.access,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
@@ -965,6 +959,7 @@ class AppUser {
         ? GenerationQuota.fromJson(j['generation'] as Map<String, dynamic>)
         : null,
     qaTools: j['qa_tools'] == true,
+    access: j['access'] is Map<String, dynamic> ? AccountAccess.fromJson(j['access'] as Map<String, dynamic>) : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -973,6 +968,29 @@ class AppUser {
     'email': ?email,
     'avatar': ?avatar,
     'profile': ?profile?.toJson(),
+    'access': ?access?.toJson(),
+  };
+}
+
+/// `access` of `GET /auth/me` (ACC-1 §2): `premium` while a right is in force, until [expiresAt] (null — no end);
+/// `free` — the first plan, day 1. [source] — whose right: `admin`, `promo`, `apple`, `google`.
+class AccountAccess {
+  const AccountAccess({required this.premium, this.expiresAt, this.source});
+
+  final bool premium;
+  final DateTime? expiresAt;
+  final String? source;
+
+  factory AccountAccess.fromJson(Map<String, dynamic> j) => AccountAccess(
+    premium: j['plan'] == 'premium',
+    expiresAt: DateTime.tryParse((j['expires_at'] as String?) ?? '')?.toLocal(),
+    source: j['source'] as String?,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'plan': premium ? 'premium' : 'free',
+    'expires_at': expiresAt?.toUtc().toIso8601String(),
+    'source': source,
   };
 }
 

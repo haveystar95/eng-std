@@ -178,12 +178,13 @@ class TalkScene {
 class TalkHints {
   const TalkHints({required this.enabled, this.sentence, this.target, this.sceneId, this.ref});
 
-  /// False — «Без подсказок»: the server sends no hint at all, and the plate stands only after «Подсказать» (37-7c).
+  /// False — «Без подсказок»: the plate stands only after «Подсказать» (37-7c). The hint itself comes all the same
+  /// (FIX-4c §2) — the same target the server would hint with hints on.
   final bool enabled;
 
   /// THE LESSON'S SENTENCE of the target, in the learner's language, with its capital and its closing mark — «У меня
-  /// есть боль в плече.», «Мне сказать вам его температуру?». Null when hints are off, when the move is not the
-  /// learner's, when everything of the scene is said and when the talk has ended.
+  /// есть боль в плече.», «Мне сказать вам его температуру?». Null when the move is not the learner's, when everything
+  /// of the scene is said and when the talk has ended — in both modes (FIX-4c §2).
   final String? sentence;
 
   /// THE EXACT LINE in the target language — «The pain is sharp when he bends.» — only on the move right after the
@@ -216,6 +217,7 @@ class TalkTarget {
     this.exampleTarget,
     this.exampleNative,
     this.valueTarget,
+    this.lineNative,
   });
 
   final String sceneId;
@@ -239,6 +241,11 @@ class TalkTarget {
   /// без окна.
   final String? valueTarget;
 
+  /// THE LESSON'S WHOLE LINE in the learner's language, as the model wrote it — «Мне нужна запись на приём.»
+  /// (`line_native`, LANG-1b §3). Shown as it came: glueing [frameNative] with [exampleNative] disagrees with the frame
+  /// («Мне нужно запись на приём»). Null — a talk from before LANG-1b: no native line is drawn.
+  final String? lineNative;
+
   /// Said in this talk — the same as the wire's `said`.
   bool get said => state == TalkTargetState.said;
 
@@ -252,9 +259,6 @@ class TalkTarget {
   /// pain.» (the line «почти — скажи целиком: …» and «из урока: …» of the sheet 37-8d, the second line of the hint).
   String get lessonLine => saidWith(exampleTarget);
 
-  /// The same line in the learner's language — «У меня есть боль в плече.».
-  String get lessonNative => nativeWith(exampleNative);
-
   /// Окно каркаса на проводе.
   static const window = '___';
 
@@ -265,9 +269,6 @@ class TalkTarget {
   /// Каркас, сказанный значением: «I have pain in my ___.» + «lower back» → «I have pain in my lower back.»
   /// Нет значения — каркас как есть.
   String saidWith(String? value) => _with(frameTarget, value);
-
-  /// То же на родном: «У меня болит ___.» + «поясница» → «У меня болит поясница.»
-  String nativeWith(String? value) => _with(frameNative, value);
 
   static String _with(String frame, String? value) =>
       value == null || value.trim().isEmpty ? frame : frame.replaceFirst(window, value.trim());
@@ -294,6 +295,7 @@ class TalkTarget {
             exampleNative: _some(t['example_native']),
             state: TalkTargetState.fromWire(t['state'], said: t['said'] == true),
             valueTarget: _some(t['value_target']),
+            lineNative: _some(t['line_native']),
           ),
   ];
 

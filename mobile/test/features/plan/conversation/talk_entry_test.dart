@@ -126,13 +126,26 @@ void main() {
           scrollable: find.descendant(of: find.byType(TalkEntryView), matching: find.byType(Scrollable)).first);
       expect(t.said, isFalse, reason: '${t.ref}: до разговора ничего не сказано');
       if (t.exampleTarget == null) {
-        // A construction with no window is said as it is: the whole line, and the lesson has no value to show under it.
+        // A construction with no window is said as it is: the whole line — and under it only the lesson's own line in
+        // the learner's language when the server sent one (`line_native`); no target line, it would repeat the frame.
         expect(find.descendant(of: row, matching: find.text(t.frameTarget)), findsOneWidget, reason: '${t.ref}: каркас целиком');
-        expect(find.descendant(of: row, matching: find.byType(Text)), findsOneWidget, reason: '${t.ref}: без примера');
+        final native = t.lineNative;
+        if (native == null) {
+          expect(find.descendant(of: row, matching: find.byType(Text)), findsOneWidget, reason: '${t.ref}: без примера');
+        } else {
+          expect(find.descendant(of: row, matching: find.text(native)), findsOneWidget, reason: '${t.ref}: строка урока');
+          expect(find.descendant(of: row, matching: find.byType(Text)), findsNWidgets(2), reason: '${t.ref}: и больше ничего');
+        }
         continue;
       }
       expect(find.descendant(of: row, matching: find.text(TalkTarget.window)), findsOneWidget, reason: '${t.ref}: окно пустое');
-      final example = find.descendant(of: row, matching: find.text('${t.saidWith(t.exampleTarget)} · ${t.nativeWith(t.exampleNative)}'));
+      // The native half is the lesson's own line as it came (`line_native`, CLIENT-START §6) — never the frame glued with
+      // the value; a talk from before LANG-1b has none, and the row keeps the target line alone.
+      final native = t.lineNative;
+      final example = find.descendant(
+        of: row,
+        matching: find.text(native == null ? t.saidWith(t.exampleTarget) : '${t.saidWith(t.exampleTarget)} · $native'),
+      );
       expect(example, findsOneWidget, reason: '${t.ref}: пример урока одной строкой');
       expect(tester.widget<Text>(example).style, AppTextSession.meta);
       tops.add(tester.getRect(row).top);

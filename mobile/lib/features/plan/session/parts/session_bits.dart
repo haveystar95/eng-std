@@ -13,6 +13,8 @@ import '../../../../data/plan/session/session_models.dart';
 import '../../../../ui/plan_marks.dart';
 import '../../plan_stage_text.dart';
 
+export 'package:eng_std/ui/dock_button.dart';
+
 /// SHARED BUILDING BLOCKS OF THE DAY SESSION (canvas `session-canvas.dc.html`, series 30–32): sheet, eyebrow, task
 /// line, wave, «listen», the action button and its dock, photo, frame line with a slot, «correct / wrong» reactions.
 /// One widget per type — cards are assembled from them and do not introduce styles of their own.
@@ -296,48 +298,6 @@ class SessionListenButton extends StatelessWidget {
                   : Icon(LucideIcons.volume2, size: big ? 20 : 13, color: AppColors.ink),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// ACTION BUTTON 56 — `#1B1A18`, corner radius 18, 17/600 in paper; disabled — an 8 % backing.
-class SessionDockButton extends StatelessWidget {
-  const SessionDockButton({super.key, required this.label, required this.onTap, this.enabled = true, this.busy = false});
-
-  final String label;
-  final VoidCallback? onTap;
-  final bool enabled;
-
-  /// The answer is still being sent to the server — the button waits.
-  final bool busy;
-
-  @override
-  Widget build(BuildContext context) {
-    final on = enabled && onTap != null && !busy;
-    return Semantics(
-      button: true,
-      enabled: on,
-      label: label,
-      child: GestureDetector(
-        onTap: on
-            ? () {
-                AppHaptics.light();
-                onTap!();
-              }
-            : null,
-        child: AnimatedContainer(
-          duration: AppMotion.sessionChipSelect,
-          height: 56,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: enabled ? AppColors.windowInk : AppColors.sessionSheetShadow,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: busy
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.paper))
-              : Text(label, style: enabled ? AppTextSession.dock : AppTextSession.dock.copyWith(color: AppColors.tertiary)),
         ),
       ),
     );

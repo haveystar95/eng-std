@@ -1,98 +1,162 @@
-import 'package:drift/native.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
-import 'package:eng_std/data/providers.dart';
-import 'package:eng_std/features/profile/build_stamp.dart';
+import 'package:eng_std/data/plan/notify_permission.dart';
+import 'package:eng_std/data/start/account_device_store.dart';
 import 'package:eng_std/features/profile/profile_screen.dart';
+import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/theme/theme.dart';
 
 import '../../support/plan_goldens.dart';
+import '../../support/start_harness.dart';
 
-/// ВЕРСИЯ СБОРКИ НА ПРОФИЛЕ — снимок низа экрана (наряд PLAN-UI, §8).
+/// THE PROFILE AND ITS SHEETS AS GOLDENS (work order CLIENT-START, «Golden»): 42-1a free (top and scrolled), 42-1b
+/// Premium, 42-1 in English, the name sheet 42-2 (a name · empty), the deletion 42-3 (asked · deleting), the reminders
+/// sheet 42-4. The
+/// frames stand under the canvas's 52 status bar; the reminders are on, as the canvas draws them (iOS allowed them).
+/// The canvas's «Подписка ›» row under «Бесплатно» is not drawn until PAY-1 brings the paywall it opens.
 ///
-/// Строка стоит внизу профиля ВСЕГДА, и приёмка начинается с неё: «ту ли сборку я смотрю».
-/// Снимается двумя состояниями, потому что у неё их ровно два и второе — не поломка:
-///
-/// - сборка со скрипта: `--dart-define=BUILD_SHA=… BUILD_AT=…` → «клиент abc1234 · 10.09 23:40»;
-/// - сборка руками (`flutter run`): констант нет → «клиент без метки». Честное «не знаю» вместо
-///   пустоты или выдуманного SHA — иначе строке, ради которой всё и заведено, нельзя верить.
-///
-/// Серверная половина живая (`GET /health`) и в снимке подменена ответом; ошибку и ожидание той же
-/// половины держат тесты `build_stamp_test.dart` — там это дешевле, чем кадром.
+/// ```bash
+/// flutter test --update-goldens test/features/profile/profile_golden_test.dart
+/// ```
+/// The PNGs — `test/goldens/profile/`, named by the frame.
 void main() {
   setUpAll(setUpPlanGoldens);
 
-  Widget profile({required ({String sha, String at}) client}) => ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWith((ref) {
-        final db = AppDatabase.forTesting(NativeDatabase.memory());
-        ref.onDispose(db.close);
-
-        return db;
-      }),
-      authControllerProvider.overrideWith(_ProfileAuth.new),
-      statsProvider.overrideWith(
-        (ref) => Stream.value(
-          Stats(
-            totalWords: 146,
-            learned: 60,
-            mastered: 82,
-            dueToday: 0,
-            reviewsTotal: 1240,
-            streakDays: 12,
-          ),
-        ),
+  Widget profile({
+    AppUser? user,
+    SignInDoor door = SignInDoor.apple,
+    Locale locale = const Locale('ru'),
+    ScriptedAuth? auth,
+  }) {
+    final account = user ?? denUser();
+    return ProviderScope(
+      overrides: accountOverrides(
+        auth: () => auth ?? ScriptedAuth(restored: account),
+        keychain: MemoryKeyValue({'door:${account.id}': door.name}),
+        probe: FakeNotifyProbe(NotifyPermission.granted),
       ),
-      clientBuildProvider.overrideWithValue(client),
-      backendCommitProvider.overrideWith((ref) async => 'def5678'),
-    ],
-    child: planGoldenShell(const ProfileScreen(pushed: true)),
-  );
-
-  /// Низ профиля: строка версии — последняя на экране, и до неё надо доскроллить.
-  Future<void> toBottom(WidgetTester tester) async {
-    await tester.pumpAndSettle();
-    await tester.dragUntilVisible(
-      find.byType(BuildStampLine),
-      find.byType(Scrollable).first,
-      const Offset(0, -300),
+      // The app's shell with the view's own insets (the golden shell's bare MediaQuery would drop the status bar).
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        locale: locale,
+        supportedLocales: const [Locale('ru'), Locale('en')],
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: true), child: child!),
+        home: const ProfileScreen(pushed: true),
+      ),
     );
-    await tester.pumpAndSettle();
   }
 
-  testWidgets('сборка со скрипта — хеш клиента, дата и хеш сервера', (tester) async {
-    await expectPlanGolden(
+  Future<void> shoot(WidgetTester tester, Widget app, String name, {Future<void> Function(WidgetTester)? prime}) {
+    tester.view.padding = const FakeViewPadding(top: 52 * kGoldenDpr, bottom: 34 * kGoldenDpr);
+    addTearDown(tester.view.resetPadding);
+    return expectPlanGolden(
       tester,
-      profile(client: (sha: 'a1b2c3d', at: '10.09 23:40')),
-      'profile/build-stamp-stamped',
-      prime: toBottom,
+      app,
+      'profile/$name',
+      prime: (tester) async {
+        await tester.pumpAndSettle();
+        await prime?.call(tester);
+      },
+    );
+  }
+
+  Future<void> sheet(WidgetTester tester, String row) async {
+    await tester.tap(find.byKey(ValueKey(row)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
+
+  testWidgets('42-1a бесплатный — верх', (tester) async {
+    await shoot(tester, profile(), '42-1a');
+  });
+
+  testWidgets('42-1a бесплатный — прокручен до версии', (tester) async {
+    await shoot(
+      tester,
+      profile(),
+      '42-1a-scrolled',
+      prime: (tester) async {
+        await tester.drag(find.byKey(const ValueKey('profile-list')), const Offset(0, -1200));
+        await tester.pumpAndSettle();
+      },
     );
   });
 
-  testWidgets('сборка мимо скрипта — «без метки», а не пустота', (tester) async {
-    await expectPlanGolden(
+  testWidgets('42-1b Premium — «продлится 25 октября», Google', (tester) async {
+    await shoot(tester, profile(user: denUser(premium: true, until: DateTime(2026, 10, 25)), door: SignInDoor.google), '42-1b');
+  });
+
+  testWidgets('42-1 en — the profile in English', (tester) async {
+    final den = AppUser(
+      id: denUser().id,
+      name: 'Den',
+      profile: denUser().profile,
+      access: denUser().access,
+    );
+    await shoot(tester, profile(user: den, locale: const Locale('en')), '42-1-en');
+  });
+
+  // On iOS, as the phone draws it: a bare caret in the focused field, no Android selection handle under it.
+  testWidgets('42-2 имя — поле и «Готово»', (tester) async {
+    await shoot(tester, profile(), '42-2-name', prime: (tester) => sheet(tester, 'profile-header'));
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  // The field emptied: no label over it — the sheet's title is «Имя» — and the placeholder says what goes there
+  // (доработка CLIENT-START п. 3).
+  testWidgets('42-2 имя — пустое поле: плейсхолдер «Как тебя зовут»', (tester) async {
+    await shoot(
       tester,
-      profile(client: (sha: '', at: '')),
-      'profile/build-stamp-unstamped',
-      prime: toBottom,
+      profile(),
+      '42-2-name-empty',
+      prime: (tester) async {
+        await sheet(tester, 'profile-header');
+        await tester.enterText(find.byKey(const ValueKey('name-field')), '');
+        await tester.pump();
+      },
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  testWidgets('42-3a удалить аккаунт — вопрос', (tester) async {
+    await shoot(
+      tester,
+      profile(),
+      '42-3a-delete',
+      prime: (tester) async {
+        await tester.drag(find.byKey(const ValueKey('profile-list')), const Offset(0, -1200));
+        await tester.pumpAndSettle();
+        await sheet(tester, 'profile-delete');
+      },
     );
   });
-}
 
-class _ProfileAuth extends AuthController {
-  @override
-  Future<AppUser?> build() async => AppUser(
-    id: 'u1',
-    name: 'Денис',
-    email: 'haveystar95@gmail.com',
-    profile: Profile(
-      nativeLanguage: 'ru',
-      targetLanguage: 'en',
-      cefrLevel: 'B1',
-      dailyGoal: 20,
-    ),
-  );
+  testWidgets('42-3b «Удаляем…» — обе двери притихли', (tester) async {
+    final hold = Completer<void>();
+    addTearDown(() {
+      if (!hold.isCompleted) hold.complete();
+    });
+    await shoot(
+      tester,
+      profile(auth: ScriptedAuth(restored: denUser(), deleteHold: hold)),
+      '42-3b-deleting',
+      prime: (tester) async {
+        await tester.drag(find.byKey(const ValueKey('profile-list')), const Offset(0, -1200));
+        await tester.pumpAndSettle();
+        await sheet(tester, 'profile-delete');
+        await tester.tap(find.descendant(of: find.byKey(const ValueKey('delete-sheet')), matching: find.text('Удалить аккаунт')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+      },
+    );
+  });
+
+  testWidgets('42-4 напоминания — выключатель, колесо, «Готово»', (tester) async {
+    await shoot(tester, profile(), '42-4-reminders', prime: (tester) => sheet(tester, 'profile-time'));
+  });
 }

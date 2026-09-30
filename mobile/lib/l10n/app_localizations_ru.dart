@@ -94,26 +94,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeGeneratePlaceholder => 'Например: визит к врачу';
 
   @override
-  String get homeGenerateChipDoctor => 'У врача';
-
-  @override
-  String get homeGenerateChipRent => 'Аренда';
-
-  @override
   String get homeGenerateChipInterview => 'Собеседование';
-
-  @override
-  String homeCollectionProgress(int done, int total) {
-    String _temp0 = intl.Intl.pluralLogic(
-      total,
-      locale: localeName,
-      other: '$done из $total слов',
-      many: '$done из $total слов',
-      few: '$done из $total слов',
-      one: '$done из $total слова',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get tabHome => 'Сегодня';
@@ -171,15 +152,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get collectionLearnSubtitle => 'Новые слова — выучить';
-
-  @override
   String collectionReviewButton(int count) {
     return 'Повторить $count';
   }
-
-  @override
-  String get collectionReviewSubtitle => 'Срок повторения подошёл';
 
   @override
   String get collectionPracticeButton => 'Свободная тренировка';
@@ -284,11 +259,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collectionMoveWordNowhere => 'Других своих коллекций пока нет';
-
-  @override
-  String collectionDefaultUndeletable(String title) {
-    return '«$title» — коллекция для сохранённых слов, её нельзя удалить. Переименовать можно.';
-  }
 
   @override
   String get collectionMenuRename => 'Переименовать';
@@ -527,9 +497,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Текст появляется в поле по мере распознавания — после остановки его можно править руками.';
 
   @override
-  String get generateVoiceRecordingNote => 'Говори — клавиатура вернётся, когда остановишь запись';
-
-  @override
   String get generateVoicePermissionDenied =>
       'Нужен доступ к микрофону и распознаванию речи — включите в Настройках';
 
@@ -547,9 +514,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collectionSheetCreateButton => 'Создать';
-
-  @override
-  String get searchTitle => 'Поиск слова';
 
   @override
   String get searchFieldHint => 'Найти слово';
@@ -823,232 +787,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'День загрузить не удалось. Потяни вниз, чтобы попробовать снова — всё сохранённое на месте.';
 
   @override
-  String get homeGenerateOfflineNote =>
-      'Генерация недоступна без сети. Тема сохранится и уйдёт в работу, когда связь вернётся.';
-
-  @override
-  String get appWordmark => 'Слова';
-
-  @override
-  String get authTagline => 'Слова для реальных ситуаций — от банка до собеседования.';
-
-  @override
-  String get authContinueGoogle => 'Продолжить с Google';
-
-  @override
-  String get authContinueApple => 'Продолжить с Apple';
-
-  @override
-  String get authTerms => 'Условия';
-
-  @override
-  String get authPrivacy => 'Конфиденциальность';
-
-  @override
-  String get authOfflineHint => 'Нет сети. Для первого входа нужно подключение.';
-
-  @override
-  String get authAppleUnavailable => 'Вход через Apple пока недоступен.';
-
-  @override
-  String get onbLangTitle => 'Какой язык учим?';
-
-  @override
-  String get onbLangSubtitle => 'Можно поменять в профиле в любой момент.';
-
-  @override
-  String get onbLevelTitle => 'Насколько уверенно читаешь?';
-
-  @override
-  String get onbLevelSubtitle => 'Примерно — потом уточним по твоим ответам в разборе.';
-
-  @override
-  String onbLevelExample(String level) {
-    return 'На $level в коллекции попадают слова вроде «wire transfer» и «make ends meet».';
-  }
-
-  @override
-  String get onbGoalTitle => 'Сколько слов в день?';
-
-  @override
-  String get onbGoalSubtitle => 'Цель влияет только на напоминания и прогресс.';
-
-  @override
-  String onbGoalMinutes(int count) {
-    return '≈ $count минут в день';
-  }
-
-  @override
-  String get onbGoalRecommended => 'рекомендуем';
-
-  @override
-  String get onbFooterNote =>
-      'Всё это меняется в профиле — уровень, цель и язык не заперты за онбордингом.';
-
-  @override
-  String get onbNext => 'Далее';
-
-  @override
-  String get onbStart => 'Начать';
-
-  @override
-  String get cefrHintA1 => 'начало';
-
-  @override
-  String get cefrHintA2 => 'базовый';
-
-  @override
-  String get cefrHintB1 => 'средний';
-
-  @override
-  String get cefrHintB2 => 'уверенный';
-
-  @override
-  String get cefrHintC1 => 'свободный';
-
-  @override
-  String get cefrHintC2 => 'почти носитель';
-
-  @override
   String get profileTitle => 'Профиль';
 
   @override
-  String get profileSectionLearning => 'Обучение';
-
-  @override
-  String get profileSectionApp => 'Приложение';
-
-  @override
-  String get profileSectionSubscription => 'Подписка';
-
-  @override
-  String get profileSectionAccount => 'Аккаунт';
-
-  @override
-  String get profileRowLevel => 'Уровень';
-
-  @override
-  String get profileRowGoal => 'Дневная цель';
-
-  @override
-  String get profileRowTargetLang => 'Язык изучения';
-
-  @override
-  String get profileRowUiLang => 'Язык интерфейса';
-
-  @override
-  String get profileRowAutoPronounce => 'Автопроизношение';
-
-  @override
-  String get profileAutoPronounceHint => 'Озвучивать слово при показе карточки';
-
-  @override
-  String get profileRowTransliteration => 'Подсказка произношения';
-
-  @override
-  String get profileTransliterationHint => 'Показывать, как читается слово, вашими буквами';
-
-  @override
-  String get profileRowReminders => 'Напоминания';
-
-  @override
-  String get profileRemindersHint => 'Одно в день, если есть что повторить';
-
-  @override
-  String get profileRowReminderTime => 'Время';
-
-  @override
-  String get profileFreeTier => 'Бесплатный тариф';
-
-  @override
-  String get profileFreeTierHint => '3 генерации в день';
-
-  @override
-  String get profileSoon => 'Скоро';
-
-  @override
-  String get profileSignOut => 'Выйти';
-
-  @override
-  String get profileDeleteAccount => 'Удалить аккаунт';
-
-  @override
-  String profileGoalValue(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count слов',
-      many: '$count слов',
-      few: '$count слова',
-      one: '$count слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get uiLangSystem => 'Системный';
-
-  @override
-  String get uiLangRussian => 'Русский';
-
-  @override
-  String get uiLangEnglish => 'English';
-
-  @override
-  String get profileUiLangSheet => 'Язык интерфейса';
-
-  @override
-  String get profileLevelSheet => 'Уровень';
-
-  @override
-  String get profileGoalSheet => 'Дневная цель';
-
-  @override
-  String get reminderSheetTitle => 'Когда напомнить';
-
-  @override
-  String get reminderSheetSubtitle =>
-      'Лучше всего работает время, когда у тебя обычно есть пять свободных минут.';
-
-  @override
   String get commonSave => 'Сохранить';
-
-  @override
-  String get deleteAccountTitle => 'Удалить аккаунт?';
-
-  @override
-  String deleteAccountBody(String words, String streak) {
-    return 'Все данные и прогресс будут удалены безвозвратно: $words, $streak и все коллекции.';
-  }
-
-  @override
-  String deleteAccountWords(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count слов',
-      many: '$count слов',
-      few: '$count слова',
-      one: '$count слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String deleteAccountStreak(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count дней стрика',
-      many: '$count дней стрика',
-      few: '$count дня стрика',
-      one: '$count день стрика',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get deleteAccountConfirm => 'Удалить';
 
   @override
   String get sessionPhaseIntro => 'Знакомство';
@@ -1142,9 +884,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionInstrSpeakExample => 'прочитай предложение вслух';
-
-  @override
-  String get sessionSpeakStart => 'Сказать';
 
   @override
   String get sessionSpeakStop => 'Готово';
@@ -1253,19 +992,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionEchoAgain => 'Попробуй ещё';
 
   @override
-  String get sessionEchoEnable => 'Включить микрофон';
-
-  @override
-  String get sessionHeaderIntro => 'Знакомство';
-
-  @override
-  String get sessionHeaderRecognition => 'Узнавание';
-
-  @override
   String get sessionInstrRecogniseTranslation => 'выбери перевод';
-
-  @override
-  String get sessionRecogniseJustMet => 'вы только что познакомились с этим словом';
 
   @override
   String get ladderStep0 => 'знакомство';
@@ -1300,26 +1027,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String statusCountToSort(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Разобрать $count слова',
-      many: 'Разобрать $count слов',
-      few: 'Разобрать $count слова',
-      one: 'Разобрать $count слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get statusLegendTitle => 'Что значат точки';
 
   @override
   String get poolKnownLegend => 'Слово помечено «знаю» — по лестнице оно не шло.';
-
-  @override
-  String get ladderTitle => 'ЛЕСТНИЦА СЛОВА';
 
   @override
   String get ladderKnownDash => 'знаю';
@@ -1486,35 +1197,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionListenReplay => 'Повторить озвучку';
 
   @override
-  String get sessionInstrSituationalHear => 'выбери, что он сказал';
-
-  @override
-  String get sessionInstrSituationalSay => 'выбери, что ответишь';
-
-  @override
-  String get sessionInstrAssembleTurn => 'собери свой ответ из блоков';
-
-  @override
-  String get sessionSceneRunHint => 'скажи свою реплику — текста не будет';
-
-  @override
-  String get sessionInstrSituationalAsk => 'выбери, что спросишь';
-
-  @override
-  String get sessionSituationLabel => 'Ситуация';
-
-  @override
-  String get sessionSituationHearLabel => 'Сейчас услышите';
-
-  @override
-  String get sessionSituationRevealText => 'Показать текст';
-
-  @override
-  String sessionSituationTask(String outcome) {
-    return 'Твоя задача — $outcome.';
-  }
-
-  @override
   String get sessionListenReplaySlow => 'Замедленно';
 
   @override
@@ -1522,35 +1204,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionDailyNewLimit => 'Дневной лимит новых слов достигнут. Возвращайся завтра';
-
-  @override
-  String sessionLoadError(String error) {
-    return 'Не удалось загрузить сессию: $error';
-  }
-
-  @override
-  String get authErrorOffline => 'Нет подключения к интернету. Для входа нужна сеть.';
-
-  @override
-  String get authErrorGoogleUnsupported => 'Вход через Google не поддерживается на этой платформе.';
-
-  @override
-  String get authErrorCancelled => 'Вход отменён.';
-
-  @override
-  String get authErrorGoogle => 'Не удалось войти через Google. Попробуй ещё раз.';
-
-  @override
-  String get authErrorGoogleToken => 'Не удалось получить токен Google.';
-
-  @override
-  String get authErrorLoginFailed => 'Не удалось войти. Попробуй ещё раз.';
-
-  @override
-  String get authErrorApple => 'Вход через Apple пока недоступен.';
-
-  @override
-  String get authErrorAppleToken => 'Не удалось получить токен Apple.';
 
   @override
   String get practiceDialogEntry => 'Разговор · 3 мин';
@@ -1646,9 +1299,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get storeSegmentReady => 'Готовые';
-
-  @override
-  String get storeSectionOther => 'Разное';
 
   @override
   String storeWordsCount(int count) {
@@ -1791,32 +1441,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallDevPurchased => 'Premium активирован (dev-режим)';
 
   @override
-  String get paywallNeedsRealPremium => 'Нужен настоящий Premium (StoreKit — отдельный блок)';
-
-  @override
-  String get profileTryPremium => 'Попробовать Premium';
-
-  @override
-  String profileFreeTierReset(String time) {
-    return '3 генерации в день · сбрасываются в $time';
-  }
-
-  @override
-  String get profilePremiumActive => 'Premium';
-
-  @override
-  String get profilePremiumBadge => 'активна';
-
-  @override
-  String get profilePremiumHint => 'Подписка активна';
-
-  @override
-  String get profileManageSubscription => 'Управлять подпиской';
-
-  @override
-  String get profileRestorePurchases => 'Восстановить покупки';
-
-  @override
   String get profileSectionDev => 'Разработка';
 
   @override
@@ -1862,9 +1486,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get syncUnreachableBanner => 'Сервер недоступен · показываю сохранённое';
-
-  @override
-  String get poolNotStudyingNote => 'Слово на полке — ты его пока не учишь.';
 
   @override
   String get poolEnrollAction => 'Учить это слово';
@@ -1935,18 +1556,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get myWordsNothingFound => 'Ничего не нашлось';
 
   @override
-  String get topicSessionAction => 'Тренировка по теме';
-
-  @override
-  String get topicSessionTitle => 'Выбери тему';
-
-  @override
   String homeStreakBadge(int count) {
     return 'Стрик $count';
   }
-
-  @override
-  String get homeSessionCardTitle => 'Сессия на сегодня';
 
   @override
   String get challengeLabel => 'Слово-вызов';
@@ -2062,117 +1674,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String homeSessionPartRepeat(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count повторить',
-      many: '$count повторить',
-      few: '$count повторить',
-      one: '$count повторить',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeSessionPartNew(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count новых',
-      many: '$count новых',
-      few: '$count новых',
-      one: '$count новое',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeSessionPartTriage(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count разобрать',
-      many: '$count разобрать',
-      few: '$count разобрать',
-      one: '$count разобрать',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeSessionStart => 'Начать';
-
-  @override
-  String homeInWorkTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'В работе — $count слова',
-      many: 'В работе — $count слов',
-      few: 'В работе — $count слова',
-      one: 'В работе — $count слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeInWorkWaiting(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count ждут очереди',
-      many: '$count ждут очереди',
-      few: '$count ждут очереди',
-      one: '$count ждёт очереди',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeInWorkPace(int perDay, int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'при $perDay в день новым до очереди ~$days дня',
-      many: 'при $perDay в день новым до очереди ~$days дней',
-      few: 'при $perDay в день новым до очереди ~$days дня',
-      one: 'при $perDay в день новым до очереди ~$days день',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeInWorkQueueStands(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'возьмёте $count сейчас — очередь двинется сегодня',
-      many: 'возьмёте $count сейчас — очередь двинется сегодня',
-      few: 'возьмёте $count сейчас — очередь двинется сегодня',
-      one: 'возьмёте $count сейчас — очередь двинется сегодня',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeEdgeTitle => 'На грани забывания';
-
-  @override
-  String get homeEdgeTomorrow => 'выпадет завтра';
-
-  @override
-  String homeEdgeInDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'через $count дня',
-      many: 'через $count дней',
-      few: 'через $count дня',
-      one: 'через $count день',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get homeHardestTitle => 'Далось труднее всего';
@@ -2186,19 +1688,6 @@ class AppLocalizationsRu extends AppLocalizations {
       many: '$count ошибок',
       few: '$count ошибки',
       one: '$count ошибка',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeSectionCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count слова',
-      many: '$count слов',
-      few: '$count слова',
-      one: '$count слово',
     );
     return '$_temp0';
   }
@@ -2256,11 +1745,6 @@ class AppLocalizationsRu extends AppLocalizations {
       one: 'карточка $position из $total',
     );
     return '$_temp0';
-  }
-
-  @override
-  String homeDoneOf(int done, int total) {
-    return '$done из $total';
   }
 
   @override
@@ -2346,25 +1830,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get homeContinueLabel => 'Продолжить';
-
-  @override
-  String homeContinueAbandoned(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'брошено $count дня назад',
-      many: 'брошено $count дней назад',
-      few: 'брошено $count дня назад',
-      one: 'брошено $count день назад',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeGenerateRow => 'Собрать коллекцию по теме';
-
-  @override
   String homeStoreLink(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2444,28 +1909,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeFirstDayTitle => 'Начнём с первого набора';
 
   @override
-  String homeFirstDayReadyTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Взять готовый набор ($count темы)',
-      many: 'Взять готовый набор ($count тем)',
-      few: 'Взять готовый набор ($count темы)',
-      one: 'Взять готовый набор ($count тема)',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeFirstDayReadyHint => 'Слова уже отобраны, озвучены и размечены по уровню';
-
-  @override
-  String get homeFirstDayOwnTitle => 'Собрать свою по описанию';
-
-  @override
-  String get homeFirstDayOwnHint => 'Опишите ситуацию — ИИ подберёт слова и фразы под неё';
-
-  @override
   String homeSortOffer(int count, String title) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2495,26 +1938,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeSortFirstTitle => 'Пора разобрать слова';
 
   @override
-  String get onbNativeTitle => 'На каком языке показывать переводы?';
-
-  @override
-  String get onbNativeSubtitle =>
-      'На нём будут переводы, объяснения и планы подготовки. Можно поменять в профиле.';
-
-  @override
-  String get profileRowNativeLang => 'Родной язык';
-
-  @override
-  String get profileNativeLangHint => 'Существующие коллекции останутся как есть';
-
-  @override
   String profileNativeLangConfirmTitle(String language) {
     return 'Переводы на «$language»?';
   }
 
   @override
   String get profileNativeLangConfirmBody =>
-      'Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.';
+      'Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.';
 
   @override
   String get tabPlan => 'План';
@@ -2524,44 +1954,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get commonBack => 'Назад';
-
-  @override
-  String sessionSayIntent(String intent) {
-    return 'Скажи: $intent';
-  }
-
-  @override
-  String homePlanCardBadge(int index, int total) {
-    return 'План · день $index из $total';
-  }
-
-  @override
-  String homePlanCardEventIn(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Событие через $days дня',
-      many: 'Событие через $days дней',
-      few: 'Событие через $days дня',
-      one: 'Событие через $days день',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homePlanCardEventToday => 'Событие сегодня';
-
-  @override
-  String get homePlanCardContinue => 'Продолжить';
-
-  @override
-  String get homePlanInviteTitle => 'Есть дата и цель?';
-
-  @override
-  String get homePlanInviteBody => 'Соберём дни подготовки — от приёма у врача до собеседования.';
-
-  @override
-  String get homePlanInviteCta => 'Составить';
 
   @override
   String get devVoicesTitle => 'Голоса реплик';
@@ -2590,33 +1982,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devVoicesFavourite => 'Фаворит сессии';
-
-  @override
-  String devVoiceTrouble(int silent, int failed) {
-    return 'Озвучка: $silent реплик системным голосом, $failed не скачалось';
-  }
-
-  @override
-  String get devQaClockTitle => 'QA · «сегодня» плана';
-
-  @override
-  String devQaClockShift(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'сдвиг: $days дней',
-      few: 'сдвиг: $days дня',
-      one: 'сдвиг: $days день',
-      zero: 'без сдвига',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get devQaClockPlus => '+1 день';
-
-  @override
-  String get devQaClockReset => 'Сбросить';
 
   @override
   String get planTitle => 'План';
@@ -2887,12 +2252,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planPlateBuildingSub => 'около минуты · можно закрыть приложение';
 
   @override
-  String get planPlateFailedTitle => 'День не собрался';
-
-  @override
-  String planPlateFailedSub(int n) {
-    return 'Сеть пропала. Маршрут на месте, пропал только день $n';
-  }
+  String get planPlateFailedTitle => 'Не получилось собрать день';
 
   @override
   String get planPlateCtaRetry => 'Повторить';
@@ -3482,30 +2842,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planWindowSheetClose => 'Закрыть';
 
   @override
-  String get profileRowSounds => 'Звуки';
-
-  @override
-  String get profileSoundsHint => 'Верно · неверно · этап закрыт · день закрыт';
-
-  @override
-  String get profileRowSessionSounds => 'Звуки в сессии';
-
-  @override
-  String get profileSessionSoundsHint => 'Верно · мимо · запись · этап пройден';
-
-  @override
-  String dayCards(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n карточек',
-      few: '$n карточки',
-      one: '$n карточка',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String dayMinutes(int n) {
     String _temp0 = intl.Intl.pluralLogic(
       n,
@@ -4051,10 +3387,13 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get planTalkEntryRuleStart => 'Собеседник начнёт первым. Отвечай и спрашивай сам.';
+  String get planTalkEntryRuleStart => 'Собеседник начнёт первым. Отвечай и спрашивай сам.';
 
   @override
-  String get planTalkEntryRuleRescue => 'Не понял — нажми «Не понял», и он повторит проще.';
+  String planTalkEntryRuleRescue(String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {'female': 'она', 'other': 'он'});
+    return 'Не понял — нажми «Не понял», и $_temp0 повторит проще.';
+  }
 
   @override
   String get planTalkEntryRuleCounts => 'Считается: сказал сам, фразы дня, понял вопросы.';
@@ -4413,12 +3752,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planVoiceInProfile => 'Можно поменять в профиле';
 
   @override
-  String get profileRowVoice => 'Голос своих реплик';
-
-  @override
-  String get profileVoiceUnset => 'не выбран';
-
-  @override
   String get planTalkConstructions => 'Конструкции в разговоре';
 
   @override
@@ -4465,8 +3798,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planTalkSceneContinue => 'Продолжить';
 
   @override
-  String planTalkEntryRuleStartRole(String role) {
-    return '$role начнёт первым. Отвечай и спрашивай сам.';
+  String planTalkEntryRuleStartRole(String role, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$role начнёт первой.',
+      'other': '$role начнёт первым.',
+    });
+    return '$_temp0 Отвечай и спрашивай сам.';
   }
 
   @override
@@ -4494,4 +3831,356 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planWindowTalkReplayLimit => 'Разговор сегодня уже повторяли — вернись завтра';
+
+  @override
+  String get startSlogan => 'Готов говорить.';
+
+  @override
+  String get startSignInApple => 'Войти с Apple';
+
+  @override
+  String get startSignInGoogle => 'Войти с Google';
+
+  @override
+  String get startSignInFailed => 'Не удалось войти. Попробуй ещё раз';
+
+  @override
+  String startLegal(String terms, String privacy) {
+    return 'Продолжая, ты принимаешь $terms и $privacy';
+  }
+
+  @override
+  String get startLegalTerms => 'Правила';
+
+  @override
+  String get startLegalPrivacy => 'Конфиденциальность';
+
+  @override
+  String get introSkip => 'Пропустить';
+
+  @override
+  String get introStart => 'Начать';
+
+  @override
+  String get introATitle => 'Скоро важный\nразговор.\nТы будешь готов.';
+
+  @override
+  String get introAThought =>
+      'Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.';
+
+  @override
+  String get introALineNative => 'Я хочу записаться на приём.';
+
+  @override
+  String get introSceneAirport => 'аэропорт';
+
+  @override
+  String get introSceneBank => 'банк';
+
+  @override
+  String get introSceneInterview => 'собеседование';
+
+  @override
+  String get introSceneRent => 'аренда';
+
+  @override
+  String get introSceneDoctor => 'врач';
+
+  @override
+  String get introBTitle => 'Язык —\nпод каждый разговор.';
+
+  @override
+  String get introBThought =>
+      'Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.';
+
+  @override
+  String get introCBrow => '6 дней · 20 минут в день';
+
+  @override
+  String get introCToday => 'сегодня';
+
+  @override
+  String get introCDate => '2 октября';
+
+  @override
+  String get introCEvent => 'приём у врача';
+
+  @override
+  String get introStageWords => 'Слова';
+
+  @override
+  String get introStagePhrases => 'Фразы';
+
+  @override
+  String get introStageDialogue => 'Диалог';
+
+  @override
+  String get introStageListen => 'Слушаю';
+
+  @override
+  String get introStageSpeak => 'Говорю';
+
+  @override
+  String get introStageTalk => 'Разговор';
+
+  @override
+  String get introCTitle => 'Двадцать минут\nв день — вслух.';
+
+  @override
+  String get introCThought =>
+      'Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.';
+
+  @override
+  String get introDLineNative => 'Доброе утро. Что вас беспокоит?';
+
+  @override
+  String get introDTap => 'тап — говорить';
+
+  @override
+  String get introDTitle => 'Живой разговор с ИИ —\nне по сценарию.';
+
+  @override
+  String get introDThought =>
+      'Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.';
+
+  @override
+  String get introECaption => 'три подборки из стора · свои слова из планов';
+
+  @override
+  String get introECoverCity => 'Быт и город';
+
+  @override
+  String get introECoverHealth => 'Здоровье';
+
+  @override
+  String get introECoverWork => 'Работа';
+
+  @override
+  String introEWordCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count слова',
+      many: '$count слов',
+      few: '$count слова',
+      one: '$count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get introETitle => 'Слова остаются\nс тобой.';
+
+  @override
+  String get introEThought =>
+      'Свои коллекции и готовые подборки. Повторяй между планами — ничего не пропадёт.';
+
+  @override
+  String get accountSignedInApple => 'Вход через Apple';
+
+  @override
+  String get accountSignedInGoogle => 'Вход через Google';
+
+  @override
+  String get accountGroupSubscription => 'Подписка';
+
+  @override
+  String get accountFree => 'Бесплатно';
+
+  @override
+  String get accountFreeValue => 'один план, день 1';
+
+  @override
+  String get accountPremium => 'Premium';
+
+  @override
+  String accountPremiumUntil(String date) {
+    return 'продлится $date';
+  }
+
+  @override
+  String get accountPremiumForever => 'бессрочно';
+
+  @override
+  String get accountManageSubscription => 'Управлять подпиской';
+
+  @override
+  String get accountRestorePurchases => 'Восстановить покупки';
+
+  @override
+  String get accountGroupLearning => 'Обучение';
+
+  @override
+  String get accountVoice => 'Голос ученика';
+
+  @override
+  String get accountVoiceMale => 'мужской';
+
+  @override
+  String get accountVoiceFemale => 'женский';
+
+  @override
+  String get accountSessionSounds => 'Звуки в сессии';
+
+  @override
+  String get accountUiLanguage => 'Язык интерфейса';
+
+  @override
+  String get accountUiRussian => 'Русский';
+
+  @override
+  String get accountUiEnglish => 'English';
+
+  @override
+  String get accountNativeLanguage => 'Родной язык';
+
+  @override
+  String get accountGroupReminders => 'Напоминания';
+
+  @override
+  String get accountRemind => 'Напоминать о дне';
+
+  @override
+  String get accountTime => 'Время';
+
+  @override
+  String get accountGroupApp => 'Приложение';
+
+  @override
+  String get accountTerms => 'Правила';
+
+  @override
+  String get accountPrivacy => 'Конфиденциальность';
+
+  @override
+  String get accountSupport => 'Поддержка';
+
+  @override
+  String get accountSupportValue => 'письмо';
+
+  @override
+  String get accountRate => 'Оценить Ritora';
+
+  @override
+  String get accountSignOut => 'Выйти';
+
+  @override
+  String get accountDelete => 'Удалить аккаунт';
+
+  @override
+  String get accountNameTitle => 'Имя';
+
+  @override
+  String get accountNameHint => 'Как тебя зовут';
+
+  @override
+  String get accountDone => 'Готово';
+
+  @override
+  String get accountDeleteTitle => 'Удалить аккаунт?';
+
+  @override
+  String accountDeleteBodyPlan(String plan) {
+    return 'Исчезнут план «$plan», пройденные дни и настройки. Восстановить их будет нельзя.';
+  }
+
+  @override
+  String get accountDeleteBody =>
+      'Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.';
+
+  @override
+  String get accountDeleteNote => 'Подписку отмени в App Store';
+
+  @override
+  String get accountDeleteFailed => 'Не удалось удалить. Попробуй ещё раз';
+
+  @override
+  String get accountDeleting => 'Удаляем…';
+
+  @override
+  String get accountRemindersTitle => 'Напоминания';
+
+  @override
+  String get accountRemindersNote => 'Мы напоминаем раз в день, когда ждёт следующий день плана';
+
+  @override
+  String get accountRemindersDenied => 'Уведомления выключены в Настройках iOS — включить там';
+
+  @override
+  String notifyAskTitle(int day, String time) {
+    return 'Напомнить про день $day завтра в $time?';
+  }
+
+  @override
+  String get notifyAskBody => 'Раз в день, без лишнего';
+
+  @override
+  String get notifyAskLater => 'Не сейчас';
+
+  @override
+  String get notifyAskYes => 'Напоминать';
+
+  @override
+  String get micAskTitle => 'Ritora слушает, как ты говоришь';
+
+  @override
+  String get micAskBody =>
+      'Микрофон нужен, чтобы говорить: в «Диалоге», «Говорю сам» и в разговоре';
+
+  @override
+  String get micAskLater => 'Позже';
+
+  @override
+  String get micAskAllow => 'Разрешить микрофон';
+
+  @override
+  String get planPlateNoNetwork => 'Нет сети';
+
+  @override
+  String get planPlateBySubscription => 'по подписке';
+
+  @override
+  String get planPlateOpensWithSubscription => 'Откроется с подпиской';
+
+  @override
+  String get planPlateSubscription => 'Подписка';
+
+  @override
+  String get planRouteMetaOpensWithSubscription => 'откроется с подпиской';
+
+  @override
+  String get planRouteMetaBySubscription => 'по подписке';
+
+  @override
+  String get planKitLabel => 'Спасательный набор';
+
+  @override
+  String planKitSub(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n фразы на любой случай',
+      many: '$n фраз на любой случай',
+      few: '$n фразы на любой случай',
+      one: '$n фраза на любой случай',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planKitAll(int n) {
+    return 'все $n →';
+  }
+
+  @override
+  String get planKitCollapse => 'свернуть';
+
+  @override
+  String get planEntrySubscriptionTitle => 'Второй план — по подписке';
+
+  @override
+  String get planEntryActiveLimitTitle => 'Не больше трёх планов сразу';
+
+  @override
+  String get planEntryToTab => 'К плану';
 }

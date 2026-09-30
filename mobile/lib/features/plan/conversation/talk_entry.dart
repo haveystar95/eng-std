@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/paper_switch.dart';
 
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/plan/conversation/conversation_models.dart';
@@ -130,7 +131,7 @@ class TalkEntryView extends StatelessWidget {
                         const SizedBox(height: 24),
                         for (final (i, (icon, line)) in [
                           (_RuleIcon.talk, _firstRule(l)),
-                          (_RuleIcon.rescue, l.planTalkEntryRuleRescue),
+                          (_RuleIcon.rescue, l.planTalkEntryRuleRescue(_gender)),
                           (_RuleIcon.counts, l.planTalkEntryRuleCounts),
                         ].indexed) ...[
                           if (i > 0) const SizedBox(height: 14),
@@ -169,7 +170,7 @@ class TalkEntryView extends StatelessWidget {
                   ],
                   _NoHintsRow(value: noHints, onChanged: onNoHints),
                   const SizedBox(height: 14),
-                  SessionDockButton(
+                  DockButton(
                     key: const ValueKey('talk-entry-start'),
                     label: l.planTalkStart,
                     busy: starting,
@@ -186,11 +187,20 @@ class TalkEntryView extends StatelessWidget {
 }
 
 extension on TalkEntryView {
+  /// The role the first rule names: the first scene's, on a talk of several scenes (37-5b); none on the day's.
+  String get _role => scenes.length > 1 ? scenes.first.role.trim() : '';
+
+  /// Whom the rules speak of: the named role, by the server's gender (`window.sources[].partner_gender`, FIX-4c §3) —
+  /// «Регистратор начнёт первой», «…и она повторит проще» (доработка CLIENT-START п. 2); no role — `other`,
+  /// «Собеседник … он».
+  String get _gender => _role.isEmpty ? 'other' : (scenes.first.female ? 'female' : 'male');
+
   /// «Собеседник начнёт первым…» — or, on a talk of several scenes, the first scene's role as the plan names it:
   /// «Регистратор начнёт первым…» (37-5b). The day keeps its line (наряд CLIENT-FIX-4 §5: «в дне — как было»).
   String _firstRule(AppLocalizations l) {
-    final role = scenes.length > 1 ? scenes.first.role.trim() : '';
-    return role.isEmpty ? l.planTalkEntryRuleStart : l.planTalkEntryRuleStartRole(role);
+    final role = _role;
+    if (role.isEmpty) return l.planTalkEntryRuleStart;
+    return l.planTalkEntryRuleStartRole(role, _gender);
   }
 
   /// 37-5b: a scene's caps and its constructions, 14 apart, the grey «Разговор идёт сцена за сценой» between two
@@ -216,8 +226,8 @@ extension on TalkEntryView {
 }
 
 /// A SCENE OF A TALK THAT WALKS SEVERAL (кадр 37-5b): its id, its name, its role in the nominative as the plan names it,
-/// and its constructions in the server's order.
-typedef TalkEntryScene = ({String sceneId, String title, String role, List<TalkTarget> targets});
+/// whether the role is a woman (`partner_gender`), and its constructions in the server's order.
+typedef TalkEntryScene = ({String sceneId, String title, String role, bool female, List<TalkTarget> targets});
 
 /// THE TALK ROW'S CONSTRUCTIONS BY SCENE (37-5b) — in the order the day names its scenes (`window.sources[]`,
 /// [order]); a scene that list does not name goes after them, in the order its constructions came. The name is the
@@ -225,7 +235,7 @@ typedef TalkEntryScene = ({String sceneId, String title, String role, List<TalkT
 /// talk lists its constructions as one block (37-5).
 List<TalkEntryScene> talkEntryScenes(
   List<TalkTarget> targets, {
-  required List<({String sceneId, String title})> order,
+  required List<({String sceneId, String title, bool female})> order,
   required PlanScene? Function(String sceneId) sceneById,
 }) {
   final byScene = <String, List<TalkTarget>>{};
@@ -234,6 +244,7 @@ List<TalkEntryScene> talkEntryScenes(
   }
   if (byScene.length < 2) return const [];
   final named = {for (final s in order) s.sceneId: s.title};
+  final female = {for (final s in order) s.sceneId: s.female};
   final ids = [
     for (final s in order)
       if (byScene.containsKey(s.sceneId)) s.sceneId,
@@ -246,6 +257,7 @@ List<TalkEntryScene> talkEntryScenes(
         sceneId: id,
         title: named[id] ?? sceneById(id)?.titleNative ?? '',
         role: sceneById(id)?.partnerRoleNative ?? '',
+        female: female[id] ?? false,
         targets: byScene[id]!,
       ),
   ];
@@ -365,27 +377,7 @@ class _NoHintsRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              AnimatedContainer(
-                key: const ValueKey('talk-entry-no-hints'),
-                duration: AppMotion.sessionChipSelect,
-                width: 44,
-                height: 26,
-                padding: const EdgeInsets.all(3),
-                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-                decoration: BoxDecoration(
-                  color: value ? AppColors.verdictKnown : AppColors.sessionToggleTrack,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.paper,
-                    boxShadow: [BoxShadow(color: AppColors.sessionToggleKnobShadow, blurRadius: 3, offset: Offset(0, 1))],
-                  ),
-                ),
-              ),
+              PaperSwitch(key: const ValueKey('talk-entry-no-hints'), value: value),
             ],
           ),
         ),

@@ -147,6 +147,12 @@ class AppConfig {
     defaultValue: 'haveystar95@gmail.com',
   );
 
+  /// «Правила» and «Конфиденциальность» — the two documents the sign-in's legal line and the profile link to (41-4,
+  /// 42-1). No such pages exist yet: empty — the links are drawn and lead nowhere (named in the CLIENT-START report);
+  /// the owner sets them at build time: `--dart-define=TERMS_URL=https://… --dart-define=PRIVACY_URL=https://…`.
+  static const String termsUrl = String.fromEnvironment('TERMS_URL');
+  static const String privacyUrl = String.fromEnvironment('PRIVACY_URL');
+
   /// Optional web/server client id (used as serverClientId if set).
   static const String googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',

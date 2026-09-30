@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/day_plate.dart' show BrassOutlineButton;
 
 /// КНОПКА ГЛАВНОГО ДЕЙСТВИЯ (кадры 23-0a…0d): одна, прижата к низу поверх ленты — 56, скругление
 /// 18, `#1B1A18`; над ней 24 бумажного градиента, в который уходит лента. Градиент касаний не ловит:
@@ -20,6 +21,7 @@ class WindowActionBar extends StatelessWidget {
     this.secondaryLabel,
     this.onSecondary,
     this.busy = false,
+    this.lockedNote,
   });
 
   final String label;
@@ -27,6 +29,10 @@ class WindowActionBar extends StatelessWidget {
   final String? secondaryLabel;
   final VoidCallback? onSecondary;
   final bool busy;
+
+  /// A day that opens with a subscription (23-0a «по подписке»): this note 13 grey on the left and [label] as the brass
+  /// outline button on the right, in place of the charcoal button.
+  final String? lockedNote;
 
   static const fade = 24.0;
   static const button = 56.0;
@@ -92,6 +98,18 @@ class WindowActionBar extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
               ],
+              if (lockedNote case final note?)
+                SizedBox(
+                  height: button,
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(note, style: AppTextStart.lockedNote)),
+                      const SizedBox(width: 12),
+                      BrassOutlineButton(key: const ValueKey('window-action'), label: label, onPaper: true, onTap: onTap),
+                    ],
+                  ),
+                )
+              else
               Semantics(
                 button: true,
                 child: GestureDetector(

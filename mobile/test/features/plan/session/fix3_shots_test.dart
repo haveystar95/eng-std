@@ -45,6 +45,7 @@ import '../../../support/nbsp.dart';
 import '../../../support/plan_goldens.dart' show planFixture, planFrom, planGoldenApp, setUpPlanGoldens;
 import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
+import '../../../support/speech_probe_channel.dart';
 import '../../../support/talk_harness.dart';
 
 /// СНИМКИ НАРЯДА FIX-3, ОКНО 2 (§9) — каждый изменённый экран и состояние кадром 390 × 844 @2×, для архитектора ДО
@@ -107,6 +108,8 @@ void main() {
       DayWindow.fromJson(serverFixtureJson(day)['window']).stages.firstWhere((s) => s.stage == PlanStage.conversation);
 
   setUpAll(setUpPlanGoldens);
+  // A microphone card asks iOS about the microphone as it comes up (41-3, CLIENT-START §4): here iOS has answered yes.
+  mockSpeechProbe();
 
   Map<String, dynamic> dayJson(String name) => serverFixtureJson(name);
   Map<String, dynamic> windowOf(Map<String, dynamic> json) => json['window'] as Map<String, dynamic>;

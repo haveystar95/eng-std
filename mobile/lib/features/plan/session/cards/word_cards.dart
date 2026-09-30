@@ -154,7 +154,7 @@ class _WordIntroCardState extends State<WordIntroCard> {
           ],
         ],
       ),
-      bottom: SessionDockButton(
+      bottom: DockButton(
         label: l.planSessionUnderstood,
         busy: env.advancing,
         onTap: () {
@@ -563,8 +563,8 @@ class _WordAssembleCardState extends State<WordAssembleCard> {
         ],
       ),
       bottom: _correct == false
-          ? SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()))
-          : SessionDockButton(label: l.planSessionCheck, enabled: _placed.isNotEmpty && !answered, onTap: _check),
+          ? DockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()))
+          : DockButton(label: l.planSessionCheck, enabled: _placed.isNotEmpty && !answered, onTap: _check),
     );
   }
 }

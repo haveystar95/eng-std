@@ -569,7 +569,7 @@ class TalkSceneCard extends StatelessWidget {
                   TalkConstructionRow(target: t),
                 ],
                 if (targets.isNotEmpty) const SizedBox(height: 14),
-                SessionDockButton(key: const ValueKey('talk-scene-continue'), label: l.planTalkSceneContinue, onTap: onContinue),
+                DockButton(key: const ValueKey('talk-scene-continue'), label: l.planTalkSceneContinue, onTap: onContinue),
               ],
             ),
           ),
@@ -622,7 +622,7 @@ class TalkEndSheet extends StatelessWidget {
             Text(l.planMinutesCount(m), key: const ValueKey('talk-end-minutes'), style: AppTextSession.body),
           ],
           const SizedBox(height: 24),
-          SessionDockButton(key: const ValueKey('talk-summary-action'), label: l.planTalkSummaryAction, onTap: onSummary),
+          DockButton(key: const ValueKey('talk-summary-action'), label: l.planTalkSummaryAction, onTap: onSummary),
         ],
       ),
     );

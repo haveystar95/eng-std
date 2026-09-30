@@ -20,11 +20,13 @@ import '../../../data/plan/session/session_summary.dart';
 import '../../../data/plan/session/speech_match.dart';
 import '../../../data/providers.dart';
 import '../../../data/speech/speech_turn.dart' show SpeechTurnConfig;
+import '../../profile/profile_screen.dart';
 import '../../profile/qa_report_button.dart' show QaReportHidden;
 import '../conversation/conversation_controller.dart';
 import '../conversation/talk_entry.dart';
 import '../conversation/talk_screen.dart';
 import '../conversation/talk_summary.dart';
+import '../notify_prompt.dart';
 import '../plan_providers.dart';
 import 'cards/card_host.dart';
 import 'cards/card_kit.dart';
@@ -32,6 +34,7 @@ import 'parts/session_bits.dart';
 import 'parts/session_chrome.dart';
 import 'parts/session_stage.dart';
 import 'session_controller.dart';
+import 'mic_ask.dart';
 import 'session_mic.dart';
 import 'session_texts.dart';
 import 'session_voice.dart';
@@ -162,12 +165,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   }
 
   /// The card's microphone in the target language's locale.
+  ///
+  /// THE FIRST MICROPHONE OF A CARD ASKS FIRST (41-3, work order CLIENT-START §4): while iOS has not been asked, a card
+  /// that shows a microphone raises the pre-permission sheet; the system's dialogs come only after «Разрешить
+  /// микрофон». «Позже» — this card offers «Skip» (the «Microphone needed» screen), and the next microphone card asks
+  /// again. A card that makes another microphone for itself (a new round, another chip) inherits its answer.
   SessionMic Function(String expected, List<String> contextual) _makeMic(String localeId) => (expected, contextual) {
     final strings = <String>{
       for (final s in contextual)
         if (s.trim().isNotEmpty) s.trim(),
     };
-    return SessionMic(
+    final mic = SessionMic(
       recognizer: ref.read(speechRecognizerProvider),
       diagnostics: ref.read(speechDiagnosticsProvider),
       localeId: localeId,
@@ -175,7 +183,40 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       contextualStrings: strings.take(50).toList(),
       rules: _session.day?.speech ?? SpeechRules.none,
     );
+    final serial = _session.cardSerial;
+    if (_micDeferredFor == serial) {
+      mic.markUnavailable(blockedInSettings: false);
+    } else if (_micAskedFor != serial) {
+      _micAskedFor = serial;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final allowed = await _askMic(localeId);
+        if (allowed || !mounted || _session.cardSerial != serial) return;
+        _micDeferredFor = serial;
+        mic.markUnavailable(blockedInSettings: false);
+      });
+    }
+    return mic;
   };
+
+  int? _micAskedFor;
+  int? _micDeferredFor;
+  bool _micSheetUp = false;
+
+  /// True — the card may listen (allowed now, or nothing to ask). One sheet at a time: a second card asking while the
+  /// first sheet is up waits for nothing and offers «Skip».
+  Future<bool> _askMic(String localeId) async {
+    if (_micSheetUp || !mounted) return false;
+    _micSheetUp = true;
+    try {
+      return await askMicOnce(
+        context,
+        probe: () => ref.read(speechDiagnosticsProvider).refresh(localeId),
+        allow: () => ref.read(speechRecognizerProvider).prepare(),
+      );
+    } finally {
+      _micSheetUp = false;
+    }
+  }
 
   Future<void> _openSettings() async {
     try {
@@ -223,7 +264,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     switch (_session.phase) {
       case SessionPhase.loading:
         return const Center(child: CircularProgressIndicator(color: AppColors.ink));
-      case SessionPhase.building || SessionPhase.lessonFailed:
+      case SessionPhase.building || SessionPhase.lessonFailed || SessionPhase.lockedBySubscription:
         return _lessonPlate(context);
       case SessionPhase.failed:
         return Center(
@@ -234,7 +275,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
               children: [
                 Text(l.planSessionLoadFailed, textAlign: TextAlign.center, style: AppTextSession.body),
                 const SizedBox(height: 18),
-                SessionDockButton(label: l.planTabRetry, onTap: () => unawaited(_session.load())),
+                DockButton(label: l.planTabRetry, onTap: () => unawaited(_session.load())),
                 const SizedBox(height: 8),
                 TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l.planWindowBack, style: AppTextSession.skip)),
               ],
@@ -267,6 +308,37 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final route = plan.days.where((d) => d.number == widget.number).firstOrNull;
     final title = (route == null ? null : (route.titleNative ?? plan.sceneOf(route)?.titleNative)) ?? plan.displayTitle;
     final failed = _session.phase == SessionPhase.lessonFailed;
+    final bySubscription = _session.phase == SessionPhase.lockedBySubscription;
+    if (bySubscription) {
+      // 409 `plan_day_locked` · subscription: the plate of 21-3 «по подписке» — no toast (CLIENT-START §6).
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(kSessionGutter, 4, kSessionGutter, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(alignment: Alignment.centerLeft, child: SessionCloseButton(onTap: () => Navigator.of(context).maybePop(), label: l.planSessionClose)),
+            Expanded(
+              child: Center(
+                child: DayPlate(
+                  key: const ValueKey('session-locked-subscription'),
+                  label: l.planPlateLabel(widget.number),
+                  title: title,
+                  meta: l.planPlateBySubscription,
+                  stages: const [],
+                  footer: DayPlateFooter.locked(
+                    note: l.planPlateOpensWithSubscription,
+                    action: l.planPlateSubscription,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ProfileScreen(pushed: true, focusSubscription: true)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(kSessionGutter, 4, kSessionGutter, 0),
       child: Column(
@@ -281,7 +353,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                 title: title,
                 stages: const [],
                 notice: failed
-                    ? DayPlateNotice(title: l.planPlateFailedTitle, sub: l.planPlateFailedSub(widget.number))
+                    ? DayPlateNotice(
+                        title: l.planPlateFailedTitle,
+                        sub: _session.retryOffline ? l.planPlateNoNetwork : null,
+                        offline: _session.retryOffline,
+                      )
                     : DayPlateNotice(
                         title: l.planPlateBuildingTitle(widget.number),
                         sub: l.planPlateBuildingSub,
@@ -519,7 +595,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final plan = _session.currentPlan;
     final scenes = talkEntryScenes(
       _session.talkTargets,
-      order: [for (final s in _session.day?.window?.sources ?? const <WindowSourceRef>[]) (sceneId: s.sceneId, title: s.titleNative)],
+      order: [
+        for (final s in _session.day?.window?.sources ?? const <WindowSourceRef>[])
+          (sceneId: s.sceneId, title: s.titleNative, female: s.partnerFemale),
+      ],
       sceneById: plan.sceneById,
     );
     return TalkEntryView(
@@ -637,6 +716,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         final closed = await _session.closeDay();
         if (!closed || !context.mounted) return;
         await _voice.stop();
+        // 43-1: after day 1's summary (and day 2's, after «Не сейчас»), before the plan — while iOS has not been asked.
+        if (!widget.replay && context.mounted) await offerReminders(context, ref, closedDay: widget.number);
         if (context.mounted) Navigator.of(context).pop();
       },
     );

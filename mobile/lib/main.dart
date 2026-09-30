@@ -6,14 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'theme/theme.dart';
 import 'data/app_identity.dart';
-import 'data/app_settings.dart';
 import 'data/deep_links.dart';
 import 'data/locale_controller.dart';
 import 'data/providers.dart';
-import 'features/auth/login_screen.dart';
-import 'features/home/home_screen.dart';
-import 'features/onboarding/onboarding_screen.dart';
 import 'features/profile/qa_report_button.dart';
+import 'features/start/start_gate.dart';
 import 'l10n/app_localizations.dart';
 
 void main() {
@@ -52,7 +49,7 @@ class EngStdApp extends ConsumerWidget {
     final option = ref.watch(localeControllerProvider).asData?.value ?? UiLanguageOption.system;
     final supportLang = ref.watch(authControllerProvider).value?.profile?.nativeLanguage;
     return MaterialApp(
-      title: 'Eng Std',
+      title: 'Ritora',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       locale: LocaleController.localeFor(option, supportLang),
@@ -64,52 +61,7 @@ class EngStdApp extends ConsumerWidget {
       // ставится через `builder`, чтобы попасть ВНУТРЬ навигатора — иначе снимок не поймал бы ни
       // одного вытолкнутого экрана. Кнопки нет ни у кого, кроме QA-аккаунта; решает сервер.
       builder: (context, child) => QaReportOverlay(child: child ?? const SizedBox.shrink()),
-      home: const _AuthGate(),
+      home: const StartGate(),
     );
   }
-}
-
-/// Routes between the login screen and the app based on auth state.
-class _AuthGate extends ConsumerWidget {
-  const _AuthGate();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Start the on-disk image cache. `read`, not `watch`: nothing on screen depends on it — until
-    // it is ready images load from the network as before — and subscribing would rebuild the whole
-    // tree when a disk scan finishes.
-    ref.read(imageDiskCacheProvider);
-    // «Звуки» из профиля — в единственный сервис звука и хаптики; ниже никто не решает сам.
-    ref.watch(soundsEnabledProvider);
-    final auth = ref.watch(authControllerProvider);
-
-    return auth.when(
-      loading: () => const _Splash(),
-      error: (_, _) => const LoginScreen(),
-      data: (user) => user == null ? const LoginScreen() : const _OnboardingGate(),
-    );
-  }
-}
-
-/// For a signed-in user, shows onboarding until it's completed on this device.
-class _OnboardingGate extends ConsumerWidget {
-  const _OnboardingGate();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final onboarded = ref.watch(onboardedProvider);
-    return onboarded.when(
-      loading: () => const _Splash(),
-      error: (_, _) => const HomeScreen(),
-      data: (done) => done ? const HomeScreen() : const OnboardingScreen(),
-    );
-  }
-}
-
-class _Splash extends StatelessWidget {
-  const _Splash();
-
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: CircularProgressIndicator()));
 }

@@ -86,7 +86,9 @@ void main() {
       expect(await resolve(native: 'en', stored: true), isTrue);
     });
 
-    test('the switch stores a decision, and the decision survives a reread', () async {
+    // The profile has no switch for it since CLIENT-START (42-1): a decision stored by an earlier build still wins.
+    test('a decision stored by an earlier build survives a reread', () async {
+      await db.setMeta('transliteration', '0');
       container = ProviderContainer(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
@@ -96,9 +98,7 @@ void main() {
       addTearDown(container.dispose);
       await container.read(appSettingsProvider.future);
 
-      await container.read(appSettingsProvider.notifier).setTransliteration(false);
       expect(container.read(transliterationEnabledProvider), isFalse);
-      expect(await db.getMeta('transliteration'), '0');
     });
   });
 

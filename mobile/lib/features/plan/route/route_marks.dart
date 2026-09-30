@@ -156,6 +156,22 @@ class RouteDayCircle extends StatelessWidget {
           ],
         ),
       ),
+      RouteSubscriptionMark() => Container(
+        key: const ValueKey('route-subscription-node'),
+        width: RouteStop.bigNode,
+        height: RouteStop.bigNode,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: ground,
+          border: Border.all(color: AppColors.brassInk, width: 1.5),
+          boxShadow: [BoxShadow(color: ground, spreadRadius: 2)],
+        ),
+        child: const SizedBox.square(
+          dimension: 8,
+          child: DecoratedBox(decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.brassInk)),
+        ),
+      ),
     };
   }
 }

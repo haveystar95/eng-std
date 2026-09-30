@@ -116,7 +116,7 @@ class TalkSummaryView extends StatelessWidget {
         ),
         SessionDock(
           child: _ArmedNext(
-            child: SessionDockButton(key: const ValueKey('talk-next'), label: l.planSessionNext, busy: busy, onTap: onNext),
+            child: DockButton(key: const ValueKey('talk-next'), label: l.planSessionNext, busy: busy, onTap: onNext),
           ),
         ),
       ],

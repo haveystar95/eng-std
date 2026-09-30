@@ -1,0 +1,28 @@
+{
+  "_about": "CLIENT-START: the fields the server fixtures in backend2/docs/fixtures predate (line_native — LANG-1b §3, partner_gender — FIX-4c §3), read from wordtrainer_e2e_test READ ONLY on 27.09.2026 by the application read path (GetDayRoom, GetConversation → PlanJson) for the plans and talks those fixtures were taken from: 01M2QRH5MYEFZ1DEQ78RH54P6X days 2-3, 01M2H1ABCMNQXQ6YP9C9A3HD6B day 1, talks 01M34XJP15Q823PSC7FZ694YC6, 01M34XAFSNAEGCMBPTEY6RQMWE. Keys: scene_id/ref and scene_id.",
+  "line_native": {
+    "01M2H1AFDHTN8M3HRWXS0M3S2A/p1": "Вот мой паспорт.",
+    "01M2H1AFDHTN8M3HRWXS0M3S2A/p2": "Я лечу в Лондон.",
+    "01M2H1AFDHTN8M3HRWXS0M3S2A/p3": "У меня один чемодан и один рюкзак.",
+    "01M2H1AFDHTN8M3HRWXS0M3S2A/p4": "Я сдаю в багаж чемодан.",
+    "01M2H1AFDHTN8M3HRWXS0M3S2A/p5": "Можно взять рюкзак в салон?",
+    "01M2H1AFDHTN8M3HRWXS0M3S2A/p6": "Я бы хотел место у окна.",
+    "01M2H1AFDHTN8M3HRWXS0M3S2A/p7": "Где выход на посадку?",
+    "01M2QRHF9M69AMBE2XGD18KQ8P/p1": "У него температура и болит горло.",
+    "01M2QRHF9M69AMBE2XGD18KQ8P/p2": "Он болеет уже три дня.",
+    "01M2QRHF9M69AMBE2XGD18KQ8P/p3": "Мне сказать вам его температуру?",
+    "01M2QRHF9M69AMBE2XGD18KQ8P/p4": "Я дал(а) ему парацетамол.",
+    "01M2QRHF9M69AMBE2XGD18KQ8P/p5": "Похоже на вирусную инфекцию.",
+    "01M2QRHF9M69AMBE2XGD18KQ8P/p6": "Что мне делать дома?",
+    "01M2QRHF9M69AMBE2XGD18KQ8P/p7": "За какими тревожными признаками мне следить?",
+    "01M2QRHF9M86KAM8JW8XYRAWDR/p1": "У него болит поясница.",
+    "01M2QRHF9M86KAM8JW8XYRAWDR/p2": "Началось три дня назад.",
+    "01M2QRHF9M86KAM8JW8XYRAWDR/p3": "Боль острая, когда он наклоняется.",
+    "01M2QRHF9M86KAM8JW8XYRAWDR/p4": "Нет, температуры нет."
+  },
+  "partner_gender": {
+    "01M2H1AFDHTN8M3HRWXS0M3S2A": "female",
+    "01M2QRHF9M69AMBE2XGD18KQ8P": "female",
+    "01M2QRHF9M86KAM8JW8XYRAWDR": "female"
+  }
+}

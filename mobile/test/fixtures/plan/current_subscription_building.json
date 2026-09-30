@@ -1,0 +1,330 @@
+{
+  "id": "01M3F4WDHZX7VNSD35C6P67P7Z",
+  "status": "active",
+  "goal_text": "Собеседование в пятницу, боюсь вопросов про опыт",
+  "target_lang": "ro",
+  "native_lang": "ru",
+  "level": "beginner",
+  "days_total": 3,
+  "days_requested": 3,
+  "days_shortened_from": null,
+  "event_date": "2026-09-29",
+  "days_left": 2,
+  "title_native": "Собеседование",
+  "title_target": "Interviu de angajare",
+  "event_native": "Собеседование",
+  "until_phrase": "До собеседования · 2 дня",
+  "overdue_native": null,
+  "route_summary": "3 дня · 2 ситуации, репетиция",
+  "summary": "Опыт и навыки, начало беседы. К 29 сентября скажешь всё это сам",
+  "reminder_hour": 19,
+  "catch_up": true,
+  "learner_role_target": "Candidat",
+  "learner_role_native": "Кандидат",
+  "cover_image": {
+    "url": "https://images.pexels.com/photos/30688591/pexels-photo-30688591.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+    "author": "Ninthgrid",
+    "author_url": "https://www.pexels.com/@ninthgrid-2149521550",
+    "tone": "#989C9B"
+  },
+  "collection_id": null,
+  "unclear_reason": null,
+  "fail_reason": null,
+  "current_day": {
+    "id": "01M3F4WDJBRFKQ2GHA4REZYW58",
+    "number": 1,
+    "type": "scene",
+    "status": "building",
+    "lock_reason": null,
+    "scene_id": "01M3F4WDJ63Z94X09PJJBYHRWT",
+    "title_native": "Опыт и навыки",
+    "title_target": "Experiență și abilități",
+    "teaches_native": "рассказать про опыт и навыки",
+    "lesson_status": "building",
+    "opens_on": "2026-09-26",
+    "slot": {
+      "code": "today",
+      "date": "2026-09-27",
+      "label_native": "сегодня"
+    },
+    "cards_total": 0,
+    "cards_done": 0,
+    "minutes_spent": 0,
+    "opened_at": null,
+    "closed_at": null,
+    "stages": [
+      {
+        "stage": "words",
+        "state": "current"
+      },
+      {
+        "stage": "phrases",
+        "state": "locked"
+      },
+      {
+        "stage": "dialogue",
+        "state": "locked"
+      },
+      {
+        "stage": "listen",
+        "state": "locked"
+      },
+      {
+        "stage": "speak",
+        "state": "locked"
+      },
+      {
+        "stage": "conversation",
+        "state": "locked"
+      }
+    ]
+  },
+  "days": [
+    {
+      "id": "01M3F4WDJBRFKQ2GHA4REZYW58",
+      "number": 1,
+      "type": "scene",
+      "status": "building",
+      "lock_reason": null,
+      "scene_id": "01M3F4WDJ63Z94X09PJJBYHRWT",
+      "title_native": "Опыт и навыки",
+      "title_target": "Experiență și abilități",
+      "teaches_native": "рассказать про опыт и навыки",
+      "lesson_status": "building",
+      "opens_on": "2026-09-26",
+      "slot": {
+        "code": "today",
+        "date": "2026-09-27",
+        "label_native": "сегодня"
+      },
+      "cards_total": 0,
+      "cards_done": 0,
+      "minutes_spent": 0,
+      "opened_at": null,
+      "closed_at": null,
+      "stages": [
+        {
+          "stage": "words",
+          "state": "current"
+        },
+        {
+          "stage": "phrases",
+          "state": "locked"
+        },
+        {
+          "stage": "dialogue",
+          "state": "locked"
+        },
+        {
+          "stage": "listen",
+          "state": "locked"
+        },
+        {
+          "stage": "speak",
+          "state": "locked"
+        },
+        {
+          "stage": "conversation",
+          "state": "locked"
+        }
+      ]
+    },
+    {
+      "id": "01M3F4WDJHK53JGBKXXXCKK8FT",
+      "number": 2,
+      "type": "scene",
+      "status": "locked",
+      "lock_reason": "subscription",
+      "scene_id": "01M3F4WDJADQ38CXVB6E608664",
+      "title_native": "Начало беседы",
+      "title_target": "Începutul interviului",
+      "teaches_native": "представиться и понять вопросы",
+      "lesson_status": "pending",
+      "opens_on": null,
+      "slot": {
+        "code": "tomorrow",
+        "date": "2026-09-28",
+        "label_native": "завтра"
+      },
+      "cards_total": 0,
+      "cards_done": 0,
+      "minutes_spent": 0,
+      "opened_at": null,
+      "closed_at": null,
+      "stages": [
+        {
+          "stage": "words",
+          "state": "locked"
+        },
+        {
+          "stage": "phrases",
+          "state": "locked"
+        },
+        {
+          "stage": "dialogue",
+          "state": "locked"
+        },
+        {
+          "stage": "listen",
+          "state": "locked"
+        },
+        {
+          "stage": "speak",
+          "state": "locked"
+        },
+        {
+          "stage": "conversation",
+          "state": "locked"
+        }
+      ]
+    },
+    {
+      "id": "01M3F4WDJHK53JGBKXXXCKK8FV",
+      "number": 3,
+      "type": "rehearsal",
+      "status": "locked",
+      "lock_reason": "subscription",
+      "scene_id": null,
+      "title_native": null,
+      "title_target": null,
+      "teaches_native": null,
+      "lesson_status": null,
+      "opens_on": null,
+      "slot": {
+        "code": "date",
+        "date": "2026-09-29",
+        "label_native": null
+      },
+      "cards_total": 0,
+      "cards_done": 0,
+      "minutes_spent": 0,
+      "opened_at": null,
+      "closed_at": null,
+      "stages": [
+        {
+          "stage": "recall",
+          "state": "locked"
+        },
+        {
+          "stage": "conversation",
+          "state": "locked"
+        }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "01M3F4WDJ63Z94X09PJJBYHRWT",
+      "order": 1,
+      "kind": "situation",
+      "priority": 1,
+      "title_native": "Опыт и навыки",
+      "title_target": "Experiență și abilități",
+      "teaches_native": "рассказать про опыт и навыки",
+      "goals_native": [
+        "назвать прошлую работу",
+        "описать свои задачи",
+        "сказать, что умеете",
+        "ответить на простой вопрос"
+      ],
+      "learner_role_target": "Candidat",
+      "learner_role_native": "Кандидат",
+      "partner_role_target": "Intervievator",
+      "partner_role_native": "Интервьюер",
+      "image": {
+        "url": "https://images.pexels.com/photos/36733328/pexels-photo-36733328.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+        "author": "Vitaly Gariev",
+        "author_url": "https://www.pexels.com/@silverkblack",
+        "tone": "#8B9191",
+        "url_112": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/images/01M3F4WDJ63Z94X09PJJBYHRWT/112?v=64e9abd4a1c3",
+        "url_448": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/images/01M3F4WDJ63Z94X09PJJBYHRWT/448?v=64e9abd4a1c3"
+      },
+      "lesson_status": "building",
+      "lesson_fail_reason": null,
+      "day_number": 1,
+      "cost_usd": "0.207737",
+      "latency_ms": 67800,
+      "prompt_version": "lesson_day.v4.10"
+    },
+    {
+      "id": "01M3F4WDJADQ38CXVB6E608664",
+      "order": 2,
+      "kind": "situation",
+      "priority": 2,
+      "title_native": "Начало беседы",
+      "title_target": "Începutul interviului",
+      "teaches_native": "представиться и понять вопросы",
+      "goals_native": [
+        "поздороваться вежливо",
+        "коротко представиться",
+        "сказать, зачем пришли",
+        "попросить повторить вопрос"
+      ],
+      "learner_role_target": "Candidat",
+      "learner_role_native": "Кандидат",
+      "partner_role_target": "Intervievator",
+      "partner_role_native": "Интервьюер",
+      "image": {
+        "url": "https://images.pexels.com/photos/5668857/pexels-photo-5668857.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+        "author": "Sora Shimazaki",
+        "author_url": "https://www.pexels.com/@sora-shimazaki",
+        "tone": "#828285",
+        "url_112": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/images/01M3F4WDJADQ38CXVB6E608664/112?v=6c527f729b9f",
+        "url_448": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/images/01M3F4WDJADQ38CXVB6E608664/448?v=6c527f729b9f"
+      },
+      "lesson_status": "pending",
+      "lesson_fail_reason": null,
+      "day_number": 2,
+      "cost_usd": null,
+      "latency_ms": null,
+      "prompt_version": null
+    }
+  ],
+  "rescue_kit": [
+    {
+      "text_target": "Poftim?",
+      "text_native": "Простите?",
+      "pronunciation_native": null,
+      "audio_url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/rescue-audio/1dd63e4d0dd2f25499454ea740a1fb8ac8c14a42"
+    },
+    {
+      "text_target": "Puteți vorbi mai rar, vă rog?",
+      "text_native": "Можно помедленнее, пожалуйста?",
+      "pronunciation_native": null,
+      "audio_url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/rescue-audio/88b63a7845bb352994d6d481a24ca67b9010d83f"
+    },
+    {
+      "text_target": "Nu înțeleg.",
+      "text_native": "Я не понимаю.",
+      "pronunciation_native": null,
+      "audio_url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/rescue-audio/60c74beac09ae4aa1daa9adb881f7285592957fe"
+    },
+    {
+      "text_target": "Un moment.",
+      "text_native": "Одну минуту.",
+      "pronunciation_native": null,
+      "audio_url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/rescue-audio/672902655c3e582fb4ef42c620a7ac60016e5410"
+    },
+    {
+      "text_target": "Îmi puteți scrie asta?",
+      "text_native": "Можете это записать?",
+      "pronunciation_native": null,
+      "audio_url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/rescue-audio/4b427b6922510fc7ea16bed0f46a01e21deee425"
+    },
+    {
+      "text_target": "Mulțumesc.",
+      "text_native": "Спасибо.",
+      "pronunciation_native": null,
+      "audio_url": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/rescue-audio/2b0b2c0b1b8d93e86199e35eaa0d0c78760fc0d2"
+    }
+  ],
+  "cost_usd": "0.226802",
+  "versions": {
+    "build": "454c6644",
+    "prompt_plan": "plan-builder-v2",
+    "prompt_lesson": "lesson_day.v4.10"
+  },
+  "started_at": "2026-09-26T06:28:28+00:00",
+  "finished_at": null,
+  "created_at": "2026-09-26T15:21:02+00:00"
+}

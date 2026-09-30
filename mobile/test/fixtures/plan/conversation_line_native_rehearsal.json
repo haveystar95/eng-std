@@ -1,0 +1,569 @@
+{
+  "id": "01M3CPMKMHB5G3KEABW57ETPX0",
+  "plan_id": "01M2QRH5MYEFZ1DEQ78RH54P6X",
+  "day": 3,
+  "type": "rehearsal",
+  "state": "ended",
+  "replay": true,
+  "talk_title_native": "Поговори с регистратором и врачом",
+  "partner": {
+    "role_native": "Врач",
+    "role_target": "Doctor"
+  },
+  "scene": {
+    "title_native": "Приём у врача",
+    "title_target": "Doctor visit"
+  },
+  "scenes": [
+    {
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "title_native": "Запись к врачу",
+      "title_target": "Booking",
+      "role_native": "Регистратор",
+      "role_target": "Receptionist",
+      "lines": 7,
+      "state": "done"
+    },
+    {
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "title_native": "Приём у врача",
+      "title_target": "Doctor visit",
+      "role_native": "Врач",
+      "role_target": "Doctor",
+      "lines": 7,
+      "state": "done"
+    }
+  ],
+  "minutes_estimate": 6,
+  "turns_left": 1,
+  "targets": [
+    {
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "ref": "p1",
+      "frame_target": "It hurts in his ___.",
+      "frame_native": "У него болит ___.",
+      "example_target": "lower back",
+      "example_native": "поясница",
+      "said": true,
+      "value_target": "lower back",
+      "line_native": "У него болит поясница.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "ref": "p2",
+      "frame_target": "It started ___.",
+      "frame_native": "Началось ___.",
+      "example_target": "three days ago",
+      "example_native": "три дня назад",
+      "said": true,
+      "value_target": "two days ago",
+      "line_native": "Началось три дня назад.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "ref": "p3",
+      "frame_target": "The pain is ___ when he bends.",
+      "frame_native": "Боль ___, когда он наклоняется.",
+      "example_target": "sharp",
+      "example_native": "острая",
+      "said": true,
+      "value_target": "sharp",
+      "line_native": "Боль острая, когда он наклоняется.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "ref": "p4",
+      "frame_target": "He doesn't have a fever.",
+      "frame_native": "Температуры у него нет.",
+      "example_target": null,
+      "example_native": null,
+      "said": true,
+      "value_target": null,
+      "line_native": "Нет, температуры нет.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "ref": "p1",
+      "frame_target": "He has ___.",
+      "frame_native": "У него ___.",
+      "example_target": "a fever and a sore throat",
+      "example_native": "температура и болит горло",
+      "said": true,
+      "value_target": "a fever and a sore throat",
+      "line_native": "У него температура и болит горло.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "ref": "p2",
+      "frame_target": "He's been sick ___.",
+      "frame_native": "Он болеет ___.",
+      "example_target": "for three days",
+      "example_native": "уже три дня",
+      "said": true,
+      "value_target": "for three days",
+      "line_native": "Он болеет уже три дня.",
+      "state": "said"
+    },
+    {
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "ref": "p3",
+      "frame_target": "Should I tell you ___?",
+      "frame_native": "Мне сказать вам ___?",
+      "example_target": "his temperature",
+      "example_native": "его температуру",
+      "said": true,
+      "value_target": "his temperature",
+      "line_native": "Мне сказать вам его температуру?",
+      "state": "said"
+    }
+  ],
+  "extra_said": [
+    {
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "ref": "p4",
+      "frame_target": "I gave him ___.",
+      "frame_native": "Я дал(а) ему ___.",
+      "example_target": "paracetamol",
+      "example_native": "парацетамол",
+      "said": true,
+      "value_target": "paracetamol",
+      "line_native": "Я дал(а) ему парацетамол."
+    }
+  ],
+  "hints": {
+    "enabled": false,
+    "delay_ms": 5000,
+    "target": null,
+    "scene_id": null,
+    "ref": null,
+    "sentence": null
+  },
+  "turns": [
+    {
+      "index": 1,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Hello. What hurts: his upper back or his lower back?",
+      "text_native": "Здравствуйте. Что болит: верхняя часть спины или поясница?",
+      "audio": null,
+      "understood": null,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:41+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": "start"
+    },
+    {
+      "index": 2,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "It hurts in his lower back.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+          "ref": "p1"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-25T16:33:41+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": null
+    },
+    {
+      "index": 3,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Did it start today, or earlier this week?",
+      "text_native": "Это началось сегодня или раньше на этой неделе?",
+      "audio": null,
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:42+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": null
+    },
+    {
+      "index": 4,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "It started two days ago.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+          "ref": "p2"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-25T16:33:42+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": null
+    },
+    {
+      "index": 5,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Okay. Is the pain sharp, or more of a dull ache when he bends?",
+      "text_native": "Хорошо. Боль острая или скорее тупая, когда он наклоняется?",
+      "audio": null,
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:44+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": null
+    },
+    {
+      "index": 6,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "The pain is sharp when she bends.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-25T16:33:45+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": null
+    },
+    {
+      "index": 7,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Okay. Does he have a fever?",
+      "text_native": "Хорошо. Температуры у него нет?",
+      "audio": null,
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:46+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": null
+    },
+    {
+      "index": 8,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "The pain is sharp when he bends.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+          "ref": "p3"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-25T16:33:46+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": null
+    },
+    {
+      "index": 9,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "I see. He doesn’t have a fever, right?",
+      "text_native": "Понятно. Температуры у него нет, верно?",
+      "audio": null,
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:48+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": null
+    },
+    {
+      "index": 10,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "He doesn't have a fever.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+          "ref": "p4"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-25T16:33:48+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": null
+    },
+    {
+      "index": 11,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Thank you. I’ll note that down. Goodbye.",
+      "text_native": "Спасибо. Я это запишу. До свидания.",
+      "audio": null,
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:50+00:00",
+      "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+      "scene_event": "end"
+    },
+    {
+      "index": 12,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "What seems to be the problem with your son today?",
+      "text_native": "Что случилось с вашим сыном сегодня?",
+      "audio": null,
+      "understood": null,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:51+00:00",
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "scene_event": "start"
+    },
+    {
+      "index": 13,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "He has a fever and a sore throat.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+          "ref": "p1"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-25T16:33:51+00:00",
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "scene_event": null
+    },
+    {
+      "index": 14,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "How long has he had these symptoms?",
+      "text_native": "Как долго у него эти симптомы?",
+      "audio": null,
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:53+00:00",
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "scene_event": null
+    },
+    {
+      "index": 15,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "He's been sick for three days. I gave him paracetamol.",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+          "ref": "p2"
+        }
+      ],
+      "extra_said": [
+        {
+          "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+          "ref": "p4"
+        }
+      ],
+      "off_topic": null,
+      "created_at": "2026-09-25T16:33:53+00:00",
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "scene_event": null
+    },
+    {
+      "index": 16,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Yes, that’s fine. What was his highest temperature?",
+      "text_native": "Да, хорошо. Какая у него была самая высокая температура?",
+      "audio": null,
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:54+00:00",
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "scene_event": null
+    },
+    {
+      "index": 17,
+      "speaker": "learner",
+      "kind": "said",
+      "text_target": "Should I tell you his temperature?",
+      "text_native": null,
+      "audio": null,
+      "understood": null,
+      "phrases_used": [
+        {
+          "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+          "ref": "p3"
+        }
+      ],
+      "extra_said": [],
+      "off_topic": null,
+      "created_at": "2026-09-25T16:33:54+00:00",
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "scene_event": null
+    },
+    {
+      "index": 18,
+      "speaker": "partner",
+      "kind": "agent",
+      "text_target": "Yes, please tell me the highest reading. Thank you, and please come back if he gets worse.",
+      "text_native": "Да, пожалуйста, скажите мне самое высокое значение. Спасибо, и, пожалуйста, приходите снова, если ему станет хуже.",
+      "audio": null,
+      "understood": true,
+      "phrases_used": [],
+      "extra_said": [],
+      "off_topic": false,
+      "created_at": "2026-09-25T16:33:56+00:00",
+      "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+      "scene_event": "end"
+    }
+  ],
+  "summary": {
+    "said_count": 8,
+    "phrases_used": 7,
+    "phrases_total": 7,
+    "phrases": [
+      {
+        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+        "ref": "p1",
+        "frame_target": "It hurts in his ___.",
+        "frame_native": "У него болит ___.",
+        "example_target": "lower back",
+        "example_native": "поясница",
+        "said": true,
+        "value_target": "lower back",
+        "line_native": "У него болит поясница.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+        "ref": "p2",
+        "frame_target": "It started ___.",
+        "frame_native": "Началось ___.",
+        "example_target": "three days ago",
+        "example_native": "три дня назад",
+        "said": true,
+        "value_target": "two days ago",
+        "line_native": "Началось три дня назад.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+        "ref": "p3",
+        "frame_target": "The pain is ___ when he bends.",
+        "frame_native": "Боль ___, когда он наклоняется.",
+        "example_target": "sharp",
+        "example_native": "острая",
+        "said": true,
+        "value_target": "sharp",
+        "line_native": "Боль острая, когда он наклоняется.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M2QRHF9M86KAM8JW8XYRAWDR",
+        "ref": "p4",
+        "frame_target": "He doesn't have a fever.",
+        "frame_native": "Температуры у него нет.",
+        "example_target": null,
+        "example_native": null,
+        "said": true,
+        "value_target": null,
+        "line_native": "Нет, температуры нет.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+        "ref": "p1",
+        "frame_target": "He has ___.",
+        "frame_native": "У него ___.",
+        "example_target": "a fever and a sore throat",
+        "example_native": "температура и болит горло",
+        "said": true,
+        "value_target": "a fever and a sore throat",
+        "line_native": "У него температура и болит горло.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+        "ref": "p2",
+        "frame_target": "He's been sick ___.",
+        "frame_native": "Он болеет ___.",
+        "example_target": "for three days",
+        "example_native": "уже три дня",
+        "said": true,
+        "value_target": "for three days",
+        "line_native": "Он болеет уже три дня.",
+        "state": "said"
+      },
+      {
+        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+        "ref": "p3",
+        "frame_target": "Should I tell you ___?",
+        "frame_native": "Мне сказать вам ___?",
+        "example_target": "his temperature",
+        "example_native": "его температуру",
+        "said": true,
+        "value_target": "his temperature",
+        "line_native": "Мне сказать вам его температуру?",
+        "state": "said"
+      }
+    ],
+    "understood_all": true,
+    "not_understood": 0,
+    "rescues": 0,
+    "ended_reason": "natural",
+    "ended_by_limit": false,
+    "minutes": 1,
+    "returns_tomorrow": false,
+    "extra_said": [
+      {
+        "scene_id": "01M2QRHF9M69AMBE2XGD18KQ8P",
+        "ref": "p4",
+        "frame_target": "I gave him ___.",
+        "frame_native": "Я дал(а) ему ___.",
+        "example_target": "paracetamol",
+        "example_native": "парацетамол",
+        "said": true,
+        "value_target": "paracetamol",
+        "line_native": "Я дал(а) ему парацетамол."
+      }
+    ]
+  }
+}

@@ -336,9 +336,9 @@ class _ListenDialogueCardState extends State<ListenDialogueCard> {
           },
           const SizedBox(height: 14),
           switch (_state) {
-            _Player.idle || _Player.playing => SessionDockButton(label: l.planSessionPause, onTap: () => unawaited(_pauseNow())),
-            _Player.paused => SessionDockButton(label: l.planSessionContinue, onTap: () => unawaited(_play(from: _line))),
-            _Player.done => SessionDockButton(
+            _Player.idle || _Player.playing => DockButton(label: l.planSessionPause, onTap: () => unawaited(_pauseNow())),
+            _Player.paused => DockButton(label: l.planSessionContinue, onTap: () => unawaited(_play(from: _line))),
+            _Player.done => DockButton(
               label: l.planSessionNext,
               busy: env.advancing,
               onTap: () {
@@ -552,7 +552,7 @@ class ListenReviewCard extends StatelessWidget {
           ],
         ],
       ),
-      bottom: SessionDockButton(
+      bottom: DockButton(
         label: l.planSessionNext,
         busy: env.advancing,
         onTap: () {
@@ -707,9 +707,9 @@ class _ListenPredictCardState extends State<ListenPredictCard> with ChoiceCardSt
         ],
         const SizedBox(height: 16),
         if (answeredWrong)
-          SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()))
+          DockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()))
         else if (!answered)
-          SessionDockButton(
+          DockButton(
             key: const ValueKey('predict-answer'),
             label: l.planSessionThisIsAnswer,
             // Only a plate that has been HEARD can be marked, so an active button is always one the
@@ -914,7 +914,7 @@ class _ListenPaceCardState extends State<ListenPaceCard> {
         children: [
           Center(child: SessionTextExit(key: const ValueKey('pace-again'), label: l.planSessionReplay, brass: true, onTap: () => unawaited(_both()))),
           const SizedBox(height: 14),
-          SessionDockButton(
+          DockButton(
             label: l.planSessionUnderstoodAction,
             busy: env.advancing,
             onTap: () {

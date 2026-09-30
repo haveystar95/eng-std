@@ -308,7 +308,7 @@ class _PhraseIntroCardState extends State<PhraseIntroCard> {
           ],
         ],
       ),
-      bottom: SessionDockButton(
+      bottom: DockButton(
         label: l.planSessionNext,
         busy: env.advancing,
         onTap: () {
@@ -529,8 +529,8 @@ class _PhraseAssembleCardState extends State<PhraseAssembleCard> {
         ],
       ),
       bottom: _correct == false
-          ? SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()))
-          : SessionDockButton(
+          ? DockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next()))
+          : DockButton(
               label: l.planSessionCheck,
               enabled: !answered && _pieces.isNotEmpty && (_slot != null || !p.frame.hasSlot),
               onTap: _check,
@@ -1266,7 +1266,7 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
             ],
             if (_frameWrong) ...[
               const SizedBox(height: 8),
-              SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
+              DockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
             ],
           ],
         ),
@@ -1348,7 +1348,7 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
               ),
             ),
           const SizedBox(height: 14),
-          SessionDockButton(
+          DockButton(
             label: l.planSessionNext,
             enabled: filled != null,
             busy: env.advancing,

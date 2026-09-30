@@ -9,14 +9,15 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
+import '../../data/api_client.dart' show isOffline;
 import '../../data/image_loader.dart';
 import '../../data/plan/plan_models.dart';
 import '../collections/collection_detail_screen.dart';
 import '../profile/profile_avatar.dart';
+import '../profile/profile_screen.dart';
 import 'entry/plan_entry_screen.dart';
 import 'plan_day_plate_view.dart';
 import 'day/open_day.dart';
-import 'plan_notifications_host.dart';
 import 'plan_providers.dart';
 import 'route/plan_route.dart';
 import 'route/route_examples.dart';
@@ -24,6 +25,7 @@ import 'plan_rules.dart';
 import 'plan_sheets.dart';
 import 'plan_stage_text.dart';
 import 'plan_tab_parts.dart';
+import 'rescue_kit_card.dart';
 
 /// ТАБ «ПЛАН» — кадры 21-1 … 21-14 и 22-5a/b/c (наряд PLAN-UI).
 ///
@@ -236,6 +238,8 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
             room: s.room,
             onOpen: () => _openDay(focus),
             onRetryLesson: () => _retryLesson(focus),
+            onSubscription: _openSubscription,
+            retryOffline: _retryOfflineDay == focus.number,
           ),
         if (showTabHints && firstStage != null) ...[
           const SizedBox(height: 14),
@@ -264,10 +268,16 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
                 onOpenDay: widget.readOnly ? null : _openDay,
                 explainDay: ref.watch(planExplainDayProvider),
                 focus: ref.watch(planFocusDayProvider),
+                onSubscription: widget.readOnly ? null : _openSubscription,
               ),
             ],
           ),
         ),
+        // THE RESCUE KIT (21-2b) — under the route, where it stood before PLAN-UI-2 took it off; a live plan only.
+        if (!widget.readOnly && p.rescueKit.isNotEmpty && !showsDone) ...[
+          gap,
+          PlanRescueKitCard(plan: p),
+        ],
         if (!widget.readOnly) ...[
           gap,
           PlanFinishedList(rows: s.finished, onOpen: _openFinished),
@@ -332,9 +342,7 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
     // раз, за первым планом (правило целиком — в [showPlanHowSheetOnce]).
     if (!mounted) return;
     await showPlanHowSheetOnce(context, ref);
-    // РАЗРЕШЕНИЕ НА УВЕДОМЛЕНИЯ — один раз, после «Начать» на превью и листа «Как устроен план»,
-    // не при старте приложения (наряд PLAN-UI-3 §4); следом регистрация push-токена.
-    if (mounted) await askPlanNotificationsOnce(ref);
+    // Notifications are no longer asked here: the pre-permission 43-1 comes after day 1's summary (CLIENT-START §4).
   }
 
   void _openMenu(BuildContext anchor) {
@@ -439,15 +447,29 @@ class _PlanTabBodyState extends ConsumerState<PlanTabBody> {
     }
   }
 
+  /// The day whose «Повторить» could not leave for want of a network — its plate says «Нет сети» (22-5c).
+  int? _retryOfflineDay;
+
   Future<void> _retryLesson(PlanDayRoute day) async {
     final p = plan;
     final sceneId = day.sceneId;
     if (p == null || sceneId == null) return;
     try {
       await ref.read(planTabProvider.notifier).retryLesson(p.id, sceneId);
-    } catch (_) {
+      if (mounted && _retryOfflineDay != null) setState(() => _retryOfflineDay = null);
+    } catch (e) {
       AppHaptics.warning();
+      if (mounted) setState(() => _retryOfflineDay = isOffline(e) ? day.number : null);
     }
+  }
+
+  /// «Подписка» (21-3 / 22-5a «по подписке») — the paywall is PAY-1's; until then the profile, on its subscription
+  /// group.
+  void _openSubscription() {
+    AppHaptics.light();
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ProfileScreen(pushed: true, focusSubscription: true)),
+    );
   }
 
   void _openCollection() {

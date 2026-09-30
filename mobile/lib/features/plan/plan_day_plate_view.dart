@@ -4,6 +4,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../data/local/cached_image_provider.dart';
+import '../../data/plan/day_window.dart' show DayWindow;
 import '../../data/plan/plan_models.dart';
 import 'plan_format.dart';
 import 'plan_stage_text.dart';
@@ -25,6 +26,8 @@ class PlanDayPlateView extends StatelessWidget {
     required this.room,
     required this.onOpen,
     this.onRetryLesson,
+    this.onSubscription,
+    this.retryOffline = false,
   });
 
   final Plan plan;
@@ -34,6 +37,13 @@ class PlanDayPlateView extends StatelessWidget {
 
   /// «Повторить» у несобравшегося дня (22-5c) — повтор урока, не пересборка плана.
   final VoidCallback? onRetryLesson;
+
+  /// «Подписка» on a day that opens with a subscription (21-3 «по подписке») — the profile's subscription group
+  /// until PAY-1 brings the paywall.
+  final VoidCallback? onSubscription;
+
+  /// The last «Повторить» could not leave — there really is no network: «Нет сети» under the title.
+  final bool retryOffline;
 
   @override
   Widget build(BuildContext context) {
@@ -50,12 +60,36 @@ class PlanDayPlateView extends StatelessWidget {
     final cards = _cardsTotal;
     String? cardsMeta(AppLocalizations l) => cards > 0 ? l.planCardsCount(cards) : null;
 
-    // Кадр 22-5a: день ещё пишется — на месте этапов строка о сроке и разрешение уйти. Кнопки
-    // здесь НЕТ: нажимать пока не на что, а приглушённая кнопка обещала бы, что скоро можно.
     // «Day 3 · catching up» (GEN-3 `catch_up`): the next day opens as soon as this one closes — said on the day's
     // own plate, the closed day's plate names the next one by its date anyway.
     final label = plan.catchUp ? l.planPlateLabelCatchUp(day.number) : l.planPlateLabel(day.number);
 
+    // 21-3 «по подписке»: the day is there, its rows ahead, and it opens with a subscription — not with a date.
+    // FIRST, before the lesson's state: a free learner's locked day has no lesson written for it (`pending`), and
+    // «Собираем день» over it would promise a day the subscription holds.
+    if (day.lockedBySubscription) {
+      final count = cardsMeta(l);
+      final stages = _stages(l);
+      return DayPlate(
+        // Only «ДЕНЬ N»: «догоняем» says the day opens as soon as the one before closes — this one waits for the
+        // subscription (доработка CLIENT-START п. 5; the window's brow, 23-0a, is «ДЕНЬ N» already).
+        label: l.planPlateLabel(day.number),
+        title: title,
+        meta: count == null ? l.planPlateBySubscription : l.planDot(l.planPlateBySubscription, count),
+        cover: cover,
+        stages: stages,
+        footer: DayPlateFooter.locked(
+          note: l.planPlateOpensWithSubscription,
+          action: l.planPlateSubscription,
+          onTap: onSubscription,
+        ),
+        // The plate opens the day's window (23-0a «по подписке» — the free learner sees it whole); «Подписка» leads on.
+        onTap: onOpen,
+      );
+    }
+
+    // Кадр 22-5a: день ещё пишется — на месте этапов строка о сроке и разрешение уйти. Кнопки
+    // здесь НЕТ: нажимать пока не на что, а приглушённая кнопка обещала бы, что скоро можно.
     if (day.lessonBuilding) {
       return DayPlate(
         label: label,
@@ -71,7 +105,8 @@ class PlanDayPlateView extends StatelessWidget {
       );
     }
 
-    // Кадр 22-5c: день не собрался — маршрут остаётся, потерян только день, и действие одно.
+    // Кадр 22-5c: день не собрался — маршрут остаётся, потерян только день, и действие одно. It is a lesson that failed
+    // its checks twice, not the network (plan-api «Для CLIENT-START»): «Нет сети» only when a retry could not leave.
     if (day.lessonFailed) {
       return DayPlate(
         label: label,
@@ -81,7 +116,8 @@ class PlanDayPlateView extends StatelessWidget {
         stages: const [],
         notice: DayPlateNotice(
           title: l.planPlateFailedTitle,
-          sub: l.planPlateFailedSub(day.number),
+          sub: retryOffline ? l.planPlateNoNetwork : null,
+          offline: retryOffline,
         ),
         footer: DayPlateFooter.button(label: l.planPlateCtaRetry, onTap: onRetryLesson),
       );
@@ -185,7 +221,30 @@ class PlanDayPlateView extends StatelessWidget {
         ),
       );
     }
+    if (out.isEmpty && day.lockedBySubscription) return _windowRowsAhead(l, r);
 
     return out;
+  }
+
+  /// 21-3 «по подписке»: a free learner's locked day has no lesson written yet, so the room's own stages are all
+  /// `absent` — the day's rows are the window's (`window.stages`, the server's list for this day), every one «впереди».
+  List<DayPlateStage> _windowRowsAhead(AppLocalizations l, PlanDayRoom r) {
+    final DayWindow window;
+    try {
+      window = DayWindow.fromJson(r.windowJson);
+    } on PlanContractError catch (e) {
+      debugPrint('[plate] window of a subscription day: $e');
+      return const [];
+    }
+    return [
+      for (final s in window.stages)
+        if (s.stage != PlanStage.unknown)
+          DayPlateStage(
+            kind: planStageMark(s.stage),
+            name: planStageName(l, s.stage),
+            count: l.planPlateStateAhead,
+            state: DayPlateStageState.locked,
+          ),
+    ];
   }
 }

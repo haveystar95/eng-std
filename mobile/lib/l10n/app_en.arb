@@ -1,5 +1,4 @@
 {
-  "@@locale": "en",
   "triageCounter": "{current} of {total}",
   "triageSwipeHint": "Swipe or tap the buttons · tap to flip",
   "triageVerdictUnknown": "Don't know",
@@ -23,10 +22,7 @@
   "triageRemainingAfterSync": "{count, plural, one{{count} more after syncing} other{{count} more after syncing}}",
   "triageLoadError": "Couldn't load: {error}",
   "homeGeneratePlaceholder": "e.g. a visit to the doctor",
-  "homeGenerateChipDoctor": "At the doctor",
-  "homeGenerateChipRent": "Renting",
   "homeGenerateChipInterview": "Job interview",
-  "homeCollectionProgress": "{total, plural, one{{done} of {total} word} other{{done} of {total} words}}",
   "tabHome": "Today",
   "tabCollections": "Collections",
   "homeSessionTitle": "Session",
@@ -38,9 +34,7 @@
   "collectionTriageButton": "Sort {count}",
   "collectionTriageSubtitle": "New words in this set",
   "collectionLearnButton": "Learn {count}",
-  "collectionLearnSubtitle": "New words — learn them",
   "collectionReviewButton": "Review {count}",
-  "collectionReviewSubtitle": "Due for review",
   "collectionPracticeButton": "Free practice",
   "collectionPracticeSubtitle": "Nothing urgent — just practice",
   "collectionWordsLabel": "Words",
@@ -80,14 +74,6 @@
   },
   "collectionMoveWordFailed": "Could not move it",
   "collectionMoveWordNowhere": "You have no other collections yet",
-  "collectionDefaultUndeletable": "“{title}” is where saved words land, so it cannot be deleted. Renaming it is fine.",
-  "@collectionDefaultUndeletable": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "collectionMenuRename": "Rename",
   "collectionMenuDelete": "Delete set",
   "collectionMenuRemoveFromMine": "Remove from mine",
@@ -148,14 +134,12 @@
   "generateVoiceListening": "Listening · {time}",
   "generateVoiceStop": "Stop",
   "generateVoiceHelper": "Text appears in the field as it's recognised — after you stop you can edit it by hand.",
-  "generateVoiceRecordingNote": "Speak — the keyboard returns when you stop",
   "generateVoicePermissionDenied": "Microphone and speech recognition access is needed — enable it in Settings",
   "collectionSheetCreateTitle": "New collection",
   "collectionSheetEditTitle": "Rename collection",
   "collectionNameLabel": "Name",
   "collectionNameHint": "e.g. Travel",
   "collectionSheetCreateButton": "Create",
-  "searchTitle": "Word search",
   "searchFieldHint": "Find a word",
   "searchRecentLabel": "You searched",
   "searchPressEnter": "Press Enter to search for “{query}” whole",
@@ -308,69 +292,8 @@
   "homeOfflineBanner": "No connection. Reviews work as usual — we'll sync when you're back online.",
   "homeUnreachableTitle": "The server isn't answering",
   "homeUnreachableBody": "Today's plan couldn't be loaded. Pull down to try again — everything saved is still here.",
-  "homeGenerateOfflineNote": "Generation needs a connection. Your topic is saved and will run once you're back online.",
-  "appWordmark": "Слова",
-  "authTagline": "Words for real situations — from the bank to a job interview.",
-  "authContinueGoogle": "Continue with Google",
-  "authContinueApple": "Continue with Apple",
-  "authTerms": "Terms",
-  "authPrivacy": "Privacy",
-  "authOfflineHint": "No connection. The first sign-in needs the network.",
-  "authAppleUnavailable": "Sign in with Apple isn't available yet.",
-  "onbLangTitle": "Which language are you learning?",
-  "onbLangSubtitle": "You can change it in your profile anytime.",
-  "onbLevelTitle": "How confidently do you read?",
-  "onbLevelSubtitle": "Roughly — we'll refine it from how you sort your words.",
-  "onbLevelExample": "At {level}, collections include words like “wire transfer” and “make ends meet”.",
-  "onbGoalTitle": "How many words a day?",
-  "onbGoalSubtitle": "The goal only affects reminders and progress.",
-  "onbGoalMinutes": "≈ {count} min a day",
-  "onbGoalRecommended": "recommended",
-  "onbFooterNote": "All of this lives in your profile — level, goal and language aren't locked behind onboarding.",
-  "onbNext": "Next",
-  "onbStart": "Start",
-  "cefrHintA1": "beginner",
-  "cefrHintA2": "elementary",
-  "cefrHintB1": "intermediate",
-  "cefrHintB2": "upper",
-  "cefrHintC1": "advanced",
-  "cefrHintC2": "near-native",
   "profileTitle": "Profile",
-  "profileSectionLearning": "Learning",
-  "profileSectionApp": "App",
-  "profileSectionSubscription": "Subscription",
-  "profileSectionAccount": "Account",
-  "profileRowLevel": "Level",
-  "profileRowGoal": "Daily goal",
-  "profileRowTargetLang": "Learning language",
-  "profileRowUiLang": "Interface language",
-  "profileRowAutoPronounce": "Auto-pronounce",
-  "profileAutoPronounceHint": "Speak the word when the card appears",
-  "profileRowTransliteration": "Pronunciation hint",
-  "profileTransliterationHint": "Show how the word reads, in your own letters",
-  "profileRowReminders": "Reminders",
-  "profileRemindersHint": "One a day, when there's something to review",
-  "profileRowReminderTime": "Time",
-  "profileFreeTier": "Free tier",
-  "profileFreeTierHint": "3 generations a day",
-  "profileSoon": "Soon",
-  "profileSignOut": "Sign out",
-  "profileDeleteAccount": "Delete account",
-  "profileGoalValue": "{count, plural, one{{count} word} other{{count} words}}",
-  "uiLangSystem": "System",
-  "uiLangRussian": "Русский",
-  "uiLangEnglish": "English",
-  "profileUiLangSheet": "Interface language",
-  "profileLevelSheet": "Level",
-  "profileGoalSheet": "Daily goal",
-  "reminderSheetTitle": "When to remind you",
-  "reminderSheetSubtitle": "It works best at a time when you usually have five free minutes.",
   "commonSave": "Save",
-  "deleteAccountTitle": "Delete account?",
-  "deleteAccountBody": "All data and progress will be erased permanently: {words}, {streak} and all collections.",
-  "deleteAccountWords": "{count, plural, one{{count} word} other{{count} words}}",
-  "deleteAccountStreak": "{count, plural, one{{count}-day streak} other{{count}-day streak}}",
-  "deleteAccountConfirm": "Delete",
   "sessionPhaseIntro": "Getting to know",
   "sessionPhaseAssemble": "Assemble",
   "sessionPhaseReview": "Review",
@@ -423,7 +346,6 @@
   "sessionIntroAlso": "also:",
   "sessionInstrSpeakWord": "say the word out loud",
   "sessionInstrSpeakExample": "read the sentence out loud",
-  "sessionSpeakStart": "Speak",
   "sessionSpeakStop": "Done",
   "sessionSpeakListening": "Listening…",
   "sessionSpeakNotHeard": "Didn't catch that. Try again — a little closer to the mic.",
@@ -455,11 +377,7 @@
   "sessionEchoTry": "Say it back",
   "sessionEchoHeard": "Heard you",
   "sessionEchoAgain": "Give it another go",
-  "sessionEchoEnable": "Turn on the microphone",
-  "sessionHeaderIntro": "First look",
-  "sessionHeaderRecognition": "Recognition",
   "sessionInstrRecogniseTranslation": "choose the translation",
-  "sessionRecogniseJustMet": "you have just met this word",
   "ladderStep0": "first look",
   "ladderStep1": "recognition",
   "ladderStep3": "practice",
@@ -483,17 +401,8 @@
       }
     }
   },
-  "statusCountToSort": "{count, plural, one{Sort {count} word} other{Sort {count} words}}",
-  "@statusCountToSort": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "statusLegendTitle": "What the dots mean",
   "poolKnownLegend": "Marked “I know it” — it never walked the ladder.",
-  "ladderTitle": "WORD LADDER",
   "ladderKnownDash": "known",
   "ladderTrainWord": "Train this word",
   "sessionFeedbackCorrect": "Correct",
@@ -525,59 +434,9 @@
   "sessionExitCancel": "Continue",
   "sessionClose": "Close",
   "sessionListenReplay": "Replay audio",
-  "sessionInstrSituationalHear": "choose what they said",
-  "@sessionInstrSituationalHear": {
-    "description": "«Тебе скажут» situational instruction."
-  },
-  "sessionInstrSituationalSay": "choose what you will say",
-  "@sessionInstrSituationalSay": {
-    "description": "«Ты ответишь» situational instruction."
-  },
-  "sessionInstrAssembleTurn": "put your reply together from the blocks",
-  "sessionSceneRunHint": "say your line — there will be no text",
-  "@sessionSceneRunHint": {
-    "description": "Scene-run turn hint: the line is not on screen, only its translation (SCENE-RUN, Ч.2)."
-  },
-  "@sessionInstrAssembleTurn": {
-    "description": "Level B+ instruction — assemble the reply from blocks instead of choosing (SCENE-RUN, Ч.1)."
-  },
-  "sessionInstrSituationalAsk": "choose what you will ask",
-  "@sessionInstrSituationalAsk": {
-    "description": "«Ты спросишь» situational instruction."
-  },
-  "sessionSituationLabel": "Situation",
-  "@sessionSituationLabel": {
-    "description": "Caption over the position on a situational card."
-  },
-  "sessionSituationHearLabel": "You are about to hear",
-  "@sessionSituationHearLabel": {
-    "description": "Caption over the scene name on the hear card."
-  },
-  "sessionSituationRevealText": "Show the text",
-  "@sessionSituationRevealText": {
-    "description": "Reveals the interlocutor's line after the answer."
-  },
-  "sessionSituationTask": "Your task — {outcome}.",
-  "@sessionSituationTask": {
-    "description": "The ability this card serves, when the day has no paired role line.",
-    "placeholders": {
-      "outcome": {
-        "type": "String"
-      }
-    }
-  },
   "sessionListenReplaySlow": "Slower",
   "sessionEmpty": "Nothing to review here yet",
   "sessionDailyNewLimit": "You've reached today's new-word limit. Come back tomorrow",
-  "sessionLoadError": "Couldn't load the session: {error}",
-  "authErrorOffline": "No internet connection. Signing in needs a network.",
-  "authErrorGoogleUnsupported": "Google sign-in isn't supported on this platform.",
-  "authErrorCancelled": "Sign-in cancelled.",
-  "authErrorGoogle": "Google sign-in failed. Please try again.",
-  "authErrorGoogleToken": "Couldn't get a Google token.",
-  "authErrorLoginFailed": "Couldn't sign in. Please try again.",
-  "authErrorApple": "Sign in with Apple isn't available yet.",
-  "authErrorAppleToken": "Couldn't get an Apple token.",
   "practiceDialogEntry": "Conversation · 3 min",
   "practiceDialogEntrySubtitle": "Voice practice with AI",
   "practiceDialogOfflineHint": "Needs internet",
@@ -606,7 +465,6 @@
   "practiceDialogResultWords": "words: {used} of {total}",
   "storeSegmentMine": "Mine",
   "storeSegmentReady": "Ready-made",
-  "storeSectionOther": "Other",
   "storeWordsCount": "{count, plural, one{{count} word} other{{count} words}}",
   "storeInLibrary": "In library",
   "storeAddToMine": "Add to mine",
@@ -644,14 +502,6 @@
   "paywallTerms": "Terms",
   "paywallPrivacy": "Privacy",
   "paywallDevPurchased": "Premium activated (dev mode)",
-  "paywallNeedsRealPremium": "Needs real Premium (StoreKit is a separate block)",
-  "profileTryPremium": "Try Premium",
-  "profileFreeTierReset": "3 generations a day · resets at {time}",
-  "profilePremiumActive": "Premium",
-  "profilePremiumBadge": "active",
-  "profilePremiumHint": "Subscription active",
-  "profileManageSubscription": "Manage subscription",
-  "profileRestorePurchases": "Restore purchases",
   "profileSectionDev": "Development",
   "devFlagStore": "Collections store",
   "devFlagPaywall": "Paywall",
@@ -674,7 +524,6 @@
   "sessionLoadFailed": "Couldn't load the session",
   "syncStuckBanner": "Answers aren't reaching the server — check your connection",
   "syncUnreachableBanner": "Server unreachable · showing what's saved",
-  "poolNotStudyingNote": "This word is on the shelf — you are not studying it yet.",
   "poolEnrollAction": "Learn this word",
   "poolEnrollNote": "It joins the queue and starts coming up in your sessions.",
   "poolUnenrollAction": "Stop studying",
@@ -693,8 +542,6 @@
   "myWordsEmptyTitle": "Nothing here yet",
   "myWordsEmptyMessage": "Words land here when you sweep a collection with “don’t know” or “not sure” — or tap “Learn this word” on a word card.",
   "myWordsNothingFound": "Nothing found",
-  "topicSessionAction": "Session by topic",
-  "topicSessionTitle": "Pick a topic",
   "homeStreakBadge": "Streak {count}",
   "@homeStreakBadge": {
     "description": "Streak badge in the home header (frame 17a).",
@@ -703,10 +550,6 @@
         "type": "int"
       }
     }
-  },
-  "homeSessionCardTitle": "Today's session",
-  "@homeSessionCardTitle": {
-    "description": "Title of the day's dark card (frame 17a)."
   },
   "challengeLabel": "Word challenge",
   "challengeStreak": "{count, plural, one{{count} in a row} other{{count} in a row}}",
@@ -742,92 +585,9 @@
       }
     }
   },
-  "homeSessionPartRepeat": "{count, plural, one{{count} to review} other{{count} to review}}",
-  "@homeSessionPartRepeat": {
-    "description": "Session composition: repeats.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeSessionPartNew": "{count, plural, one{{count} new} other{{count} new}}",
-  "@homeSessionPartNew": {
-    "description": "Session composition: first meetings.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeSessionPartTriage": "{count, plural, one{{count} to sort} other{{count} to sort}}",
-  "@homeSessionPartTriage": {
-    "description": "Session composition: triage swipes.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "homeSessionStart": "Start",
   "@homeSessionStart": {
     "description": "Button on the day's dark card (frame 17a)."
-  },
-  "homeInWorkTitle": "{count, plural, one{In progress — {count} word} other{In progress — {count} words}}",
-  "@homeInWorkTitle": {
-    "description": "«In progress» heading — the pool's size (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeInWorkWaiting": "{count, plural, one{{count} waiting in line} other{{count} waiting in line}}",
-  "@homeInWorkWaiting": {
-    "description": "Pool words never shown yet (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeInWorkPace": "{days, plural, one{at {perDay} new a day the queue clears in ~{days} day} other{at {perDay} new a day the queue clears in ~{days} days}}",
-  "@homeInWorkPace": {
-    "description": "When the queue reaches the last waiting word (ICU plural on days).",
-    "placeholders": {
-      "perDay": {
-        "type": "int"
-      },
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "homeInWorkQueueStands": "{count, plural, one{take {count} now and the queue moves today} other{take {count} now and the queue moves today}}",
-  "@homeInWorkQueueStands": {
-    "description": "«In progress» line in state B (frame 17d): the day's quota is untouched.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeEdgeTitle": "About to slip",
-  "@homeEdgeTitle": {
-    "description": "Heading of the soonest-due words section (frame 17a)."
-  },
-  "homeEdgeTomorrow": "due tomorrow",
-  "@homeEdgeTomorrow": {
-    "description": "A word's due day: tomorrow."
-  },
-  "homeEdgeInDays": "{count, plural, one{in {count} day} other{in {count} days}}",
-  "@homeEdgeInDays": {
-    "description": "A word's due day (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "homeHardestTitle": "Hardest today",
   "@homeHardestTitle": {
@@ -842,15 +602,6 @@
       }
     }
   },
-  "homeSectionCount": "{count, plural, one{{count} word} other{{count} words}}",
-  "@homeSectionCount": {
-    "description": "Counter beside a section heading (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "homeDoneTitle": "Done for today",
   "@homeDoneTitle": {
     "description": "Title of the evening card (frame 17b)."
@@ -859,18 +610,6 @@
   "homeDoneCards": "{count, plural, one{{count} card} other{{count} cards}}",
   "homeDoneMinutes": "{count, plural, one{{count} min} other{{count} min}}",
   "homeChainProgress": "{total, plural, one{card {position} of {total}} other{card {position} of {total}}}",
-  "homeDoneOf": "{done} of {total}",
-  "@homeDoneOf": {
-    "description": "The day's progress: answered cards out of planned.",
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "homeDoneDuration": "{minutes} min {seconds} s",
   "@homeDoneDuration": {
     "description": "How long the session took.",
@@ -942,23 +681,6 @@
       }
     }
   },
-  "homeContinueLabel": "Continue",
-  "@homeContinueLabel": {
-    "description": "Label of the abandoned-collection card (frame 17a)."
-  },
-  "homeContinueAbandoned": "{count, plural, one{left {count} day ago} other{left {count} days ago}}",
-  "@homeContinueAbandoned": {
-    "description": "How long ago the collection was last touched (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeGenerateRow": "Build a collection on a topic",
-  "@homeGenerateRow": {
-    "description": "Entry row into generation on the home screen (frame 17a)."
-  },
   "homeStoreLink": "{count, plural, one{or take one of {count} ready-made} other{or take one of {count} ready-made}}",
   "@homeStoreLink": {
     "description": "Quiet store entry line under generation (ICU plural).",
@@ -985,27 +707,6 @@
   "@homeFirstDayTitle": {
     "description": "First-day greeting (frame 17c)."
   },
-  "homeFirstDayReadyTitle": "{count, plural, one{Take a ready-made set ({count} topic)} other{Take a ready-made set ({count} topics)}}",
-  "@homeFirstDayReadyTitle": {
-    "description": "First card of the first day (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeFirstDayReadyHint": "The words are already chosen, voiced and levelled",
-  "@homeFirstDayReadyHint": {
-    "description": "Caption of the ready-made sets card (frame 17c)."
-  },
-  "homeFirstDayOwnTitle": "Build your own from a description",
-  "@homeFirstDayOwnTitle": {
-    "description": "Second card of the first day (frame 17c)."
-  },
-  "homeFirstDayOwnHint": "Describe a situation — AI will pick the words and phrases for it",
-  "@homeFirstDayOwnHint": {
-    "description": "Caption of the generation card (frame 17c)."
-  },
   "homeSortOffer": "{count, plural, one{You can sort {count} more word from “{title}”} other{You can sort {count} more words from “{title}”}}",
   "@homeSortOffer": {
     "description": "The swipe-pass offer once the day is closed (frames 17b/17d).",
@@ -1031,10 +732,6 @@
   "@homeSortFirstTitle": {
     "description": "Headline instead of «All reviewed» when nothing is in progress yet."
   },
-  "onbNativeTitle": "Which language should translations be in?",
-  "onbNativeSubtitle": "Translations, explanations and preparation plans use it. You can change it in your profile.",
-  "profileRowNativeLang": "Native language",
-  "profileNativeLangHint": "Existing collections stay as they are",
   "profileNativeLangConfirmTitle": "Translations in {language}?",
   "@profileNativeLangConfirmTitle": {
     "placeholders": {
@@ -1043,35 +740,10 @@
       }
     }
   },
-  "profileNativeLangConfirmBody": "New collections and plans will use it. Existing collections stay as they are — their translations are not rewritten.",
+  "profileNativeLangConfirmBody": "New collections and plans will use it. Existing collections stay as they are — their translations are not rewritten.",
   "tabPlan": "Plan",
   "searchOpen": "Search",
   "commonBack": "Back",
-  "sessionSayIntent": "Say: {intent}",
-  "homePlanCardBadge": "Plan · day {index} of {total}",
-  "@homePlanCardBadge": {
-    "placeholders": {
-      "index": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "homePlanCardEventIn": "{days, plural, one{Event in {days} day} other{Event in {days} days}}",
-  "@homePlanCardEventIn": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "homePlanCardEventToday": "Event today",
-  "homePlanCardContinue": "Continue",
-  "homePlanInviteTitle": "Got a date and a goal?",
-  "homePlanInviteBody": "We will build the preparation days — from a doctor's appointment to a job interview.",
-  "homePlanInviteCta": "Make one",
   "devVoicesTitle": "Line voices",
   "devVoicesLead": "The same five lines of the qa plan, read by every candidate at one pace. Judge them on the phone rather than in the files: the speaker and the headphones decide more than a spectrogram.",
   "devVoicesSystem": "The phone's own voice",
@@ -1080,28 +752,6 @@
   "devVoicesPlayAll": "All five",
   "devVoicesStop": "Stop",
   "devVoicesFavourite": "This session's favourite",
-  "devVoiceTrouble": "Voice: {silent} lines fell back to the system voice, {failed} downloads failed",
-  "devQaClockTitle": "QA · the plan's “today”",
-  "@devQaClockTitle": {
-    "description": "Дев-меню (DAY-FIX-2, Ч.7): сдвиг «сегодня» плана на QA-аккаунте за dev-дверью."
-  },
-  "devQaClockShift": "{days, plural, =0{no shift} one{shifted by {days} day} other{shifted by {days} days}}",
-  "@devQaClockShift": {
-    "description": "Текущий сдвиг под заголовком строки.",
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "devQaClockPlus": "+1 day",
-  "@devQaClockPlus": {
-    "description": "Кнопка сдвига «сегодня» плана на день вперёд."
-  },
-  "devQaClockReset": "Reset",
-  "@devQaClockReset": {
-    "description": "Кнопка сброса сдвига «сегодня» плана."
-  },
   "planTitle": "Plan",
   "@planTitle": {},
   "planEmptyTitle": "The conversation you are getting ready for",
@@ -1415,18 +1065,9 @@
   "@planPlateBuildingSub": {
     "description": "Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub)."
   },
-  "planPlateFailedTitle": "The day did not build",
+  "planPlateFailedTitle": "Couldn’t put the day together",
   "@planPlateFailedTitle": {
     "description": "Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title)."
-  },
-  "planPlateFailedSub": "The network dropped. The route is intact — only day {n} is missing",
-  "@planPlateFailedSub": {
-    "description": "Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub).",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
   },
   "planPlateCtaRetry": "Try again",
   "@planPlateCtaRetry": {
@@ -2133,15 +1774,6 @@
   "planWindowSheetReturnsOn": "comes back on day {n}",
   "planWindowSheetReturnsTomorrow": "comes back tomorrow",
   "planWindowSheetClose": "Close",
-  "profileRowSounds": "Sounds",
-  "@profileRowSounds": {},
-  "profileSoundsHint": "Correct · wrong · stage closed · day closed",
-  "@profileSoundsHint": {},
-  "profileRowSessionSounds": "Sounds in the session",
-  "@profileRowSessionSounds": {},
-  "profileSessionSoundsHint": "Correct · miss · recording · stage done",
-  "@profileSessionSoundsHint": {},
-  "dayCards": "{n, plural, one{{n} card} other{{n} cards}}",
   "dayMinutes": "{n, plural, one{{n} minute} other{{n} minutes}}",
   "planSessionStateDone": "done",
   "planSessionStateAhead": "ahead",
@@ -2285,7 +1917,7 @@
     }
   },
   "planTalkEntryRuleStart": "They speak first. Answer, and ask your own questions.",
-  "planTalkEntryRuleRescue": "Lost the thread — tap «Didn't get it» and they will say it more simply.",
+  "planTalkEntryRuleRescue": "Lost the thread — tap «Didn't get it» and {gender, select, female{she} male{he} other{they}} will say it more simply.",
   "planTalkEntryRuleCounts": "What counts: what you said, the day's phrases, the questions you got.",
   "planTalkStart": "Start the talk",
   "planTalkRescueAction": "Didn't get it",
@@ -2482,8 +2114,6 @@
   "planVoiceFemale": "Female",
   "planVoiceFemaleHint": "higher and softer",
   "planVoiceInProfile": "You can change it in your profile",
-  "profileRowVoice": "Voice of your lines",
-  "profileVoiceUnset": "not chosen",
   "planTalkConstructions": "Constructions in the talk",
   "planTalkYouSaid": "you said: {said}",
   "planTalkRepeatBefore": "go over it before the conversation",
@@ -2496,7 +2126,7 @@
   "planTalkSceneNumber": "Scene {n}",
   "planTalkSceneOf": "Scene {n} of {total}",
   "planTalkSceneContinue": "Continue",
-  "planTalkEntryRuleStartRole": "{role} speaks first. Answer, and ask your own questions.",
+  "planTalkEntryRuleStartRole": "{gender, select, female{{role} speaks first.} other{{role} speaks first.}} Answer, and ask your own questions.",
   "planTalkEntrySceneByScene": "The talk goes scene by scene",
   "planWindowReturnedFromDay": "Back from day {n}",
   "@planWindowReturnedFromDay": {
@@ -2520,5 +2150,131 @@
     "description": "Кнопка пройденного дня (23-0c): ведёт на итог дня 30-7; повтора дня целиком нет."
   },
   "planWindowSummary": "Summary",
-  "planWindowTalkReplayLimit": "The talk was already replayed today — come back tomorrow"
+  "planWindowTalkReplayLimit": "The talk was already replayed today — come back tomorrow",
+  "startSlogan": "Prepared to speak.",
+  "startSignInApple": "Sign in with Apple",
+  "startSignInGoogle": "Sign in with Google",
+  "startSignInFailed": "Couldn’t sign in. Try again",
+  "startLegal": "By continuing you accept the {terms} and {privacy}",
+  "@startLegal": {
+    "placeholders": {"terms": {"type": "String"}, "privacy": {"type": "String"}}
+  },
+  "startLegalTerms": "Terms",
+  "startLegalPrivacy": "Privacy Policy",
+  "introSkip": "Skip",
+  "introStart": "Start",
+  "introATitle": "A big conversation\nis coming.\nYou’ll be ready.",
+  "introAThought": "A doctor, a landlord, an interview, the bank. Name the event — the plan builds itself around it.",
+  "introALineNative": "",
+  "introSceneAirport": "airport",
+  "introSceneBank": "bank",
+  "introSceneInterview": "interview",
+  "introSceneRent": "rent",
+  "introSceneDoctor": "doctor",
+  "introBTitle": "A language\nfor every conversation.",
+  "introBThought": "English, German, Romanian, Polish, Spanish, Italian, French. Pick it per plan; hints stay in your own language.",
+  "introCBrow": "6 days · 20 min a day",
+  "introCToday": "today",
+  "introCDate": "October 2",
+  "introCEvent": "doctor’s appointment",
+  "introStageWords": "Words",
+  "introStagePhrases": "Phrases",
+  "introStageDialogue": "Dialogue",
+  "introStageListen": "Listen",
+  "introStageSpeak": "Speak",
+  "introStageTalk": "Talk",
+  "introCTitle": "Twenty minutes a day —\nout loud.",
+  "introCThought": "Words, phrases, dialogue: you listen and speak, not type. Exactly the days left before the event.",
+  "introDLineNative": "",
+  "introDTap": "tap to speak",
+  "introDTitle": "A live conversation\nwith AI — no script.",
+  "introDThought": "It hears what you said and answers that. Ask again, wander off — it keeps up.",
+  "introECaption": "three sets from the store · your own words from plans",
+  "introECoverCity": "Home and city",
+  "introECoverHealth": "Health",
+  "introECoverWork": "Work",
+  "introEWordCount": "{count, plural, one{{count} word} other{{count} words}}",
+  "@introEWordCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "introETitle": "Your words\nstay with you.",
+  "introEThought": "Your own collections and ready-made sets. Review between plans — nothing gets lost.",
+  "accountSignedInApple": "Signed in with Apple",
+  "accountSignedInGoogle": "Signed in with Google",
+  "accountGroupSubscription": "Subscription",
+  "accountFree": "Free",
+  "accountFreeValue": "one plan, day 1",
+  "accountPremium": "Premium",
+  "accountPremiumUntil": "renews {date}",
+  "@accountPremiumUntil": {
+    "placeholders": {"date": {"type": "String"}}
+  },
+  "accountPremiumForever": "no end date",
+  "accountManageSubscription": "Manage subscription",
+  "accountRestorePurchases": "Restore purchases",
+  "accountGroupLearning": "Learning",
+  "accountVoice": "Learner voice",
+  "accountVoiceMale": "male",
+  "accountVoiceFemale": "female",
+  "accountSessionSounds": "Session sounds",
+  "accountUiLanguage": "App language",
+  "accountUiRussian": "Русский",
+  "accountUiEnglish": "English",
+  "accountNativeLanguage": "Native language",
+  "accountGroupReminders": "Reminders",
+  "accountRemind": "Remind me about the day",
+  "accountTime": "Time",
+  "accountGroupApp": "App",
+  "accountTerms": "Terms",
+  "accountPrivacy": "Privacy",
+  "accountSupport": "Support",
+  "accountSupportValue": "email",
+  "accountRate": "Rate Ritora",
+  "accountSignOut": "Sign out",
+  "accountDelete": "Delete account",
+  "accountNameTitle": "Name",
+  "accountNameHint": "What’s your name",
+  "accountDone": "Done",
+  "accountDeleteTitle": "Delete account?",
+  "accountDeleteBodyPlan": "Your plan “{plan}”, the days you’ve done and your settings will be gone. They can’t be restored.",
+  "@accountDeleteBodyPlan": {
+    "placeholders": {"plan": {"type": "String"}}
+  },
+  "accountDeleteBody": "The days you’ve done and your settings will be gone. They can’t be restored.",
+  "accountDeleteNote": "Cancel your subscription in the App Store",
+  "accountDeleteFailed": "Couldn’t delete. Try again",
+  "accountDeleting": "Deleting…",
+  "accountRemindersTitle": "Reminders",
+  "accountRemindersNote": "We remind you once a day, when the next day of the plan is waiting",
+  "accountRemindersDenied": "Notifications are off in iOS Settings — turn them on there",
+  "notifyAskTitle": "Remind you about day {day} tomorrow at {time}?",
+  "@notifyAskTitle": {
+    "placeholders": {"day": {"type": "int"}, "time": {"type": "String"}}
+  },
+  "notifyAskBody": "Once a day, nothing more",
+  "notifyAskLater": "Not now",
+  "notifyAskYes": "Remind me",
+  "micAskTitle": "Ritora listens to how you speak",
+  "micAskBody": "The microphone is how you speak: in Dialogue, Speak and the conversation",
+  "micAskLater": "Later",
+  "micAskAllow": "Allow microphone",
+  "planPlateNoNetwork": "No network",
+  "planPlateBySubscription": "with a subscription",
+  "planPlateOpensWithSubscription": "Opens with a subscription",
+  "planPlateSubscription": "Subscription",
+  "planRouteMetaOpensWithSubscription": "opens with a subscription",
+  "planRouteMetaBySubscription": "with a subscription",
+  "planKitLabel": "Rescue kit",
+  "planKitSub": "{n, plural, one{{n} line for any moment} other{{n} lines for any moment}}",
+  "@planKitSub": {
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "planKitAll": "all {n} →",
+  "@planKitAll": {
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "planKitCollapse": "collapse",
+  "planEntrySubscriptionTitle": "A second plan comes with a subscription",
+  "planEntryActiveLimitTitle": "No more than three plans at once",
+  "planEntryToTab": "Back to the plan"
 }

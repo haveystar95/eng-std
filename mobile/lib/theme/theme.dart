@@ -16,7 +16,6 @@ import 'colors.dart';
 import 'geometry.dart';
 import 'typography.dart';
 
-export 'brand_palette.dart';
 export 'colors.dart';
 export 'feedback.dart';
 export 'flag_palette.dart';
@@ -25,6 +24,8 @@ export 'haptics.dart';
 export 'ink_density.dart';
 export 'motion.dart';
 export 'shadows.dart';
+export 'start_motion.dart';
+export 'start_typography.dart';
 export 'typography.dart';
 
 /// Baseline Material theme for the paper/ink system. Screens lean on the token

@@ -398,7 +398,7 @@ class _SpeakAnswerCardState extends State<SpeakAnswerCard> with _JudgedCardState
         children: [
           Center(child: SessionTextExit(key: const ValueKey('exit-skip'), label: l.planSessionSkip, brass: true, onTap: skip)),
           const SizedBox(height: 14),
-          SessionDockButton(key: const ValueKey('exit-again'), label: l.planSessionTryAgain, onTap: tryAgain),
+          DockButton(key: const ValueKey('exit-again'), label: l.planSessionTryAgain, onTap: tryAgain),
         ],
       );
     }
@@ -562,7 +562,7 @@ class _SpeakEchoCardState extends State<SpeakEchoCard> with VoiceCardState<Speak
             ),
           ),
           const SizedBox(height: 14),
-          SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
+          DockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
         ],
       );
     }
@@ -746,7 +746,7 @@ class _SpeakRetellCardState extends State<SpeakRetellCard> with VoiceCardState<S
             ),
           ),
           const SizedBox(height: 14),
-          SessionDockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
+          DockButton(label: l.planSessionNext, busy: env.advancing, onTap: () => unawaited(env.next())),
         ],
       );
     }

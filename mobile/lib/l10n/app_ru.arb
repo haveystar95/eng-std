@@ -1,5 +1,4 @@
 {
-  "@@locale": "ru",
   "triageCounter": "{current} из {total}",
   "@triageCounter": {
     "description": "Счётчик карточек в шапке триажа (кадр 2.2, «3 из 10»).",
@@ -115,29 +114,9 @@
   "@homeGeneratePlaceholder": {
     "description": "Плейсхолдер поля темы на карточке генерации."
   },
-  "homeGenerateChipDoctor": "У врача",
-  "@homeGenerateChipDoctor": {
-    "description": "Чип-пример темы."
-  },
-  "homeGenerateChipRent": "Аренда",
-  "@homeGenerateChipRent": {
-    "description": "Чип-пример темы."
-  },
   "homeGenerateChipInterview": "Собеседование",
   "@homeGenerateChipInterview": {
     "description": "Чип-пример темы."
-  },
-  "homeCollectionProgress": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
-  "@homeCollectionProgress": {
-    "description": "Прогресс коллекции на карточке ленты, «18 из 24 слов» (ICU plural). Предлог «из» требует родительного падежа, поэтому формы здесь НЕ счётные: 1 → «из 1 слова», 2 → «из 2 слов», 5 → «из 5 слов» (QA-OBS-5).",
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
   },
   "tabHome": "Сегодня",
   "@tabHome": {
@@ -218,10 +197,6 @@
       }
     }
   },
-  "collectionLearnSubtitle": "Новые слова — выучить",
-  "@collectionLearnSubtitle": {
-    "description": "Подстрока кнопки «Учить»."
-  },
   "collectionReviewButton": "Повторить {count}",
   "@collectionReviewButton": {
     "description": "Главная кнопка коллекции: подошёл срок повторения.",
@@ -230,10 +205,6 @@
         "type": "int"
       }
     }
-  },
-  "collectionReviewSubtitle": "Срок повторения подошёл",
-  "@collectionReviewSubtitle": {
-    "description": "Подстрока кнопки «Повторить»."
   },
   "collectionPracticeButton": "Свободная тренировка",
   "@collectionPracticeButton": {
@@ -380,15 +351,6 @@
   "collectionMoveWordNowhere": "Других своих коллекций пока нет",
   "@collectionMoveWordNowhere": {
     "description": "Переносить некуда — у пользователя одна коллекция."
-  },
-  "collectionDefaultUndeletable": "«{title}» — коллекция для сохранённых слов, её нельзя удалить. Переименовать можно.",
-  "@collectionDefaultUndeletable": {
-    "description": "Почему у коллекции по умолчанию нет удаления.",
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
   },
   "collectionMenuRename": "Переименовать",
   "@collectionMenuRename": {
@@ -715,10 +677,6 @@
   "@generateVoiceHelper": {
     "description": "Пояснение под полем при голосовом вводе (кадр 6c)."
   },
-  "generateVoiceRecordingNote": "Говори — клавиатура вернётся, когда остановишь запись",
-  "@generateVoiceRecordingNote": {
-    "description": "Подсказка на месте клавиатуры во время записи (кадр 6c)."
-  },
   "generateVoicePermissionDenied": "Нужен доступ к микрофону и распознаванию речи — включите в Настройках",
   "@generateVoicePermissionDenied": {
     "description": "Сообщение при отказе в разрешении на микрофон/распознавание."
@@ -742,10 +700,6 @@
   "collectionSheetCreateButton": "Создать",
   "@collectionSheetCreateButton": {
     "description": "Кнопка создания коллекции."
-  },
-  "searchTitle": "Поиск слова",
-  "@searchTitle": {
-    "description": "Заголовок экрана поиска."
   },
   "searchFieldHint": "Найти слово",
   "@searchFieldHint": {
@@ -1095,290 +1049,13 @@
   "@homeUnreachableBody": {
     "description": "Пояснение под homeUnreachableTitle: выход — pull-to-refresh, данные не потеряны (BUG-1)."
   },
-  "homeGenerateOfflineNote": "Генерация недоступна без сети. Тема сохранится и уйдёт в работу, когда связь вернётся.",
-  "@homeGenerateOfflineNote": {
-    "description": "Пояснение на пунктирной карточке генерации в офлайне (кадр 9c)."
-  },
-  "appWordmark": "Слова",
-  "@appWordmark": {
-    "description": "Словесный знак приложения на экране входа (бренд, не переводится)."
-  },
-  "authTagline": "Слова для реальных ситуаций — от банка до собеседования.",
-  "@authTagline": {
-    "description": "Подзаголовок на экране входа (кадр 10a)."
-  },
-  "authContinueGoogle": "Продолжить с Google",
-  "@authContinueGoogle": {
-    "description": "Кнопка входа через Google (кадр 10a)."
-  },
-  "authContinueApple": "Продолжить с Apple",
-  "@authContinueApple": {
-    "description": "Подпись кнопки Apple. SignInWithAppleButton рисуется Flutter'ом и по умолчанию несёт зашитое английское «Sign in with Apple» — локаль устройства тут ни при чём (QA-OBS-31). Формулировка обязана оставаться одним из вариантов, разрешённых Apple HIG: sign in / sign up / continue with Apple."
-  },
-  "authTerms": "Условия",
-  "@authTerms": {
-    "description": "Ссылка на условия (кадр 10a)."
-  },
-  "authPrivacy": "Конфиденциальность",
-  "@authPrivacy": {
-    "description": "Ссылка на политику конфиденциальности (кадр 10a)."
-  },
-  "authOfflineHint": "Нет сети. Для первого входа нужно подключение.",
-  "@authOfflineHint": {
-    "description": "Подсказка на экране входа в офлайне."
-  },
-  "authAppleUnavailable": "Вход через Apple пока недоступен.",
-  "@authAppleUnavailable": {
-    "description": "Ошибка, если Apple-вход не настроен (нет бэкенда/entitlement)."
-  },
-  "onbLangTitle": "Какой язык учим?",
-  "@onbLangTitle": {
-    "description": "Онбординг, шаг 1 — заголовок (кадр 10b)."
-  },
-  "onbLangSubtitle": "Можно поменять в профиле в любой момент.",
-  "@onbLangSubtitle": {
-    "description": "Онбординг, шаг 1 — подзаголовок."
-  },
-  "onbLevelTitle": "Насколько уверенно читаешь?",
-  "@onbLevelTitle": {
-    "description": "Онбординг, шаг 2 — заголовок (кадр 10c)."
-  },
-  "onbLevelSubtitle": "Примерно — потом уточним по твоим ответам в разборе.",
-  "@onbLevelSubtitle": {
-    "description": "Онбординг, шаг 2 — подзаголовок."
-  },
-  "onbLevelExample": "На {level} в коллекции попадают слова вроде «wire transfer» и «make ends meet».",
-  "@onbLevelExample": {
-    "description": "Онбординг, шаг 2 — пример слов для уровня.",
-    "placeholders": {
-      "level": {
-        "type": "String"
-      }
-    }
-  },
-  "onbGoalTitle": "Сколько слов в день?",
-  "@onbGoalTitle": {
-    "description": "Онбординг, шаг 3 — заголовок (кадр 10d)."
-  },
-  "onbGoalSubtitle": "Цель влияет только на напоминания и прогресс.",
-  "@onbGoalSubtitle": {
-    "description": "Онбординг, шаг 3 — подзаголовок."
-  },
-  "onbGoalMinutes": "≈ {count} минут в день",
-  "@onbGoalMinutes": {
-    "description": "Онбординг, шаг 3 — оценка времени.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "onbGoalRecommended": "рекомендуем",
-  "@onbGoalRecommended": {
-    "description": "Метка рекомендованной дневной цели."
-  },
-  "onbFooterNote": "Всё это меняется в профиле — уровень, цель и язык не заперты за онбордингом.",
-  "@onbFooterNote": {
-    "description": "Онбординг — сноска."
-  },
-  "onbNext": "Далее",
-  "@onbNext": {
-    "description": "Кнопка перехода к следующему шагу онбординга."
-  },
-  "onbStart": "Начать",
-  "@onbStart": {
-    "description": "Кнопка завершения онбординга."
-  },
-  "cefrHintA1": "начало",
-  "@cefrHintA1": {
-    "description": "Подпись уровня A1."
-  },
-  "cefrHintA2": "базовый",
-  "@cefrHintA2": {
-    "description": "Подпись уровня A2."
-  },
-  "cefrHintB1": "средний",
-  "@cefrHintB1": {
-    "description": "Подпись уровня B1."
-  },
-  "cefrHintB2": "уверенный",
-  "@cefrHintB2": {
-    "description": "Подпись уровня B2."
-  },
-  "cefrHintC1": "свободный",
-  "@cefrHintC1": {
-    "description": "Подпись уровня C1."
-  },
-  "cefrHintC2": "почти носитель",
-  "@cefrHintC2": {
-    "description": "Подпись уровня C2."
-  },
   "profileTitle": "Профиль",
   "@profileTitle": {
     "description": "Заголовок экрана профиля (кадр 11a)."
   },
-  "profileSectionLearning": "Обучение",
-  "@profileSectionLearning": {
-    "description": "Секция профиля: обучение."
-  },
-  "profileSectionApp": "Приложение",
-  "@profileSectionApp": {
-    "description": "Секция профиля: приложение."
-  },
-  "profileSectionSubscription": "Подписка",
-  "@profileSectionSubscription": {
-    "description": "Секция профиля: подписка."
-  },
-  "profileSectionAccount": "Аккаунт",
-  "@profileSectionAccount": {
-    "description": "Секция профиля: аккаунт."
-  },
-  "profileRowLevel": "Уровень",
-  "@profileRowLevel": {
-    "description": "Строка профиля: уровень."
-  },
-  "profileRowGoal": "Дневная цель",
-  "@profileRowGoal": {
-    "description": "Строка профиля: дневная цель."
-  },
-  "profileRowTargetLang": "Язык изучения",
-  "@profileRowTargetLang": {
-    "description": "Строка профиля: язык изучения."
-  },
-  "profileRowUiLang": "Язык интерфейса",
-  "@profileRowUiLang": {
-    "description": "Строка профиля: язык интерфейса."
-  },
-  "profileRowAutoPronounce": "Автопроизношение",
-  "@profileRowAutoPronounce": {
-    "description": "Строка профиля: автопроизношение."
-  },
-  "profileAutoPronounceHint": "Озвучивать слово при показе карточки",
-  "@profileAutoPronounceHint": {
-    "description": "Подпись автопроизношения."
-  },
-  "profileRowTransliteration": "Подсказка произношения",
-  "@profileRowTransliteration": {
-    "description": "Строка профиля: показывать чтение слова своими буквами на карточке."
-  },
-  "profileTransliterationHint": "Показывать, как читается слово, вашими буквами",
-  "@profileTransliterationHint": {
-    "description": "Подпись подсказки произношения."
-  },
-  "profileRowReminders": "Напоминания",
-  "@profileRowReminders": {
-    "description": "Строка профиля: напоминания."
-  },
-  "profileRemindersHint": "Одно в день, если есть что повторить",
-  "@profileRemindersHint": {
-    "description": "Подпись напоминаний."
-  },
-  "profileRowReminderTime": "Время",
-  "@profileRowReminderTime": {
-    "description": "Строка профиля: время напоминания."
-  },
-  "profileFreeTier": "Бесплатный тариф",
-  "@profileFreeTier": {
-    "description": "Строка подписки: бесплатный тариф."
-  },
-  "profileFreeTierHint": "3 генерации в день",
-  "@profileFreeTierHint": {
-    "description": "Подпись бесплатного тарифа."
-  },
-  "profileSoon": "Скоро",
-  "@profileSoon": {
-    "description": "Метка «скоро» у подписки."
-  },
-  "profileSignOut": "Выйти",
-  "@profileSignOut": {
-    "description": "Строка профиля: выйти."
-  },
-  "profileDeleteAccount": "Удалить аккаунт",
-  "@profileDeleteAccount": {
-    "description": "Строка профиля: удалить аккаунт."
-  },
-  "profileGoalValue": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
-  "@profileGoalValue": {
-    "description": "Значение дневной цели, «N слов».",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "uiLangSystem": "Системный",
-  "@uiLangSystem": {
-    "description": "Язык интерфейса: системный."
-  },
-  "uiLangRussian": "Русский",
-  "@uiLangRussian": {
-    "description": "Язык интерфейса: русский."
-  },
-  "uiLangEnglish": "English",
-  "@uiLangEnglish": {
-    "description": "Язык интерфейса: английский."
-  },
-  "profileUiLangSheet": "Язык интерфейса",
-  "@profileUiLangSheet": {
-    "description": "Заголовок шита выбора языка интерфейса."
-  },
-  "profileLevelSheet": "Уровень",
-  "@profileLevelSheet": {
-    "description": "Заголовок шита выбора уровня."
-  },
-  "profileGoalSheet": "Дневная цель",
-  "@profileGoalSheet": {
-    "description": "Заголовок шита выбора дневной цели."
-  },
-  "reminderSheetTitle": "Когда напомнить",
-  "@reminderSheetTitle": {
-    "description": "Заголовок шита выбора времени напоминания (кадр 13b)."
-  },
-  "reminderSheetSubtitle": "Лучше всего работает время, когда у тебя обычно есть пять свободных минут.",
-  "@reminderSheetSubtitle": {
-    "description": "Подзаголовок шита времени напоминания."
-  },
   "commonSave": "Сохранить",
   "@commonSave": {
     "description": "Кнопка сохранения."
-  },
-  "deleteAccountTitle": "Удалить аккаунт?",
-  "@deleteAccountTitle": {
-    "description": "Заголовок подтверждения удаления аккаунта (кадр 11b)."
-  },
-  "deleteAccountBody": "Все данные и прогресс будут удалены безвозвратно: {words}, {streak} и все коллекции.",
-  "@deleteAccountBody": {
-    "description": "Тело подтверждения удаления аккаунта с персональными числами.",
-    "placeholders": {
-      "words": {
-        "type": "String"
-      },
-      "streak": {
-        "type": "String"
-      }
-    }
-  },
-  "deleteAccountWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
-  "@deleteAccountWords": {
-    "description": "Часть «N слов» в подтверждении удаления.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "deleteAccountStreak": "{count, plural, one{{count} день стрика} few{{count} дня стрика} many{{count} дней стрика} other{{count} дней стрика}}",
-  "@deleteAccountStreak": {
-    "description": "Часть «N дней стрика» в подтверждении удаления.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "deleteAccountConfirm": "Удалить",
-  "@deleteAccountConfirm": {
-    "description": "Кнопка подтверждения удаления аккаунта."
   },
   "sessionPhaseIntro": "Знакомство",
   "@sessionPhaseIntro": {
@@ -1511,10 +1188,6 @@
   "sessionInstrSpeakExample": "прочитай предложение вслух",
   "@sessionInstrSpeakExample": {
     "description": "Инструкция speaking, поздняя форма: пример уже на экране, его нужно прочитать вслух."
-  },
-  "sessionSpeakStart": "Сказать",
-  "@sessionSpeakStart": {
-    "description": "Кнопка записи на карточке говорения — до начала прослушивания."
   },
   "sessionSpeakStop": "Готово",
   "@sessionSpeakStop": {
@@ -1669,25 +1342,9 @@
   "@sessionEchoAgain": {
     "description": "Мягкая отметка эха на интро: расслышать не удалось. Не оценка и не провал."
   },
-  "sessionEchoEnable": "Включить микрофон",
-  "@sessionEchoEnable": {
-    "description": "Семантика неактивного микрофончика на карточке знакомства: пермишена ещё нет, тап его запрашивает. Подписи на экране нет — только глиф (наряд A-4.1 Ч.5)."
-  },
-  "sessionHeaderIntro": "Знакомство",
-  "@sessionHeaderIntro": {
-    "description": "Шапка сессии на карточке знакомства (кадры 16a–16b)."
-  },
-  "sessionHeaderRecognition": "Узнавание",
-  "@sessionHeaderRecognition": {
-    "description": "Шапка сессии на ступенях узнавания 1–2 (кадры 16c-1, 16c-2)."
-  },
   "sessionInstrRecogniseTranslation": "выбери перевод",
   "@sessionInstrRecogniseTranslation": {
     "description": "Инструкция ступени 1: показан термин, выбрать перевод (кадр 16c-1)."
-  },
-  "sessionRecogniseJustMet": "вы только что познакомились с этим словом",
-  "@sessionRecogniseJustMet": {
-    "description": "Подпись на узнавании: слово встречалось в этой же сессии (кадр 16c-2)."
   },
   "ladderStep0": "знакомство",
   "@ladderStep0": {
@@ -1740,15 +1397,6 @@
       }
     }
   },
-  "statusCountToSort": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
-  "@statusCountToSort": {
-    "description": "«Разобрать N слов» — единственная форма, в которой разбор называется в интерфейсе. Слова «триаж»/«стряж» в UI не живут.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "statusLegendTitle": "Что значат точки",
   "@statusLegendTitle": {
     "description": "Заголовок шита-легенды, который открывается тапом по пяти точкам в «Моих словах» (Ч.4)."
@@ -1756,10 +1404,6 @@
   "poolKnownLegend": "Слово помечено «знаю» — по лестнице оно не шло.",
   "@poolKnownLegend": {
     "description": "Строка легенды про прочерк вместо точек: слово вне лестницы, а не в её начале."
-  },
-  "ladderTitle": "ЛЕСТНИЦА СЛОВА",
-  "@ladderTitle": {
-    "description": "Заголовок блока лестницы в развёрнутой карточке слова (кадр 16e)."
   },
   "ladderKnownDash": "знаю",
   "@ladderKnownDash": {
@@ -1933,47 +1577,6 @@
   "@sessionListenReplay": {
     "description": "Метка доступности кнопки повтора аудио (кадры 12g–12h)."
   },
-  "sessionInstrSituationalHear": "выбери, что он сказал",
-  "@sessionInstrSituationalHear": {
-    "description": "Инструкция «Тебе скажут» на ситуационной карточке (SIT-1): реплика звучит, варианты — смыслы на языке поддержки."
-  },
-  "sessionInstrSituationalSay": "выбери, что ответишь",
-  "@sessionInstrSituationalSay": {
-    "description": "Инструкция «Ты ответишь» на ситуационной карточке (SIT-1, канон §4)."
-  },
-  "sessionInstrAssembleTurn": "собери свой ответ из блоков",
-  "sessionSceneRunHint": "скажи свою реплику — текста не будет",
-  "@sessionSceneRunHint": {
-    "description": "Подсказка на ходу прогона сцены: реплики на экране нет, есть только перевод (SCENE-RUN, Ч.2)."
-  },
-  "@sessionInstrAssembleTurn": {
-    "description": "Инструкция уровня B+ — сборка ответа из блоков вместо выбора из вариантов (SCENE-RUN, Ч.1)."
-  },
-  "sessionInstrSituationalAsk": "выбери, что спросишь",
-  "@sessionInstrSituationalAsk": {
-    "description": "Инструкция «Ты спросишь» на ситуационной карточке (SIT-1, канон §4)."
-  },
-  "sessionSituationLabel": "Ситуация",
-  "@sessionSituationLabel": {
-    "description": "Подпись над положением на ситуационной карточке (кадр D-04)."
-  },
-  "sessionSituationHearLabel": "Сейчас услышите",
-  "@sessionSituationHearLabel": {
-    "description": "Подпись над названием сцены на карточке «Тебе скажут» (кадр D-03)."
-  },
-  "sessionSituationRevealText": "Показать текст",
-  "@sessionSituationRevealText": {
-    "description": "Кнопка под карточкой «Тебе скажут»: показывает реплику после ответа."
-  },
-  "sessionSituationTask": "Твоя задача — {outcome}.",
-  "@sessionSituationTask": {
-    "description": "Задача карточки, когда у дня нет парной реплики роли: умение сцены (канон §8).",
-    "placeholders": {
-      "outcome": {
-        "type": "String"
-      }
-    }
-  },
   "sessionListenReplaySlow": "Замедленно",
   "@sessionListenReplaySlow": {
     "description": "Кнопка замедленного повтора озвучки в аудировании (кадры 12g–12h)."
@@ -1985,47 +1588,6 @@
   "sessionDailyNewLimit": "Дневной лимит новых слов достигнут. Возвращайся завтра",
   "@sessionDailyNewLimit": {
     "description": "Пустая сессия «Учить N»: новые слова есть, но дневная квота новых исчерпана."
-  },
-  "sessionLoadError": "Не удалось загрузить сессию: {error}",
-  "@sessionLoadError": {
-    "description": "Ошибка загрузки сессии (сессии строятся на сервере, офлайн недоступны).",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "authErrorOffline": "Нет подключения к интернету. Для входа нужна сеть.",
-  "@authErrorOffline": {
-    "description": "Ошибка входа: нет сети (кадр 10a)."
-  },
-  "authErrorGoogleUnsupported": "Вход через Google не поддерживается на этой платформе.",
-  "@authErrorGoogleUnsupported": {
-    "description": "Ошибка входа: Google Sign-In недоступен на платформе."
-  },
-  "authErrorCancelled": "Вход отменён.",
-  "@authErrorCancelled": {
-    "description": "Ошибка входа: пользователь отменил вход."
-  },
-  "authErrorGoogle": "Не удалось войти через Google. Попробуй ещё раз.",
-  "@authErrorGoogle": {
-    "description": "Ошибка входа: сбой Google Sign-In."
-  },
-  "authErrorGoogleToken": "Не удалось получить токен Google.",
-  "@authErrorGoogleToken": {
-    "description": "Ошибка входа: нет ID-токена от Google."
-  },
-  "authErrorLoginFailed": "Не удалось войти. Попробуй ещё раз.",
-  "@authErrorLoginFailed": {
-    "description": "Ошибка входа: бэкенд отклонил обмен токена."
-  },
-  "authErrorApple": "Вход через Apple пока недоступен.",
-  "@authErrorApple": {
-    "description": "Ошибка входа: Apple-вход недоступен (нет бэкенда/платной команды)."
-  },
-  "authErrorAppleToken": "Не удалось получить токен Apple.",
-  "@authErrorAppleToken": {
-    "description": "Ошибка входа: нет identity-токена от Apple."
   },
   "practiceDialogEntry": "Разговор · 3 мин",
   "@practiceDialogEntry": {
@@ -2172,10 +1734,6 @@
   "storeSegmentReady": "Готовые",
   "@storeSegmentReady": {
     "description": "Сегмент таба «Коллекции»: стор готовых наборов (кадр 2.8)."
-  },
-  "storeSectionOther": "Разное",
-  "@storeSectionOther": {
-    "description": "Заголовок секции стора для наборов без темы."
   },
   "storeWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@storeWordsCount": {
@@ -2358,43 +1916,6 @@
   "@paywallDevPurchased": {
     "description": "Тост после фейковой покупки в dev-режиме (StoreKit — отдельный блок)."
   },
-  "paywallNeedsRealPremium": "Нужен настоящий Premium (StoreKit — отдельный блок)",
-  "@paywallNeedsRealPremium": {
-    "description": "Сообщение, когда сервер отклоняет подписку без реального premium."
-  },
-  "profileTryPremium": "Попробовать Premium",
-  "@profileTryPremium": {
-    "description": "Строка профиля (free): переход на пейволл (кадр 15a)."
-  },
-  "profileFreeTierReset": "3 генерации в день · сбрасываются в {time}",
-  "@profileFreeTierReset": {
-    "description": "Подпись бесплатного тарифа с временем сброса (кадр 15a).",
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "profilePremiumActive": "Premium",
-  "@profilePremiumActive": {
-    "description": "Строка профиля (premium): название тарифа (кадр 15b)."
-  },
-  "profilePremiumBadge": "активна",
-  "@profilePremiumBadge": {
-    "description": "Бейдж «активна» у строки Premium (кадр 15b)."
-  },
-  "profilePremiumHint": "Подписка активна",
-  "@profilePremiumHint": {
-    "description": "Подпись активной подписки Premium (кадр 15b)."
-  },
-  "profileManageSubscription": "Управлять подпиской",
-  "@profileManageSubscription": {
-    "description": "Строка профиля (premium): управление в App Store (кадр 15b)."
-  },
-  "profileRestorePurchases": "Восстановить покупки",
-  "@profileRestorePurchases": {
-    "description": "Строка профиля (premium): восстановление покупок (кадр 15b)."
-  },
   "profileSectionDev": "Разработка",
   "@profileSectionDev": {
     "description": "Dev-секция профиля (только при DEV_MENU)."
@@ -2459,10 +1980,6 @@
   "syncUnreachableBanner": "Сервер недоступен · показываю сохранённое",
   "@syncUnreachableBanner": {
     "description": "Последний синк не прошёл (SyncState.offline). Показывается и при живом Wi-Fi: канальный офлайн и молчащий сервер — разные вещи, а выглядели одинаково (BUG-1)."
-  },
-  "poolNotStudyingNote": "Слово на полке — ты его пока не учишь.",
-  "@poolNotStudyingNote": {
-    "description": "Развёрнутая карточка слова (16e) для слова вне пула: вместо лестницы, которой ещё нет. «На полке», а не «в каталоге»: слово ждёт разбора, и словарь статусов зовёт это состояние «Разобрать» (Ч.4)."
   },
   "poolEnrollAction": "Учить это слово",
   "@poolEnrollAction": {
@@ -2546,14 +2063,6 @@
   "@myWordsNothingFound": {
     "description": "Пустое состояние экрана «Мои слова» под активным поиском или фильтром."
   },
-  "topicSessionAction": "Тренировка по теме",
-  "@topicSessionAction": {
-    "description": "Вход на главном экране: учебная сессия, суженная до одной коллекции-источника."
-  },
-  "topicSessionTitle": "Выбери тему",
-  "@topicSessionTitle": {
-    "description": "Заголовок шита выбора коллекции для тематической тренировки."
-  },
   "homeStreakBadge": "Стрик {count}",
   "@homeStreakBadge": {
     "description": "Бейдж стрика в шапке главной (кадр 17a).",
@@ -2562,10 +2071,6 @@
         "type": "int"
       }
     }
-  },
-  "homeSessionCardTitle": "Сессия на сегодня",
-  "@homeSessionCardTitle": {
-    "description": "Заголовок тёмной карточки дня (кадр 17a)."
   },
   "challengeLabel": "Слово-вызов",
   "@challengeLabel": {
@@ -2692,92 +2197,9 @@
       }
     }
   },
-  "homeSessionPartRepeat": "{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}",
-  "@homeSessionPartRepeat": {
-    "description": "Состав сессии: повторения. Форма не склоняется — считается глагол, а не слова.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeSessionPartNew": "{count, plural, one{{count} новое} few{{count} новых} many{{count} новых} other{{count} новых}}",
-  "@homeSessionPartNew": {
-    "description": "Состав сессии: новые слова (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeSessionPartTriage": "{count, plural, one{{count} разобрать} few{{count} разобрать} many{{count} разобрать} other{{count} разобрать}}",
-  "@homeSessionPartTriage": {
-    "description": "Состав сессии: свайпы разбора.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "homeSessionStart": "Начать",
   "@homeSessionStart": {
     "description": "Кнопка тёмной карточки дня (кадр 17a)."
-  },
-  "homeInWorkTitle": "{count, plural, one{В работе — {count} слово} few{В работе — {count} слова} many{В работе — {count} слов} other{В работе — {count} слова}}",
-  "@homeInWorkTitle": {
-    "description": "Заголовок блока «В работе» — размер пула (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeInWorkWaiting": "{count, plural, one{{count} ждёт очереди} few{{count} ждут очереди} many{{count} ждут очереди} other{{count} ждут очереди}}",
-  "@homeInWorkWaiting": {
-    "description": "Сколько слов пула ещё ни разу не показывали (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeInWorkPace": "{days, plural, one{при {perDay} в день новым до очереди ~{days} день} few{при {perDay} в день новым до очереди ~{days} дня} many{при {perDay} в день новым до очереди ~{days} дней} other{при {perDay} в день новым до очереди ~{days} дня}}",
-  "@homeInWorkPace": {
-    "description": "Когда очередь дойдёт до последнего ждущего слова (ICU plural по дням).",
-    "placeholders": {
-      "perDay": {
-        "type": "int"
-      },
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "homeInWorkQueueStands": "{count, plural, one{возьмёте {count} сейчас — очередь двинется сегодня} few{возьмёте {count} сейчас — очередь двинется сегодня} many{возьмёте {count} сейчас — очередь двинется сегодня} other{возьмёте {count} сейчас — очередь двинется сегодня}}",
-  "@homeInWorkQueueStands": {
-    "description": "Строка «В работе» в состоянии Б (кадр 17d): квота дня цела, очередь стоит.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeEdgeTitle": "На грани забывания",
-  "@homeEdgeTitle": {
-    "description": "Заголовок секции слов с ближайшей датой повтора (кадр 17a)."
-  },
-  "homeEdgeTomorrow": "выпадет завтра",
-  "@homeEdgeTomorrow": {
-    "description": "Дата выпадения слова: завтра."
-  },
-  "homeEdgeInDays": "{count, plural, one{через {count} день} few{через {count} дня} many{через {count} дней} other{через {count} дня}}",
-  "@homeEdgeInDays": {
-    "description": "Дата выпадения слова, «через 2 дня» (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "homeHardestTitle": "Далось труднее всего",
   "@homeHardestTitle": {
@@ -2786,15 +2208,6 @@
   "homeHardestErrors": "{count, plural, one{{count} ошибка} few{{count} ошибки} many{{count} ошибок} other{{count} ошибки}}",
   "@homeHardestErrors": {
     "description": "Сколько раз слово ответили неверно в последней сессии (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeSectionCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
-  "@homeSectionCount": {
-    "description": "Счётчик справа от заголовка секции, «2 слова» (ICU plural).",
     "placeholders": {
       "count": {
         "type": "int"
@@ -2840,18 +2253,6 @@
     "description": "Внутренний прогресс одного слова, когда день дошёл до него одного: «1 слово · карточка 2 из 3». Пока слово в цепочке — строка живёт; цепочка кончилась — слово ушло из плана, и строки нет.",
     "placeholders": {
       "position": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "homeDoneOf": "{done} из {total}",
-  "@homeDoneOf": {
-    "description": "Прогресс дня: отвеченные карточки из запланированных, «32 из 32».",
-    "placeholders": {
-      "done": {
         "type": "int"
       },
       "total": {
@@ -2937,23 +2338,6 @@
         "type": "int"
       }
     }
-  },
-  "homeContinueLabel": "Продолжить",
-  "@homeContinueLabel": {
-    "description": "Лейбл карточки брошенной коллекции (кадр 17a)."
-  },
-  "homeContinueAbandoned": "{count, plural, one{брошено {count} день назад} few{брошено {count} дня назад} many{брошено {count} дней назад} other{брошено {count} дня назад}}",
-  "@homeContinueAbandoned": {
-    "description": "Давность последнего касания коллекции (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeGenerateRow": "Собрать коллекцию по теме",
-  "@homeGenerateRow": {
-    "description": "Строка входа в генерацию на главной (кадр 17a)."
   },
   "homeStoreLink": "{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}",
   "@homeStoreLink": {
@@ -3043,27 +2427,6 @@
   "@homeFirstDayTitle": {
     "description": "Приветствие первого дня (кадр 17c)."
   },
-  "homeFirstDayReadyTitle": "{count, plural, one{Взять готовый набор ({count} тема)} few{Взять готовый набор ({count} темы)} many{Взять готовый набор ({count} тем)} other{Взять готовый набор ({count} темы)}}",
-  "@homeFirstDayReadyTitle": {
-    "description": "Первая карточка первого дня (ICU plural).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "homeFirstDayReadyHint": "Слова уже отобраны, озвучены и размечены по уровню",
-  "@homeFirstDayReadyHint": {
-    "description": "Подпись карточки готовых наборов (кадр 17c)."
-  },
-  "homeFirstDayOwnTitle": "Собрать свою по описанию",
-  "@homeFirstDayOwnTitle": {
-    "description": "Вторая карточка первого дня (кадр 17c)."
-  },
-  "homeFirstDayOwnHint": "Опишите ситуацию — ИИ подберёт слова и фразы под неё",
-  "@homeFirstDayOwnHint": {
-    "description": "Подпись карточки генерации (кадр 17c)."
-  },
   "homeSortOffer": "{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}",
   "@homeSortOffer": {
     "description": "Предложение свайп-прохода, когда день закрыт (кадры 17b/17d).",
@@ -3089,22 +2452,6 @@
   "@homeSortFirstTitle": {
     "description": "Заголовок вместо «Всё повторено», когда в работе ещё ничего нет."
   },
-  "onbNativeTitle": "На каком языке показывать переводы?",
-  "@onbNativeTitle": {
-    "description": "Онбординг, шаг 1 (ONB-1) — родной язык. Спрашивается один раз за всё время."
-  },
-  "onbNativeSubtitle": "На нём будут переводы, объяснения и планы подготовки. Можно поменять в профиле.",
-  "@onbNativeSubtitle": {
-    "description": "Онбординг, шаг 1 — что покупает ответ."
-  },
-  "profileRowNativeLang": "Родной язык",
-  "@profileRowNativeLang": {
-    "description": "Строка профиля: родной язык (язык переводов)."
-  },
-  "profileNativeLangHint": "Существующие коллекции останутся как есть",
-  "@profileNativeLangHint": {
-    "description": "Подпись под строкой родного языка: смена языка не переписывает уже собранный материал."
-  },
   "profileNativeLangConfirmTitle": "Переводы на «{language}»?",
   "@profileNativeLangConfirmTitle": {
     "description": "Заголовок подтверждения смены родного языка.",
@@ -3114,7 +2461,7 @@
       }
     }
   },
-  "profileNativeLangConfirmBody": "Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.",
+  "profileNativeLangConfirmBody": "Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.",
   "@profileNativeLangConfirmBody": {
     "description": "Тело подтверждения смены родного языка."
   },
@@ -3129,56 +2476,6 @@
   "commonBack": "Назад",
   "@commonBack": {
     "description": "Ярлык кнопки «назад» для скринридера — план и поиск."
-  },
-  "sessionSayIntent": "Скажи: {intent}",
-  "@sessionSayIntent": {
-    "description": "Строка-намерение над сборкой (DAY-GATE-1, Ч.2.4): что именно надо сказать, на языке поддержки. Строка серверная (`task.intent`), префикс клиентский.",
-    "placeholders": {
-      "intent": {
-        "type": "String"
-      }
-    }
-  },
-  "homePlanCardBadge": "План · день {index} из {total}",
-  "@homePlanCardBadge": {
-    "description": "Латунная метка карточки плана на главной (кадр 08).",
-    "placeholders": {
-      "index": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "homePlanCardEventIn": "{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}",
-  "@homePlanCardEventIn": {
-    "description": "Правая метка карточки плана на главной.",
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "homePlanCardEventToday": "Событие сегодня",
-  "@homePlanCardEventToday": {
-    "description": "Правая метка карточки плана на главной."
-  },
-  "homePlanCardContinue": "Продолжить",
-  "@homePlanCardContinue": {
-    "description": "Кнопка карточки плана на главной."
-  },
-  "homePlanInviteTitle": "Есть дата и цель?",
-  "@homePlanInviteTitle": {
-    "description": "Приглашение на месте карточки плана (кадр 09)."
-  },
-  "homePlanInviteBody": "Соберём дни подготовки — от приёма у врача до собеседования.",
-  "@homePlanInviteBody": {
-    "description": "Пояснение приглашения составить план."
-  },
-  "homePlanInviteCta": "Составить",
-  "@homePlanInviteCta": {
-    "description": "Кнопка приглашения составить план."
   },
   "devVoicesTitle": "Голоса реплик",
   "@devVoicesTitle": {
@@ -3216,39 +2513,6 @@
   "devVoicesFavourite": "Фаворит сессии",
   "@devVoicesFavourite": {
     "description": "Метка у голоса, который предложен как фаворит. Решение — за владельцем."
-  },
-  "devVoiceTrouble": "Озвучка: {silent} реплик системным голосом, {failed} не скачалось",
-  "@devVoiceTrouble": {
-    "description": "Дев-бейдж сломанной трубы озвучки (наряд TTS-1). Показывается только при DEV_MENU: тихий фолбэк на системный голос при живом audio_url — дефект, и в дев-сборке он должен быть виден.",
-    "placeholders": {
-      "silent": {
-        "type": "int"
-      },
-      "failed": {
-        "type": "int"
-      }
-    }
-  },
-  "devQaClockTitle": "QA · «сегодня» плана",
-  "@devQaClockTitle": {
-    "description": "Дев-меню (DAY-FIX-2, Ч.7): сдвиг «сегодня» плана на QA-аккаунте за dev-дверью."
-  },
-  "devQaClockShift": "{days, plural, =0{без сдвига} one{сдвиг: {days} день} few{сдвиг: {days} дня} other{сдвиг: {days} дней}}",
-  "@devQaClockShift": {
-    "description": "Текущий сдвиг под заголовком строки.",
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "devQaClockPlus": "+1 день",
-  "@devQaClockPlus": {
-    "description": "Кнопка сдвига «сегодня» плана на день вперёд."
-  },
-  "devQaClockReset": "Сбросить",
-  "@devQaClockReset": {
-    "description": "Кнопка сброса сдвига «сегодня» плана."
   },
   "planTitle": "План",
   "@planTitle": {
@@ -3596,18 +2860,9 @@
   "@planPlateBuildingSub": {
     "description": "Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub)."
   },
-  "planPlateFailedTitle": "День не собрался",
+  "planPlateFailedTitle": "Не получилось собрать день",
   "@planPlateFailedTitle": {
-    "description": "Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title)."
-  },
-  "planPlateFailedSub": "Сеть пропала. Маршрут на месте, пропал только день {n}",
-  "@planPlateFailedSub": {
-    "description": "Подпись под «День не собрался» (кадр 22-5c, plan.plate.failed.sub).",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
+    "description": "Строка вместо этапов, когда день не собрался (кадр 22-5c, plan.plate.failed.title): урок не прошёл ворота дважды (lesson_status = failed) — это не сеть (CLIENT-START §6)."
   },
   "planPlateCtaRetry": "Повторить",
   "@planPlateCtaRetry": {
@@ -4486,30 +3741,6 @@
   "@planWindowSheetClose": {
     "description": "Шит слова (23-0e): единственная кнопка — текстовая, латунью; шит закрывается и тягой вниз."
   },
-  "profileRowSounds": "Звуки",
-  "@profileRowSounds": {
-    "description": "Строка профиля: выключатель звуков (токен-лист 4к-3)."
-  },
-  "profileSoundsHint": "Верно · неверно · этап закрыт · день закрыт",
-  "@profileSoundsHint": {
-    "description": "Подпись выключателя «Звуки» — четыре события 4к-3."
-  },
-  "profileRowSessionSounds": "Звуки в сессии",
-  "@profileRowSessionSounds": {
-    "description": "Строка профиля: выключатель шести звуков сессии дня владельца (верно, мимо, старт записи, итог этапа, день пройден, день готов; наряд SESSION-1b′); хранится на телефоне, по умолчанию включён; выключен — сессия звуки не загружает."
-  },
-  "profileSessionSoundsHint": "Верно · мимо · запись · этап пройден",
-  "@profileSessionSoundsHint": {
-    "description": "Подпись выключателя «Звуки в сессии»: главные события, которые звучат; карточки знакомства молчат."
-  },
-  "dayCards": "{n, plural, one{{n} карточка} few{{n} карточки} other{{n} карточек}}",
-  "@dayCards": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "dayMinutes": "{n, plural, one{{n} минута} few{{n} минуты} other{{n} минут}}",
   "@dayMinutes": {
     "placeholders": {
@@ -5170,13 +4401,18 @@
       }
     }
   },
-  "planTalkEntryRuleStart": "Собеседник начнёт первым. Отвечай и спрашивай сам.",
+  "planTalkEntryRuleStart": "Собеседник начнёт первым. Отвечай и спрашивай сам.",
   "@planTalkEntryRuleStart": {
     "description": "Вход в разговор (37-5): первая строка правил. Роль без склонения — «собеседник»."
   },
-  "planTalkEntryRuleRescue": "Не понял — нажми «Не понял», и он повторит проще.",
+  "planTalkEntryRuleRescue": "Не понял — нажми «Не понял», и {gender, select, female{она} other{он}} повторит проще.",
   "@planTalkEntryRuleRescue": {
-    "description": "Вход в разговор (37-5): вторая строка правил. Пример «скажи „Sorry?“» из кадра снят: он на английском, а язык цели бывает любым."
+    "description": "Вход в разговор (37-5): вторая строка правил. Пример «скажи „Sorry?“» из кадра снят: он на английском, а язык цели бывает любым. Род — тот же, что у первой строки (доработка CLIENT-START п. 2): female — роль первой сцены женщина (window.sources[].partner_gender, «Регистратор начнёт первой» → «она повторит»); male — роль мужчина; other — роли нет, строка «Собеседник начнёт первым» (→ «он»).",
+    "placeholders": {
+      "gender": {
+        "type": "String"
+      }
+    }
   },
   "planTalkEntryRuleCounts": "Считается: сказал сам, фразы дня, понял вопросы.",
   "@planTalkEntryRuleCounts": {
@@ -5562,14 +4798,6 @@
   "@planVoiceInProfile": {
     "description": "Лист голоса (38-1): строка под плашками — выбор не навсегда."
   },
-  "profileRowVoice": "Голос своих реплик",
-  "@profileRowVoice": {
-    "description": "Профиль: ряд выбора голоса своих реплик — тот же лист, что перед первым планом (38-1)."
-  },
-  "profileVoiceUnset": "не выбран",
-  "@profileVoiceUnset": {
-    "description": "Профиль: пол для голоса ещё не сказан — сервер озвучивает мужским, пока не сказан."
-  },
   "planTalkConstructions": "Конструкции в разговоре",
   "@planTalkConstructions": {
     "description": "Итог разговора (37-12, 37-12b): надпись над карточками конструкций; лист по тапу на ряд над микрофоном (37-8d): заголовок листа. Счётчика рядом нет — наряд FIX-3 §3 снял «N из M»."
@@ -5635,10 +4863,10 @@
   "@planTalkSceneContinue": {
     "description": "Карточка перехода между сценами (39-1): единственная кнопка — карточка сжимается в разделитель, здоровается роль следующей сцены."
   },
-  "planTalkEntryRuleStartRole": "{role} начнёт первым. Отвечай и спрашивай сам.",
+  "planTalkEntryRuleStartRole": "{gender, select, female{{role} начнёт первой.} other{{role} начнёт первым.}} Отвечай и спрашивай сам.",
   "@planTalkEntryRuleStartRole": {
-    "description": "Вход в разговор по нескольким сценам (37-5b): первая строка правил с ролью первой сцены в именительном, как её назвал план («Регистратор»). Рода роли сервер не шлёт — «первым» для всех (отчёт CLIENT-FIX-4 §7).",
-    "placeholders": { "role": { "type": "String" } }
+    "description": "Вход в разговор по нескольким сценам (37-5b): первая строка правил с ролью первой сцены в именительном, как её назвал план («Регистратор»); род — window.sources[].partner_gender первой сцены (FIX-4c §3): «Медсестра начнёт первой».",
+    "placeholders": { "role": { "type": "String" }, "gender": { "type": "String" } }
   },
   "planTalkEntrySceneByScene": "Разговор идёт сцена за сценой",
   "@planTalkEntrySceneByScene": {
@@ -5672,5 +4900,432 @@
   "planWindowTalkReplayLimit": "Разговор сегодня уже повторяли — вернись завтра",
   "@planWindowTalkReplayLimit": {
     "description": "Окно пройденного дня: шит на 409 plan_conversation_replay_limit — повтор разговора на сегодня исчерпан."
+  },
+  "startSlogan": "Готов говорить.",
+  "@startSlogan": {
+    "description": "Заставка (41-1c) и вход на ней (41-4): слоган под словомарком Ritora. Inter 15 серым."
+  },
+  "startSignInApple": "Войти с Apple",
+  "@startSignInApple": {
+    "description": "Вход на заставке (41-4): угольная кнопка с логотипом Apple. Формулировка из вариантов Apple HIG (sign in with Apple)."
+  },
+  "startSignInGoogle": "Войти с Google",
+  "@startSignInGoogle": {
+    "description": "Вход на заставке (41-4): карточка с контуром чернил и цветной «G»."
+  },
+  "startSignInFailed": "Не удалось войти. Попробуй ещё раз",
+  "@startSignInFailed": {
+    "description": "Вход (41-4b): строка чернилами над кнопками, когда вход не удался (сеть, сервер, провайдер). Отмена своего окна Apple/Google — не ошибка, строки нет."
+  },
+  "startLegal": "Продолжая, ты принимаешь {terms} и {privacy}",
+  "@startLegal": {
+    "description": "Вход (41-4): юрстрока под кнопками, 13 серым; {terms} и {privacy} — ссылки латунью (startLegalTerms, startLegalPrivacy).",
+    "placeholders": {"terms": {"type": "String"}, "privacy": {"type": "String"}}
+  },
+  "startLegalTerms": "Правила",
+  "@startLegalTerms": {
+    "description": "Ссылка «Правила» в юрстроке входа (41-4) и строка профиля (42-1)."
+  },
+  "startLegalPrivacy": "Конфиденциальность",
+  "@startLegalPrivacy": {
+    "description": "Ссылка «Конфиденциальность» в юрстроке входа (41-4); в профиле (42-1) — строка «Конфиденциальность» (en: Privacy)."
+  },
+  "introSkip": "Пропустить",
+  "@introSkip": {
+    "description": "Листы «зачем» (41-2 a–d): справа сверху, на фото — на плашке бумаги 60 %; ведёт на вкладку «План»."
+  },
+  "introStart": "Начать",
+  "@introStart": {
+    "description": "Последний лист «зачем» (41-2e): угольная кнопка → вкладка «План»."
+  },
+  "introATitle": "Скоро важный\nразговор.\nТы будешь готов.",
+  "@introATitle": {
+    "description": "Лист a (41-2a): заголовок Literata 30, три строки ручным переносом; точки латунью."
+  },
+  "introAThought": "Врач, аренда, собеседование, банк. Назови событие — план соберётся именно под него.",
+  "@introAThought": {
+    "description": "Лист a (41-2a): мысль под заголовком, Inter 15 серым."
+  },
+  "introALineNative": "Я хочу записаться на приём.",
+  "@introALineNative": {
+    "description": "Лист a (41-2a): перевод реплики «I’d like to make an appointment.» под ней, 13 серым. В английском интерфейсе пусто — строки нет."
+  },
+  "introSceneAirport": "аэропорт",
+  "@introSceneAirport": {
+    "description": "Лист a (41-2a): капитель на карточке сцены (печатается прописными)."
+  },
+  "introSceneBank": "банк",
+  "@introSceneBank": {
+    "description": "Лист a (41-2a): капитель на карточке сцены."
+  },
+  "introSceneInterview": "собеседование",
+  "@introSceneInterview": {
+    "description": "Лист a (41-2a): капитель на карточке сцены «собеседование»."
+  },
+  "introSceneRent": "аренда",
+  "@introSceneRent": {
+    "description": "Лист a (41-2a): капитель на карточке сцены."
+  },
+  "introSceneDoctor": "врач",
+  "@introSceneDoctor": {
+    "description": "Лист a (41-2a): капитель на верхней карточке сцены."
+  },
+  "introBTitle": "Язык —\nпод каждый разговор.",
+  "@introBTitle": {
+    "description": "Лист b (41-2b): заголовок, две строки; точка латунью."
+  },
+  "introBThought": "Английский, немецкий, румынский, польский, испанский, итальянский, французский. Выбираешь в каждом плане, подсказки — на родном.",
+  "@introBThought": {
+    "description": "Лист b (41-2b): мысль — семь языков дословно по реестру канвы."
+  },
+  "introCBrow": "6 дней · 20 минут в день",
+  "@introCBrow": {
+    "description": "Лист c (41-2c): бровь капителью над маршрутом (печатается прописными)."
+  },
+  "introCToday": "сегодня",
+  "@introCToday": {
+    "description": "Лист c (41-2c): подпись под узлом дня 2 маршрута."
+  },
+  "introCDate": "2 октября",
+  "@introCDate": {
+    "description": "Лист c (41-2c): капитель даты события над латунной точкой (печатается прописными)."
+  },
+  "introCEvent": "приём у врача",
+  "@introCEvent": {
+    "description": "Лист c (41-2c): название события под латунной точкой, 13 чернилами."
+  },
+  "introStageWords": "Слова",
+  "@introStageWords": {
+    "description": "Лист c (41-2c): подпись иконки этапа в ряду шести этапов."
+  },
+  "introStagePhrases": "Фразы",
+  "@introStagePhrases": {
+    "description": "Лист c (41-2c): подпись иконки этапа."
+  },
+  "introStageDialogue": "Диалог",
+  "@introStageDialogue": {
+    "description": "Лист c (41-2c): подпись иконки этапа."
+  },
+  "introStageListen": "Слушаю",
+  "@introStageListen": {
+    "description": "Лист c (41-2c): подпись иконки этапа «Слушаю и отвечаю» (коротко)."
+  },
+  "introStageSpeak": "Говорю",
+  "@introStageSpeak": {
+    "description": "Лист c (41-2c): подпись иконки этапа «Говорю сам» (коротко)."
+  },
+  "introStageTalk": "Разговор",
+  "@introStageTalk": {
+    "description": "Лист c (41-2c): подпись иконки этапа «Разговор»."
+  },
+  "introCTitle": "Двадцать минут\nв день — вслух.",
+  "@introCTitle": {
+    "description": "Лист c (41-2c): заголовок, две строки; точка латунью."
+  },
+  "introCThought": "Слова, фразы, диалог: слушаешь и говоришь, а не печатаешь. Ровно на те дни, что остались до события.",
+  "@introCThought": {
+    "description": "Лист c (41-2c): мысль под заголовком."
+  },
+  "introDLineNative": "Доброе утро. Что вас беспокоит?",
+  "@introDLineNative": {
+    "description": "Лист d (41-2d): перевод реплики роли в её пузыре, 15 серым. В английском интерфейсе пусто — строки нет."
+  },
+  "introDTap": "тап — говорить",
+  "@introDTap": {
+    "description": "Лист d (41-2d): подпись у микрофона 30-3 в покое."
+  },
+  "introDTitle": "Живой разговор с ИИ —\nне по сценарию.",
+  "@introDTitle": {
+    "description": "Лист d (41-2d): заголовок, две строки; точка латунью. Тире — в конце первой строки, перенос после него жёсткий: вторая строка с тире не начинается (доработка CLIENT-START п. 1)."
+  },
+  "introDThought": "Собеседник слышит, что ты сказал, и отвечает именно на это. Переспроси, отойди от темы — он подхватит.",
+  "@introDThought": {
+    "description": "Лист d (41-2d): мысль под заголовком."
+  },
+  "introECaption": "три подборки из стора · свои слова из планов",
+  "@introECaption": {
+    "description": "Лист e (41-2e): подпись 13 серым над заголовком."
+  },
+  "introECoverCity": "Быт и город",
+  "@introECoverCity": {
+    "description": "Лист e (41-2e): название обложки подборки стора, Literata 17."
+  },
+  "introECoverHealth": "Здоровье",
+  "@introECoverHealth": {
+    "description": "Лист e (41-2e): название средней обложки."
+  },
+  "introECoverWork": "Работа",
+  "@introECoverWork": {
+    "description": "Лист e (41-2e): название обложки."
+  },
+  "introEWordCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@introEWordCount": {
+    "description": "Лист e (41-2e): число слов под названием обложки, 13 серым.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "introETitle": "Слова остаются\nс тобой.",
+  "@introETitle": {
+    "description": "Лист e (41-2e): заголовок, две строки; точка латунью."
+  },
+  "introEThought": "Свои коллекции и готовые подборки. Повторяй между планами — ничего не пропадёт.",
+  "@introEThought": {
+    "description": "Лист e (41-2e): мысль под заголовком."
+  },
+  "accountSignedInApple": "Вход через Apple",
+  "@accountSignedInApple": {
+    "description": "Профиль (42-1): строка провайдера под именем, с галкой шалфея, без действия."
+  },
+  "accountSignedInGoogle": "Вход через Google",
+  "@accountSignedInGoogle": {
+    "description": "Профиль (42-1b): строка провайдера под именем."
+  },
+  "accountGroupSubscription": "Подписка",
+  "@accountGroupSubscription": {
+    "description": "Профиль (42-1): капитель группы подписки."
+  },
+  "accountFree": "Бесплатно",
+  "@accountFree": {
+    "description": "Профиль (42-1a): тариф без подписки (access.plan = free)."
+  },
+  "accountFreeValue": "один план, день 1",
+  "@accountFreeValue": {
+    "description": "Профиль (42-1a): что даёт бесплатный тариф — справа серым."
+  },
+  "accountPremium": "Premium",
+  "@accountPremium": {
+    "description": "Профиль (42-1b): тариф при access.plan = premium."
+  },
+  "accountPremiumUntil": "продлится {date}",
+  "@accountPremiumUntil": {
+    "description": "Профиль (42-1b): когда продлится подписка — access.expires_at, дата «25 октября».",
+    "placeholders": {"date": {"type": "String"}}
+  },
+  "accountPremiumForever": "бессрочно",
+  "@accountPremiumForever": {
+    "description": "Профиль (42-1b): право без срока (access.expires_at = null — выдано владельцем, lifetime)."
+  },
+  "accountManageSubscription": "Управлять подпиской",
+  "@accountManageSubscription": {
+    "description": "Профиль (42-1b): ведёт в подписки App Store."
+  },
+  "accountRestorePurchases": "Восстановить покупки",
+  "@accountRestorePurchases": {
+    "description": "Профиль (42-1b): перечитывает права аккаунта, без перехода (покупок в API нет до PAY-1)."
+  },
+  "accountGroupLearning": "Обучение",
+  "@accountGroupLearning": {
+    "description": "Профиль (42-1): капитель группы обучения."
+  },
+  "accountVoice": "Голос ученика",
+  "@accountVoice": {
+    "description": "Профиль (42-1): голос своих реплик (мужской/женский → сервер, лист 38-1)."
+  },
+  "accountVoiceMale": "мужской",
+  "@accountVoiceMale": {
+    "description": "Профиль (42-1): значение строки «Голос ученика»."
+  },
+  "accountVoiceFemale": "женский",
+  "@accountVoiceFemale": {
+    "description": "Профиль (42-1): значение строки «Голос ученика»."
+  },
+  "accountSessionSounds": "Звуки в сессии",
+  "@accountSessionSounds": {
+    "description": "Профиль (42-1): тумблер шести звуков сессии дня."
+  },
+  "accountUiLanguage": "Язык интерфейса",
+  "@accountUiLanguage": {
+    "description": "Профиль (42-1): язык интерфейса — шит выбора «русский / English»."
+  },
+  "accountUiRussian": "Русский",
+  "@accountUiRussian": {
+    "description": "Профиль (42-1): русский язык интерфейса — своим именем в любом интерфейсе."
+  },
+  "accountUiEnglish": "English",
+  "@accountUiEnglish": {
+    "description": "Профиль (42-1): английский язык интерфейса — своим именем."
+  },
+  "accountNativeLanguage": "Родной язык",
+  "@accountNativeLanguage": {
+    "description": "Профиль (42-1): родной язык аккаунта — список родных сервера минус цель (LANG-1)."
+  },
+  "accountGroupReminders": "Напоминания",
+  "@accountGroupReminders": {
+    "description": "Профиль (42-1): капитель группы напоминаний."
+  },
+  "accountRemind": "Напоминать о дне",
+  "@accountRemind": {
+    "description": "Профиль (42-1) и шит 42-4: тумблер напоминаний."
+  },
+  "accountTime": "Время",
+  "@accountTime": {
+    "description": "Профиль (42-1): время напоминания → шит 42-4."
+  },
+  "accountGroupApp": "Приложение",
+  "@accountGroupApp": {
+    "description": "Профиль (42-1): капитель группы приложения."
+  },
+  "accountTerms": "Правила",
+  "@accountTerms": {
+    "description": "Профиль (42-1): документ «Правила»."
+  },
+  "accountPrivacy": "Конфиденциальность",
+  "@accountPrivacy": {
+    "description": "Профиль (42-1): документ «Конфиденциальность»."
+  },
+  "accountSupport": "Поддержка",
+  "@accountSupport": {
+    "description": "Профиль (42-1): письмо в поддержку."
+  },
+  "accountSupportValue": "письмо",
+  "@accountSupportValue": {
+    "description": "Профиль (42-1): значение строки «Поддержка»."
+  },
+  "accountRate": "Оценить Ritora",
+  "@accountRate": {
+    "description": "Профиль (42-1): системное окно оценки App Store."
+  },
+  "accountSignOut": "Выйти",
+  "@accountSignOut": {
+    "description": "Профиль (42-1): текстом чернилами над «Удалить аккаунт»; POST /auth/logout → заставка 41-4a."
+  },
+  "accountDelete": "Удалить аккаунт",
+  "@accountDelete": {
+    "description": "Профиль (42-1) и шит 42-3: текст терракотой / кнопка контуром терракоты."
+  },
+  "accountNameTitle": "Имя",
+  "@accountNameTitle": {
+    "description": "Шит имени (42-2): заголовок."
+  },
+  "accountNameHint": "Как тебя зовут",
+  "@accountNameHint": {
+    "description": "Шит имени (42-2): плейсхолдер пустого поля. Подписи над полем нет — заголовок листа уже «Имя»."
+  },
+  "accountDone": "Готово",
+  "@accountDone": {
+    "description": "Шиты 42-2 и 42-4: угольная кнопка."
+  },
+  "accountDeleteTitle": "Удалить аккаунт?",
+  "@accountDeleteTitle": {
+    "description": "Шит удаления (42-3): заголовок."
+  },
+  "accountDeleteBodyPlan": "Исчезнут план «{plan}», пройденные дни и настройки. Восстановить их будет нельзя.",
+  "@accountDeleteBodyPlan": {
+    "description": "Шит удаления (42-3): что исчезнет, с названием текущего плана.",
+    "placeholders": {"plan": {"type": "String"}}
+  },
+  "accountDeleteBody": "Исчезнут пройденные дни и настройки. Восстановить их будет нельзя.",
+  "@accountDeleteBody": {
+    "description": "Шит удаления (42-3): то же, когда плана нет."
+  },
+  "accountDeleteNote": "Подписку отмени в App Store",
+  "@accountDeleteNote": {
+    "description": "Шит удаления (42-3): строка 13 серым под текстом."
+  },
+  "accountDeleteFailed": "Не удалось удалить. Попробуй ещё раз",
+  "@accountDeleteFailed": {
+    "description": "Шит удаления (42-3): DELETE /auth/me не прошёл (нет сети, 5xx) — ничего не удалено, кнопка снова живая."
+  },
+  "accountDeleting": "Удаляем…",
+  "@accountDeleting": {
+    "description": "Шит удаления (42-3b): кнопка, пока сервер удаляет; «Отмена» погашена, шит не закрывается."
+  },
+  "accountRemindersTitle": "Напоминания",
+  "@accountRemindersTitle": {
+    "description": "Шит напоминаний (42-4): заголовок."
+  },
+  "accountRemindersNote": "Мы напоминаем раз в день, когда ждёт следующий день плана",
+  "@accountRemindersNote": {
+    "description": "Шит напоминаний (42-4): строка под колесом."
+  },
+  "accountRemindersDenied": "Уведомления выключены в Настройках iOS — включить там",
+  "@accountRemindersDenied": {
+    "description": "Шит напоминаний (42-4): вместо колеса, когда iOS запретила уведомления; тап — Настройки."
+  },
+  "notifyAskTitle": "Напомнить про день {day} завтра в {time}?",
+  "@notifyAskTitle": {
+    "description": "Пред-запрос уведомлений (43-1): после итога дня 1 (и дня 2 после «Не сейчас»); день — следующий, время — своё из профиля или час сервера.",
+    "placeholders": {"day": {"type": "int"}, "time": {"type": "String"}}
+  },
+  "notifyAskBody": "Раз в день, без лишнего",
+  "@notifyAskBody": {
+    "description": "Пред-запрос уведомлений (43-1): строка под вопросом."
+  },
+  "notifyAskLater": "Не сейчас",
+  "@notifyAskLater": {
+    "description": "Пред-запрос уведомлений (43-1): латунью; после дня 1 — ещё раз после дня 2, потом не спрашивать."
+  },
+  "notifyAskYes": "Напоминать",
+  "@notifyAskYes": {
+    "description": "Пред-запрос уведомлений (43-1): угольная кнопка → системный запрос iOS."
+  },
+  "micAskTitle": "Ritora слушает, как ты говоришь",
+  "@micAskTitle": {
+    "description": "Пред-запрос микрофона (41-3): на первой карточке с микрофоном."
+  },
+  "micAskBody": "Микрофон нужен, чтобы говорить: в «Диалоге», «Говорю сам» и в разговоре",
+  "@micAskBody": {
+    "description": "Пред-запрос микрофона (41-3): строка без обещаний."
+  },
+  "micAskLater": "Позже",
+  "@micAskLater": {
+    "description": "Пред-запрос микрофона (41-3): латунью; карточку можно пропустить, шит вернётся на следующей карточке с микрофоном."
+  },
+  "micAskAllow": "Разрешить микрофон",
+  "@micAskAllow": {
+    "description": "Пред-запрос микрофона (41-3): угольная кнопка → системные окна iOS (распознавание и микрофон)."
+  },
+  "planPlateNoNetwork": "Нет сети",
+  "@planPlateNoNetwork": {
+    "description": "Плита упавшего дня (22-5c): вторая строка, только когда «Повторить» не ушёл — сети действительно нет (CLIENT-START §6)."
+  },
+  "planPlateBySubscription": "по подписке",
+  "@planPlateBySubscription": {
+    "description": "Плита дня, запертого подпиской (21-3 / 23-0a «по подписке»): начало строки под названием — «по подписке · 75 карточек»."
+  },
+  "planPlateOpensWithSubscription": "Откроется с подпиской",
+  "@planPlateOpensWithSubscription": {
+    "description": "Плита дня, запертого подпиской (21-3 / 23-0a): 13 серым вместо кнопки «Начать»."
+  },
+  "planPlateSubscription": "Подписка",
+  "@planPlateSubscription": {
+    "description": "Плита дня, запертого подпиской (21-3 / 23-0a), и экран «Второй план — по подписке»: кнопка контуром латуни → профиль, группа подписки (до PAY-1)."
+  },
+  "planRouteMetaOpensWithSubscription": "откроется с подпиской",
+  "@planRouteMetaOpensWithSubscription": {
+    "description": "Маршрут (22-5a / 21-3 «по подписке»): мета первого дня, запертого подпиской."
+  },
+  "planRouteMetaBySubscription": "по подписке",
+  "@planRouteMetaBySubscription": {
+    "description": "Маршрут (22-5a / 21-3 «по подписке»): мета следующих дней, запертых подпиской."
+  },
+  "planKitLabel": "Спасательный набор",
+  "@planKitLabel": {
+    "description": "Таб «План» (21-2b): карточка спасательного набора под маршрутом — rescue_kit плана (LANG-1b §2)."
+  },
+  "planKitSub": "{n, plural, one{{n} фраза на любой случай} few{{n} фразы на любой случай} many{{n} фраз на любой случай} other{{n} фразы на любой случай}}",
+  "@planKitSub": {
+    "description": "Карточка набора (21-2b): строка под названием — сколько фраз.",
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "planKitAll": "все {n} →",
+  "@planKitAll": {
+    "description": "Карточка набора (21-2b): раскрыть все фразы на месте.",
+    "placeholders": {"n": {"type": "int"}}
+  },
+  "planKitCollapse": "свернуть",
+  "@planKitCollapse": {
+    "description": "Карточка набора (21-2b): свернуть до первой фразы."
+  },
+  "planEntrySubscriptionTitle": "Второй план — по подписке",
+  "@planEntrySubscriptionTitle": {
+    "description": "Вход в план: POST /plans ответил 402 plan_subscription_required — экран-заглушка до пейволла PAY-1, кнопка «Подписка» → профиль."
+  },
+  "planEntryActiveLimitTitle": "Не больше трёх планов сразу",
+  "@planEntryActiveLimitTitle": {
+    "description": "Вход в план: POST /plans ответил 409 plan_active_limit — три плана уже в работе."
+  },
+  "planEntryToTab": "К плану",
+  "@planEntryToTab": {
+    "description": "Вход в план, заглушка «Не больше трёх планов сразу»: вернуться на таб «План»."
   }
 }

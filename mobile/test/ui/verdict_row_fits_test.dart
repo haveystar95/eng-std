@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
@@ -16,8 +15,8 @@ import 'package:eng_std/ui/ui.dart';
 /// the row gives each button a third of the screen, the label was pinned to one line, and the
 /// longest label in this app is English, which is exactly why the Russian-first eye never caught
 /// it. The QAB-1 pass found the same class of bug in four more places, so the file grew into the
-/// guard for all of them: the home pair (QA-OBS-10), the cloze aids (QA-OBS-29), the ladder's five
-/// captions (QA-OBS-27) and the session counter (QA-OBS-28).
+/// guard for all of them: the cloze aids (QA-OBS-29), the ladder's five captions (QA-OBS-27) and the
+/// session counter (QA-OBS-28). The home pair (QA-OBS-10) went with its row (CLIENT-START, dead strings).
 ///
 /// What is pinned is never a pixel width — only the thing that matters: no label is ever cut, and
 /// nothing overflows its row.
@@ -149,60 +148,6 @@ void main() {
 
   for (final locale in const [Locale('en'), Locale('ru')]) {
     final lang = locale.languageCode;
-
-    /// QA-OBS-10 — «Тренировка по теме» ran a RenderFlex overflow stripe across the home screen
-    /// while English «Session by topic» fitted. The pair is the row as _PoolEntries lays it out.
-    testWidgets('$lang: the home pair fits, and the two buttons stay the same height', (
-      tester,
-    ) async {
-      atWidth(tester, const Size(375, 667)); // the narrowest we ship to
-      await tester.pumpWidget(
-        host(
-          locale,
-          (l) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: QuietButton(
-                      label: l.myWordsTitle,
-                      icon: LucideIcons.bookMarked,
-                      onPressed: () {},
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.s8),
-                  Expanded(
-                    child: QuietButton(
-                      label: l.topicSessionAction,
-                      icon: LucideIcons.layers,
-                      onPressed: () {},
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final found = labelsUnder(tester, find.byType(QuietButton));
-      expect(found, hasLength(2));
-      for (final label in found) {
-        expect(label.cut, isFalse, reason: '«${label.text}» is cut off');
-      }
-      final heights = tester
-          .widgetList<QuietButton>(find.byType(QuietButton))
-          .map((b) => tester.getSize(find.byWidget(b)).height);
-      expect(
-        heights.toSet(),
-        hasLength(1),
-        reason: 'one row of equals, not a tall one and a short one',
-      );
-      expect(tester.takeException(), isNull);
-    });
 
     /// QA-OBS-29 — «Подсказка: первая буква» overflowed its half of the cloze card.
     testWidgets('$lang: the cloze aids fit their half of the card', (tester) async {

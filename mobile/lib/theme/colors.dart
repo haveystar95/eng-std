@@ -361,6 +361,20 @@ abstract final class AppColors {
   /// The card under a day window of a review or the rehearsal (37-1, 37-2) — `0 2px 8px rgba(46,38,32,.06)`.
   static const windowSourceShadow = Color.fromARGB(15, _inkR, _inkG, _inkB);
 
+  // ── Start and account (work order CLIENT-START, canvas account-canvas 41–43) ──
+
+  /// Paper at 60 % — the plate under «Пропустить» over a photo and under a scene's caps on its card (41-2).
+  static const introPlate = Color.fromARGB(153, 239, 235, 227);
+
+  /// Paper at 78 % — the middle stop of the sheets' scrim, where the picture melts into the paper (41-2).
+  static const introScrim = Color.fromARGB(199, 239, 235, 227);
+
+  /// The scene cards' and the covers' shadow — `0 12px 32px rgba(46,38,32,.22)` (41-2a, 41-2e).
+  static const introCardShadow = Color.fromARGB(56, _inkR, _inkG, _inkB);
+
+  /// The profile's avatar circle — the paper card on the ground (42-1).
+  static const avatarPlate = paper;
+
   /// Доминантный тон картинки с провода (`image.tone`, `#RRGGBB`) — заливка круга, пока картинка
   /// в пути (наряд PLAN-UI-3). Не цвет палитры, а цвет фотографии: поэтому он приходит с сервера и
   /// читается здесь, где hex законен. Кривой ответ — null, и круг остаётся бумажным.

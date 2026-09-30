@@ -15,6 +15,7 @@ class PlanReminderScheduler {
 
   final PlanNotifications _notifications;
 
+  /// [enabled] — «Напоминать о дне» (off — nothing stands); [at] — the learner's time instead of the server's hour.
   Future<int> apply({
     required Plan? plan,
     required bool pushEnabled,
@@ -22,8 +23,10 @@ class PlanReminderScheduler {
     required String zone,
     required String channel,
     required PlanNoticeText text,
+    bool enabled = true,
+    ({int hour, int minute})? at,
   }) async {
-    final notices = planLocalNotices(plan, now, pushEnabled: pushEnabled);
+    final notices = enabled ? planLocalNotices(plan, now, pushEnabled: pushEnabled, at: at) : const <PlanNotice>[];
     await _notifications.replaceScheduled(
       [
         for (final n in notices)

@@ -37,6 +37,10 @@ abstract final class WindowTexts {
       ),
       WindowDayStatus.inProgress => (l.planWindowStateInProgress, null),
       WindowDayStatus.passed => (l.planSessionStateDone, day.minutesSpent == null ? null : l.planMinutesCount(day.minutesSpent!)),
+      WindowDayStatus.locked => (
+        l.planPlateBySubscription,
+        day.minutesEstimate == null ? null : l.planTalkEntryMinutes(day.minutesEstimate!),
+      ),
     };
     String line(List<String> parts) => parts.reduce((a, b) => l.planDot(a, b));
 
@@ -79,6 +83,8 @@ abstract final class WindowTexts {
     if (day.status == WindowDayStatus.passed) return l.planWindowPassedLine(l.planMinutesCount(day.minutesSpent ?? 0));
     final (word, minutes) = switch (day.status) {
       WindowDayStatus.notStarted => (l.planWindowStateNotStarted, _approx(l, day.minutesEstimate, long: true)),
+      // 23-0a «по подписке»: «по подписке · ≈ 20 минут».
+      WindowDayStatus.locked => (l.planPlateBySubscription, _approx(l, day.minutesEstimate, long: true)),
       _ => (l.planWindowStateInProgress, _approx(l, day.minutesEstimate, long: false)),
     };
 

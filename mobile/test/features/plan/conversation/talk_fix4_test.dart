@@ -22,7 +22,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/token_store.dart';
 import 'package:eng_std/features/plan/conversation/conversation_controller.dart';
 import 'package:eng_std/features/plan/conversation/talk_summary.dart';
-import 'package:eng_std/features/plan/session/parts/session_bits.dart' show SessionDockButton;
+import 'package:eng_std/features/plan/session/parts/session_bits.dart' show DockButton;
 import 'package:eng_std/features/plan/session/session_controller.dart';
 import 'package:eng_std/features/plan/session/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -449,11 +449,11 @@ void main() {
       await settleTalk(tester);
     });
 
-    // RULE (§3, 37-7c): «Без подсказок» — no plate; «Подсказать» stands right of the microphone and puts the same plate
-    // up for this move, then goes. The server sends no hint when hints are off, so the plate is the lesson's sentence of
-    // the target the phone names by the server's order: the one said almost, else the first not said, of the scene the
-    // talk is in — and after an «almost» its exact line stands under it.
-    // CATCHES: a plate over «Без подсказок», a button that shows nothing, «Подсказать» in the normal mode.
+    // RULE (§3, 37-7c; FIX-4c §2, work order CLIENT-START §6): «Без подсказок» — no plate; «Подсказать» stands right of
+    // the microphone and puts the SERVER's plate up for this move, then goes: the server sends the hint in both modes,
+    // and the phone no longer names a target of its own — after an «almost» the server's exact line stands under it.
+    // CATCHES: a plate over «Без подсказок», a button that shows nothing, «Подсказать» in the normal mode, a plate the
+    // phone made up.
     testWidgets('«Без подсказок»: плашки нет, «Подсказать» ставит её на этот ход', (tester) async {
       final probe = TalkProbe()..documents.add(rehearsalTalk(RehearsalStep.opened, blind));
       final stand = await pumpTalk(tester, probe, hints: false);
@@ -595,7 +595,7 @@ void main() {
       var next = 0;
       await pumpSummary(tester, rehearsalTalk(RehearsalStep.ended), onNext: () => next++);
       final button = byKey('talk-next');
-      expect(tester.widget<SessionDockButton>(button).onTap, isNotNull, reason: 'кнопка выглядит как обычно');
+      expect(tester.widget<DockButton>(button).onTap, isNotNull, reason: 'кнопка выглядит как обычно');
 
       await tester.tap(button, warnIfMissed: false);
       await tester.pump(const Duration(milliseconds: 100));
@@ -625,9 +625,9 @@ void main() {
       final backend = _RehearsalDay();
       await _openSession(tester, db: db, backend: backend, talk: probe);
 
-      // 37-5b first: the constructions by scene.
+      // 37-5b first: the constructions by scene; the receptionist is a woman on e2e (`partner_gender`, FIX-4c §3).
       expect(find.text('СЦЕНА 1 · ЗАПИСЬ К ВРАЧУ · РЕГИСТРАТОР'), findsOneWidget);
-      expect(find.text('Регистратор начнёт первым. Отвечай и спрашивай сам.'), findsOneWidget);
+      expect(find.text(nbTypo('Регистратор начнёт первой. Отвечай и спрашивай сам.')), findsOneWidget);
       await tester.tap(byKey('talk-entry-start'));
       await tester.pump();
       await tester.pump();

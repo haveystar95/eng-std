@@ -193,26 +193,21 @@ class ConversationController extends ChangeNotifier {
   /// every state of the learner's move (waiting, listening, after «Sorry?», after «не расслышал») and never while the
   /// role speaks, a move is on its way or a failed move waits to be sent again (37-10).
   ///
-  /// With hints on it is the SERVER's hint as it came: `hints.sentence`, and under it `hints.target` — the exact line
-  /// after an «almost», open at once — or, on a tap, the target's lesson line. Under «Без подсказок» it stands only after
-  /// «Подсказать» ([showHint]).
+  /// It is always the SERVER's hint as it came: `hints.sentence`, and under it `hints.target` — the exact line after an
+  /// «almost», open at once — or, on a tap, the target's lesson line. The server sends it in both modes (FIX-4c §2);
+  /// under «Без подсказок» the plate stands only after «Подсказать» ([showHint]).
   TalkHintView? get hint {
     final talk = _talk;
     if (talk == null || _phase != TalkPhase.yourTurn || _lastMove != null) return null;
-    if (talk.hints.enabled) {
-      final sentence = talk.hints.sentence;
-      if (sentence == null) return null;
-      final line = talk.hints.target ?? _targetOf(talk, talk.hints.sceneId, talk.hints.ref)?.lessonLine;
-      return (sentence: sentence, line: line, open: _hintOpen && line != null);
-    }
-    if (!_hintRevealed) return null;
-    final target = _blindTarget;
-    if (target == null) return null;
-    return (sentence: target.lessonNative, line: target.lessonLine, open: _hintOpen);
+    if (!talk.hints.enabled && !_hintRevealed) return null;
+    final sentence = talk.hints.sentence;
+    if (sentence == null) return null;
+    final line = talk.hints.target ?? _targetOf(talk, talk.hints.sceneId, talk.hints.ref)?.lessonLine;
+    return (sentence: sentence, line: line, open: _hintOpen && line != null);
   }
 
-  /// «Подсказать» stands only under «Без подсказок», while the move is the learner's and the plate is not up yet
-  /// (37-7c); with hints on the plate is always there and the button is gone.
+  /// «Подсказать» stands only under «Без подсказок», while the move is the learner's, the plate is not up yet and the
+  /// server has a hint to show (37-7c); with hints on the plate is always there and the button is gone.
   bool get hintButtonShown {
     final talk = _talk;
     return talk != null &&
@@ -220,18 +215,7 @@ class ConversationController extends ChangeNotifier {
         _phase == TalkPhase.yourTurn &&
         _lastMove == null &&
         !_hintRevealed &&
-        _blindTarget != null;
-  }
-
-  /// UNDER «БЕЗ ПОДСКАЗОК» THE SERVER SENDS NO HINT (`ConversationViews::hint` returns none when hints are off), so the
-  /// phone names the target itself, by the server's own order: the one said almost, else the first one not said yet,
-  /// of the scene the talk is in. The role's `opens` — which target its line led to — is not on the wire, and that is
-  /// the only difference from the server's pick (отчёт CLIENT-FIX-4, «Чего сервер не даёт»).
-  TalkTarget? get _blindTarget {
-    final talk = _talk;
-    if (talk == null) return null;
-    final scene = talk.targetsOf(talk.currentSceneId);
-    return scene.where((t) => t.almost).firstOrNull ?? scene.where((t) => t.state == TalkTargetState.none).firstOrNull;
+        talk.hints.sentence != null;
   }
 
   static TalkTarget? _targetOf(PlanConversation talk, String? sceneId, String? ref) {
@@ -390,11 +374,10 @@ class ConversationController extends ChangeNotifier {
   /// «almost» it stands with its second line open, as the server's plate would.
   void showHint() {
     final talk = _talk;
-    if (talk == null || talk.hints.enabled || _hintRevealed) return;
-    final target = _blindTarget;
-    if (target == null) return;
+    if (talk == null || talk.hints.enabled || _hintRevealed || talk.hints.sentence == null) return;
     _hintRevealed = true;
-    _hintOpen = target.almost;
+    // After an «almost» the server's plate stands with its exact line open.
+    _hintOpen = talk.hints.target != null;
     _notify();
   }
 

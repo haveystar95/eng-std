@@ -30,6 +30,10 @@ enum SessionPhase {
   /// The day's lesson failed to build (`lesson_status: failed`): the plate with «Retry» — the lesson, not the plan.
   lessonFailed,
 
+  /// The day opens with a subscription (409 `plan_day_locked`, `meta.lock_reason: subscription`, ACC-1): the plate
+  /// «по подписке» with «Подписка» — no toast, no error (CLIENT-START §6).
+  lockedBySubscription,
+
   /// Stage entry (30-1).
   entry,
 
@@ -366,6 +370,8 @@ class SessionController extends ChangeNotifier {
       case 'plan_day_building' || 'plan_lesson_not_ready':
         _phase = SessionPhase.building;
         _armLessonPoll();
+      case 'plan_day_locked' when meta['lock_reason'] == 'subscription':
+        _phase = SessionPhase.lockedBySubscription;
       default:
         _error = e;
         _phase = SessionPhase.failed;
@@ -419,14 +425,20 @@ class SessionController extends ChangeNotifier {
     try {
       _freshPlan = await backend.retryLesson(plan.id, scene);
       if (_disposed) return;
+      _retryOffline = false;
       _phase = SessionPhase.building;
       _armLessonPoll();
     } catch (e) {
       debugPrint('[session] lesson retry: $e');
+      _retryOffline = isOffline(e);
     }
     _retrying = false;
     _notify();
   }
+
+  /// The last «Retry» could not leave — there really is no network: the plate says so (CLIENT-START §6).
+  bool get retryOffline => _retryOffline;
+  bool _retryOffline = false;
 
   PlanDayRoute? get _dayRoute {
     for (final d in currentPlan.days) {

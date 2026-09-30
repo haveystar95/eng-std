@@ -5,12 +5,17 @@
 ///
 /// A state the run did not leave behind (a talk under «Без подсказок», a summary the time ran out on) is the same
 /// answer with [rehearsalTalk]'s edit applied — named in the test that makes it.
+///
+/// `line_native` (LANG-1b §3) came after this run: every construction of it is filled in from e2e by (scene_id, ref),
+/// as the server's fixtures are ([withE2eFields]) — the run as the server answers it today.
 library;
 
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:eng_std/data/plan/conversation/conversation_models.dart';
+
+import 'server_fixtures.dart' show withE2eFields;
 
 /// Where the live run is read from, relative to `mobile/`.
 const String kLiveRehearsal = '../backend2/docs/research/fix-4b/live/live-rehearsal.json';
@@ -54,7 +59,7 @@ List<Object?> _steps() => _run ??= jsonDecode(File(kLiveRehearsal).readAsStringS
 
 /// The talk as step [step] answered it — a fresh copy of the JSON each time, so an edit touches only its own test.
 Map<String, dynamic> rehearsalJson(int step) =>
-    jsonDecode(jsonEncode((_steps()[step]! as Map<String, dynamic>)['talk'])) as Map<String, dynamic>;
+    withE2eFields(jsonDecode(jsonEncode((_steps()[step]! as Map<String, dynamic>)['talk'])) as Map<String, dynamic>);
 
 /// What the learner said to get step [step] — null at the opening.
 String? rehearsalMove(int step) => (_steps()[step]! as Map<String, dynamic>)['move'] as String?;
@@ -66,7 +71,8 @@ PlanConversation rehearsalTalk(int step, [void Function(Map<String, dynamic> jso
   return PlanConversation.fromJson(json);
 }
 
-/// «Без подсказок» as the server answers it: hints off, and no hint at all (`ConversationViews::hint`).
+/// «Без подсказок» as the server answers it since FIX-4c §2: hints off — and the hint itself as in the normal mode (the
+/// phone hides the plate and «Подсказать» puts it up for the move).
 void blind(Map<String, dynamic> json) {
-  json['hints'] = {'enabled': false, 'delay_ms': 5000, 'native': null, 'target': null, 'scene_id': null, 'ref': null, 'sentence': null};
+  (json['hints'] as Map<String, dynamic>)['enabled'] = false;
 }

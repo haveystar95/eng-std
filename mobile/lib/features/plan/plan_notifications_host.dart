@@ -6,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../data/app_settings.dart';
 import '../../data/deep_links.dart';
 import '../../data/device_timezone.dart';
+import '../../data/plan/notify_permission.dart';
 import '../../data/plan/plan_models.dart';
 import '../../data/plan/plan_notifications.dart';
 import '../../data/plan/plan_reminder_rules.dart';
@@ -37,21 +39,6 @@ class PlanPushEnabled extends AsyncNotifier<bool> {
 }
 
 final planPushEnabledProvider = AsyncNotifierProvider<PlanPushEnabled, bool>(PlanPushEnabled.new);
-
-/// Разрешение на уведомления — ОДИН раз, после «Начать» на превью (наряд PLAN-UI-3 §4), и сразу
-/// следом регистрация push-токена. Второй вызов ничего не спрашивает.
-Future<void> askPlanNotificationsOnce(WidgetRef ref) async {
-  final store = ref.read(planStoreProvider);
-  if (await store.notifyPermissionAsked()) return;
-  await store.markNotifyPermissionAsked();
-  final granted = await ref.read(planNotificationsProvider).requestPermission();
-  debugPrint('[plan-notify] permission granted: $granted');
-  if (!granted) return;
-  await ref.read(pushRegistrationProvider).register(
-    timezone: await deviceTimezone(),
-    onPushEnabled: (enabled) => ref.read(planPushEnabledProvider.notifier).set(enabled),
-  );
-}
 
 /// ГДЕ ЖИВУТ УВЕДОМЛЕНИЯ ПЛАНА (наряд PLAN-UI-3 §4, кадр 22-6 — эталон вида).
 ///
@@ -126,7 +113,16 @@ class _PlanNotificationsHostState extends ConsumerState<PlanNotificationsHost> w
   Future<void> _reschedule({bool force = false}) async {
     final plan = ref.read(planTabProvider).value?.plan;
     final pushEnabled = await ref.read(planPushEnabledProvider.future);
-    final signature = [plan?.id, plan?.status, plan?.currentDay?.number, plan?.currentDay?.slot.date, plan?.eventDate, plan?.reminderHour, pushEnabled].join('|');
+    // «Напоминать о дне» and «Время» of the profile (42-1, 42-4) — never decided, the reminders follow what iOS
+    // allows, as every build before (22) did.
+    final settings = await ref.read(appSettingsProvider.future);
+    final permission = await ref.read(notifyPermissionProvider.future);
+    final enabled = settings.remindersOn(systemAllows: permission != NotifyPermission.denied);
+    final at = parseReminderTime(settings.reminderTime);
+    final signature = [
+      plan?.id, plan?.status, plan?.currentDay?.number, plan?.currentDay?.slot.date, plan?.currentDay?.lockReason,
+      plan?.eventDate, plan?.reminderHour, pushEnabled, enabled, settings.reminderTime,
+    ].join('|');
     if (!force && signature == _scheduledFor) return;
     _scheduledFor = signature;
     if (!mounted) return;
@@ -138,8 +134,10 @@ class _PlanNotificationsHostState extends ConsumerState<PlanNotificationsHost> w
       zone: await deviceTimezone(),
       channel: l.planTitle,
       text: (plan, n) => (title: _title(l, plan, n), body: _body(l, plan, n)),
+      enabled: enabled,
+      at: at,
     );
-    debugPrint('[plan-notify] push_enabled=$pushEnabled local=$count at ${plan?.reminderHour}:00');
+    debugPrint('[plan-notify] push_enabled=$pushEnabled enabled=$enabled local=$count at ${at ?? '${plan?.reminderHour}:00'}');
   }
 
   static String _title(AppLocalizations l, Plan plan, PlanNotice n) => switch (n.kind) {
@@ -165,6 +163,16 @@ class _PlanNotificationsHostState extends ConsumerState<PlanNotificationsHost> w
       _bannerOnReturn(previous?.value?.plan, next.value?.plan);
     });
     ref.listen<AsyncValue<bool>>(planPushEnabledProvider, (previous, next) {
+      if (previous?.value != next.value) unawaited(_reschedule(force: true));
+    });
+    ref.listen<AsyncValue<AppSettings>>(appSettingsProvider, (previous, next) {
+      final before = previous?.value;
+      final after = next.value;
+      if (after != null && (before?.reminders != after.reminders || before?.reminderTime != after.reminderTime)) {
+        unawaited(_reschedule(force: true));
+      }
+    });
+    ref.listen<AsyncValue<NotifyPermission>>(notifyPermissionProvider, (previous, next) {
       if (previous?.value != next.value) unawaited(_reschedule(force: true));
     });
 

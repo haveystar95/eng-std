@@ -32,6 +32,11 @@ enum EntryBuildPhase {
   /// `failed`, or the server did not answer at all (22-4c).
   failed,
 
+  /// `POST /plans` said no to THIS learner (ACC-1 §2, only with the paywall on): 402 `plan_subscription_required` —
+  /// «Второй план — по подписке»; 409 `plan_active_limit` — «Не больше трёх планов сразу». Not a failure to retry:
+  /// the same request would be refused again ([EntryState.refusal] says which).
+  refused,
+
   /// «Начать» sent and awaited.
   starting,
 }
@@ -49,6 +54,7 @@ class EntryState {
     this.plan,
     this.planId,
     this.offline = false,
+    this.refusal,
   });
 
   final EntryStep step;
@@ -76,6 +82,9 @@ class EntryState {
   /// The last build attempt never reached the server (§6: без сети сборку не начать).
   final bool offline;
 
+  /// Why the server refused the plan ([EntryBuildPhase.refused]); null otherwise.
+  final EntryRefusal? refusal;
+
   /// ЧЕТЫРЕ ДЛИНЫ (кадр 22-3a): 3 · 5 · 7 · 10. Одного дня в канве больше нет — план из одного
   /// дня не успевает ни повторить, ни отрепетировать, и «1 день» обещал подготовку, которой не
   /// бывает.
@@ -100,6 +109,7 @@ class EntryState {
     bool clearPlan = false,
     String? planId,
     bool? offline,
+    EntryRefusal? refusal,
   }) => EntryState(
     step: step ?? this.step,
     goal: goal ?? this.goal,
@@ -112,5 +122,15 @@ class EntryState {
     plan: clearPlan ? null : (plan ?? this.plan),
     planId: clearPlan ? null : (planId ?? this.planId),
     offline: offline ?? this.offline,
+    refusal: refusal ?? (phase == null || phase == EntryBuildPhase.refused ? this.refusal : null),
   );
+}
+
+/// Why `POST /plans` refused (ACC-1 §2).
+enum EntryRefusal {
+  /// 402 `plan_subscription_required` — a plan beyond the free one.
+  subscription,
+
+  /// 409 `plan_active_limit` — three plans are already at work.
+  activeLimit,
 }

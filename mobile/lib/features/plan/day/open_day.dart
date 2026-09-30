@@ -23,7 +23,9 @@ Future<void> openDayRoom(BuildContext context, WidgetRef ref, {Plan? plan, int? 
   final day = p.days.where((d) => d.number == n).firstOrNull;
   // ЗАПЕРТЫЙ ДЕНЬ НЕ ОТКРЫВАЕТСЯ (наряд PLAN-UI-3): ни плита, ни ссылка, ни уведомление не ведут в
   // кабинет дня, который сервер ещё не открыл. Таб называет причину строкой на маршруте.
-  if (day != null && PlanRouteDayState.of(day) == RouteDayTone.locked) {
+  // A day locked by the SUBSCRIPTION does open: «бесплатному видно всё, заперты только дни 2+» — its window shows it
+  // whole, with «Откроется с подпиской» in place of «Начать» (23-0a «по подписке», CLIENT-START §6).
+  if (day != null && PlanRouteDayState.of(day) == RouteDayTone.locked && !day.lockedBySubscription) {
     AppHaptics.warning();
     ref.read(planExplainDayProvider.notifier).explain(n);
 

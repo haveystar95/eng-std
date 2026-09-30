@@ -92,24 +92,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGeneratePlaceholder => 'e.g. a visit to the doctor';
 
   @override
-  String get homeGenerateChipDoctor => 'At the doctor';
-
-  @override
-  String get homeGenerateChipRent => 'Renting';
-
-  @override
   String get homeGenerateChipInterview => 'Job interview';
-
-  @override
-  String homeCollectionProgress(int done, int total) {
-    String _temp0 = intl.Intl.pluralLogic(
-      total,
-      locale: localeName,
-      other: '$done of $total words',
-      one: '$done of $total word',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get tabHome => 'Today';
@@ -165,15 +148,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get collectionLearnSubtitle => 'New words — learn them';
-
-  @override
   String collectionReviewButton(int count) {
     return 'Review $count';
   }
-
-  @override
-  String get collectionReviewSubtitle => 'Due for review';
 
   @override
   String get collectionPracticeButton => 'Free practice';
@@ -277,11 +254,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionMoveWordNowhere => 'You have no other collections yet';
-
-  @override
-  String collectionDefaultUndeletable(String title) {
-    return '“$title” is where saved words land, so it cannot be deleted. Renaming it is fine.';
-  }
 
   @override
   String get collectionMenuRename => 'Rename';
@@ -514,9 +486,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Text appears in the field as it\'s recognised — after you stop you can edit it by hand.';
 
   @override
-  String get generateVoiceRecordingNote => 'Speak — the keyboard returns when you stop';
-
-  @override
   String get generateVoicePermissionDenied =>
       'Microphone and speech recognition access is needed — enable it in Settings';
 
@@ -534,9 +503,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionSheetCreateButton => 'Create';
-
-  @override
-  String get searchTitle => 'Word search';
 
   @override
   String get searchFieldHint => 'Find a word';
@@ -805,226 +771,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Today\'s plan couldn\'t be loaded. Pull down to try again — everything saved is still here.';
 
   @override
-  String get homeGenerateOfflineNote =>
-      'Generation needs a connection. Your topic is saved and will run once you\'re back online.';
-
-  @override
-  String get appWordmark => 'Слова';
-
-  @override
-  String get authTagline => 'Words for real situations — from the bank to a job interview.';
-
-  @override
-  String get authContinueGoogle => 'Continue with Google';
-
-  @override
-  String get authContinueApple => 'Continue with Apple';
-
-  @override
-  String get authTerms => 'Terms';
-
-  @override
-  String get authPrivacy => 'Privacy';
-
-  @override
-  String get authOfflineHint => 'No connection. The first sign-in needs the network.';
-
-  @override
-  String get authAppleUnavailable => 'Sign in with Apple isn\'t available yet.';
-
-  @override
-  String get onbLangTitle => 'Which language are you learning?';
-
-  @override
-  String get onbLangSubtitle => 'You can change it in your profile anytime.';
-
-  @override
-  String get onbLevelTitle => 'How confidently do you read?';
-
-  @override
-  String get onbLevelSubtitle => 'Roughly — we\'ll refine it from how you sort your words.';
-
-  @override
-  String onbLevelExample(String level) {
-    return 'At $level, collections include words like “wire transfer” and “make ends meet”.';
-  }
-
-  @override
-  String get onbGoalTitle => 'How many words a day?';
-
-  @override
-  String get onbGoalSubtitle => 'The goal only affects reminders and progress.';
-
-  @override
-  String onbGoalMinutes(int count) {
-    return '≈ $count min a day';
-  }
-
-  @override
-  String get onbGoalRecommended => 'recommended';
-
-  @override
-  String get onbFooterNote =>
-      'All of this lives in your profile — level, goal and language aren\'t locked behind onboarding.';
-
-  @override
-  String get onbNext => 'Next';
-
-  @override
-  String get onbStart => 'Start';
-
-  @override
-  String get cefrHintA1 => 'beginner';
-
-  @override
-  String get cefrHintA2 => 'elementary';
-
-  @override
-  String get cefrHintB1 => 'intermediate';
-
-  @override
-  String get cefrHintB2 => 'upper';
-
-  @override
-  String get cefrHintC1 => 'advanced';
-
-  @override
-  String get cefrHintC2 => 'near-native';
-
-  @override
   String get profileTitle => 'Profile';
 
   @override
-  String get profileSectionLearning => 'Learning';
-
-  @override
-  String get profileSectionApp => 'App';
-
-  @override
-  String get profileSectionSubscription => 'Subscription';
-
-  @override
-  String get profileSectionAccount => 'Account';
-
-  @override
-  String get profileRowLevel => 'Level';
-
-  @override
-  String get profileRowGoal => 'Daily goal';
-
-  @override
-  String get profileRowTargetLang => 'Learning language';
-
-  @override
-  String get profileRowUiLang => 'Interface language';
-
-  @override
-  String get profileRowAutoPronounce => 'Auto-pronounce';
-
-  @override
-  String get profileAutoPronounceHint => 'Speak the word when the card appears';
-
-  @override
-  String get profileRowTransliteration => 'Pronunciation hint';
-
-  @override
-  String get profileTransliterationHint => 'Show how the word reads, in your own letters';
-
-  @override
-  String get profileRowReminders => 'Reminders';
-
-  @override
-  String get profileRemindersHint => 'One a day, when there\'s something to review';
-
-  @override
-  String get profileRowReminderTime => 'Time';
-
-  @override
-  String get profileFreeTier => 'Free tier';
-
-  @override
-  String get profileFreeTierHint => '3 generations a day';
-
-  @override
-  String get profileSoon => 'Soon';
-
-  @override
-  String get profileSignOut => 'Sign out';
-
-  @override
-  String get profileDeleteAccount => 'Delete account';
-
-  @override
-  String profileGoalValue(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count words',
-      one: '$count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get uiLangSystem => 'System';
-
-  @override
-  String get uiLangRussian => 'Русский';
-
-  @override
-  String get uiLangEnglish => 'English';
-
-  @override
-  String get profileUiLangSheet => 'Interface language';
-
-  @override
-  String get profileLevelSheet => 'Level';
-
-  @override
-  String get profileGoalSheet => 'Daily goal';
-
-  @override
-  String get reminderSheetTitle => 'When to remind you';
-
-  @override
-  String get reminderSheetSubtitle =>
-      'It works best at a time when you usually have five free minutes.';
-
-  @override
   String get commonSave => 'Save';
-
-  @override
-  String get deleteAccountTitle => 'Delete account?';
-
-  @override
-  String deleteAccountBody(String words, String streak) {
-    return 'All data and progress will be erased permanently: $words, $streak and all collections.';
-  }
-
-  @override
-  String deleteAccountWords(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count words',
-      one: '$count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String deleteAccountStreak(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count-day streak',
-      one: '$count-day streak',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get deleteAccountConfirm => 'Delete';
 
   @override
   String get sessionPhaseIntro => 'Getting to know';
@@ -1118,9 +868,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionInstrSpeakExample => 'read the sentence out loud';
-
-  @override
-  String get sessionSpeakStart => 'Speak';
 
   @override
   String get sessionSpeakStop => 'Done';
@@ -1231,19 +978,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionEchoAgain => 'Give it another go';
 
   @override
-  String get sessionEchoEnable => 'Turn on the microphone';
-
-  @override
-  String get sessionHeaderIntro => 'First look';
-
-  @override
-  String get sessionHeaderRecognition => 'Recognition';
-
-  @override
   String get sessionInstrRecogniseTranslation => 'choose the translation';
-
-  @override
-  String get sessionRecogniseJustMet => 'you have just met this word';
 
   @override
   String get ladderStep0 => 'first look';
@@ -1278,24 +1013,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String statusCountToSort(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Sort $count words',
-      one: 'Sort $count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get statusLegendTitle => 'What the dots mean';
 
   @override
   String get poolKnownLegend => 'Marked “I know it” — it never walked the ladder.';
-
-  @override
-  String get ladderTitle => 'WORD LADDER';
 
   @override
   String get ladderKnownDash => 'known';
@@ -1445,35 +1166,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionListenReplay => 'Replay audio';
 
   @override
-  String get sessionInstrSituationalHear => 'choose what they said';
-
-  @override
-  String get sessionInstrSituationalSay => 'choose what you will say';
-
-  @override
-  String get sessionInstrAssembleTurn => 'put your reply together from the blocks';
-
-  @override
-  String get sessionSceneRunHint => 'say your line — there will be no text';
-
-  @override
-  String get sessionInstrSituationalAsk => 'choose what you will ask';
-
-  @override
-  String get sessionSituationLabel => 'Situation';
-
-  @override
-  String get sessionSituationHearLabel => 'You are about to hear';
-
-  @override
-  String get sessionSituationRevealText => 'Show the text';
-
-  @override
-  String sessionSituationTask(String outcome) {
-    return 'Your task — $outcome.';
-  }
-
-  @override
   String get sessionListenReplaySlow => 'Slower';
 
   @override
@@ -1481,35 +1173,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionDailyNewLimit => 'You\'ve reached today\'s new-word limit. Come back tomorrow';
-
-  @override
-  String sessionLoadError(String error) {
-    return 'Couldn\'t load the session: $error';
-  }
-
-  @override
-  String get authErrorOffline => 'No internet connection. Signing in needs a network.';
-
-  @override
-  String get authErrorGoogleUnsupported => 'Google sign-in isn\'t supported on this platform.';
-
-  @override
-  String get authErrorCancelled => 'Sign-in cancelled.';
-
-  @override
-  String get authErrorGoogle => 'Google sign-in failed. Please try again.';
-
-  @override
-  String get authErrorGoogleToken => 'Couldn\'t get a Google token.';
-
-  @override
-  String get authErrorLoginFailed => 'Couldn\'t sign in. Please try again.';
-
-  @override
-  String get authErrorApple => 'Sign in with Apple isn\'t available yet.';
-
-  @override
-  String get authErrorAppleToken => 'Couldn\'t get an Apple token.';
 
   @override
   String get practiceDialogEntry => 'Conversation · 3 min';
@@ -1605,9 +1268,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storeSegmentReady => 'Ready-made';
-
-  @override
-  String get storeSectionOther => 'Other';
 
   @override
   String storeWordsCount(int count) {
@@ -1746,32 +1406,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallDevPurchased => 'Premium activated (dev mode)';
 
   @override
-  String get paywallNeedsRealPremium => 'Needs real Premium (StoreKit is a separate block)';
-
-  @override
-  String get profileTryPremium => 'Try Premium';
-
-  @override
-  String profileFreeTierReset(String time) {
-    return '3 generations a day · resets at $time';
-  }
-
-  @override
-  String get profilePremiumActive => 'Premium';
-
-  @override
-  String get profilePremiumBadge => 'active';
-
-  @override
-  String get profilePremiumHint => 'Subscription active';
-
-  @override
-  String get profileManageSubscription => 'Manage subscription';
-
-  @override
-  String get profileRestorePurchases => 'Restore purchases';
-
-  @override
   String get profileSectionDev => 'Development';
 
   @override
@@ -1817,9 +1451,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncUnreachableBanner => 'Server unreachable · showing what\'s saved';
-
-  @override
-  String get poolNotStudyingNote => 'This word is on the shelf — you are not studying it yet.';
 
   @override
   String get poolEnrollAction => 'Learn this word';
@@ -1888,18 +1519,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myWordsNothingFound => 'Nothing found';
 
   @override
-  String get topicSessionAction => 'Session by topic';
-
-  @override
-  String get topicSessionTitle => 'Pick a topic';
-
-  @override
   String homeStreakBadge(int count) {
     return 'Streak $count';
   }
-
-  @override
-  String get homeSessionCardTitle => 'Today\'s session';
 
   @override
   String get challengeLabel => 'Word challenge';
@@ -2000,101 +1622,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String homeSessionPartRepeat(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count to review',
-      one: '$count to review',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeSessionPartNew(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count new',
-      one: '$count new',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeSessionPartTriage(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count to sort',
-      one: '$count to sort',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeSessionStart => 'Start';
-
-  @override
-  String homeInWorkTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'In progress — $count words',
-      one: 'In progress — $count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeInWorkWaiting(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count waiting in line',
-      one: '$count waiting in line',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeInWorkPace(int perDay, int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'at $perDay new a day the queue clears in ~$days days',
-      one: 'at $perDay new a day the queue clears in ~$days day',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeInWorkQueueStands(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'take $count now and the queue moves today',
-      one: 'take $count now and the queue moves today',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeEdgeTitle => 'About to slip';
-
-  @override
-  String get homeEdgeTomorrow => 'due tomorrow';
-
-  @override
-  String homeEdgeInDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'in $count days',
-      one: 'in $count day',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get homeHardestTitle => 'Hardest today';
@@ -2106,17 +1634,6 @@ class AppLocalizationsEn extends AppLocalizations {
       locale: localeName,
       other: '$count mistakes',
       one: '$count mistake',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeSectionCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count words',
-      one: '$count word',
     );
     return '$_temp0';
   }
@@ -2166,11 +1683,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: 'card $position of $total',
     );
     return '$_temp0';
-  }
-
-  @override
-  String homeDoneOf(int done, int total) {
-    return '$done of $total';
   }
 
   @override
@@ -2246,23 +1758,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeContinueLabel => 'Continue';
-
-  @override
-  String homeContinueAbandoned(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'left $count days ago',
-      one: 'left $count day ago',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeGenerateRow => 'Build a collection on a topic';
-
-  @override
   String homeStoreLink(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2336,27 +1831,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFirstDayTitle => 'Let\'s start with a first set';
 
   @override
-  String homeFirstDayReadyTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Take a ready-made set ($count topics)',
-      one: 'Take a ready-made set ($count topic)',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeFirstDayReadyHint => 'The words are already chosen, voiced and levelled';
-
-  @override
-  String get homeFirstDayOwnTitle => 'Build your own from a description';
-
-  @override
-  String get homeFirstDayOwnHint =>
-      'Describe a situation — AI will pick the words and phrases for it';
-
-  @override
   String homeSortOffer(int count, String title) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2382,26 +1856,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSortFirstTitle => 'Time to sort your words';
 
   @override
-  String get onbNativeTitle => 'Which language should translations be in?';
-
-  @override
-  String get onbNativeSubtitle =>
-      'Translations, explanations and preparation plans use it. You can change it in your profile.';
-
-  @override
-  String get profileRowNativeLang => 'Native language';
-
-  @override
-  String get profileNativeLangHint => 'Existing collections stay as they are';
-
-  @override
   String profileNativeLangConfirmTitle(String language) {
     return 'Translations in $language?';
   }
 
   @override
   String get profileNativeLangConfirmBody =>
-      'New collections and plans will use it. Existing collections stay as they are — their translations are not rewritten.';
+      'New collections and plans will use it. Existing collections stay as they are — their translations are not rewritten.';
 
   @override
   String get tabPlan => 'Plan';
@@ -2411,43 +1872,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonBack => 'Back';
-
-  @override
-  String sessionSayIntent(String intent) {
-    return 'Say: $intent';
-  }
-
-  @override
-  String homePlanCardBadge(int index, int total) {
-    return 'Plan · day $index of $total';
-  }
-
-  @override
-  String homePlanCardEventIn(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'Event in $days days',
-      one: 'Event in $days day',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homePlanCardEventToday => 'Event today';
-
-  @override
-  String get homePlanCardContinue => 'Continue';
-
-  @override
-  String get homePlanInviteTitle => 'Got a date and a goal?';
-
-  @override
-  String get homePlanInviteBody =>
-      'We will build the preparation days — from a doctor\'s appointment to a job interview.';
-
-  @override
-  String get homePlanInviteCta => 'Make one';
 
   @override
   String get devVoicesTitle => 'Line voices';
@@ -2476,32 +1900,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devVoicesFavourite => 'This session\'s favourite';
-
-  @override
-  String devVoiceTrouble(int silent, int failed) {
-    return 'Voice: $silent lines fell back to the system voice, $failed downloads failed';
-  }
-
-  @override
-  String get devQaClockTitle => 'QA · the plan\'s “today”';
-
-  @override
-  String devQaClockShift(int days) {
-    String _temp0 = intl.Intl.pluralLogic(
-      days,
-      locale: localeName,
-      other: 'shifted by $days days',
-      one: 'shifted by $days day',
-      zero: 'no shift',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get devQaClockPlus => '+1 day';
-
-  @override
-  String get devQaClockReset => 'Reset';
 
   @override
   String get planTitle => 'Plan';
@@ -2758,12 +2156,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planPlateBuildingSub => 'about a minute · you can close the app';
 
   @override
-  String get planPlateFailedTitle => 'The day did not build';
-
-  @override
-  String planPlateFailedSub(int n) {
-    return 'The network dropped. The route is intact — only day $n is missing';
-  }
+  String get planPlateFailedTitle => 'Couldn’t put the day together';
 
   @override
   String get planPlateCtaRetry => 'Try again';
@@ -3336,24 +2729,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planWindowSheetClose => 'Close';
 
   @override
-  String get profileRowSounds => 'Sounds';
-
-  @override
-  String get profileSoundsHint => 'Correct · wrong · stage closed · day closed';
-
-  @override
-  String get profileRowSessionSounds => 'Sounds in the session';
-
-  @override
-  String get profileSessionSoundsHint => 'Correct · miss · recording · stage done';
-
-  @override
-  String dayCards(int n) {
-    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n cards', one: '$n card');
-    return '$_temp0';
-  }
-
-  @override
   String dayMinutes(int n) {
     String _temp0 = intl.Intl.pluralLogic(
       n,
@@ -3869,8 +3244,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTalkEntryRuleStart => 'They speak first. Answer, and ask your own questions.';
 
   @override
-  String get planTalkEntryRuleRescue =>
-      'Lost the thread — tap «Didn\'t get it» and they will say it more simply.';
+  String planTalkEntryRuleRescue(String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {'female': 'she', 'male': 'he', 'other': 'they'});
+    return 'Lost the thread — tap «Didn\'t get it» and $_temp0 will say it more simply.';
+  }
 
   @override
   String get planTalkEntryRuleCounts =>
@@ -4203,12 +3580,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planVoiceInProfile => 'You can change it in your profile';
 
   @override
-  String get profileRowVoice => 'Voice of your lines';
-
-  @override
-  String get profileVoiceUnset => 'not chosen';
-
-  @override
   String get planTalkConstructions => 'Constructions in the talk';
 
   @override
@@ -4255,8 +3626,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTalkSceneContinue => 'Continue';
 
   @override
-  String planTalkEntryRuleStartRole(String role) {
-    return '$role speaks first. Answer, and ask your own questions.';
+  String planTalkEntryRuleStartRole(String role, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$role speaks first.',
+      'other': '$role speaks first.',
+    });
+    return '$_temp0 Answer, and ask your own questions.';
   }
 
   @override
@@ -4285,4 +3660,353 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get planWindowTalkReplayLimit =>
       'The talk was already replayed today — come back tomorrow';
+
+  @override
+  String get startSlogan => 'Prepared to speak.';
+
+  @override
+  String get startSignInApple => 'Sign in with Apple';
+
+  @override
+  String get startSignInGoogle => 'Sign in with Google';
+
+  @override
+  String get startSignInFailed => 'Couldn’t sign in. Try again';
+
+  @override
+  String startLegal(String terms, String privacy) {
+    return 'By continuing you accept the $terms and $privacy';
+  }
+
+  @override
+  String get startLegalTerms => 'Terms';
+
+  @override
+  String get startLegalPrivacy => 'Privacy Policy';
+
+  @override
+  String get introSkip => 'Skip';
+
+  @override
+  String get introStart => 'Start';
+
+  @override
+  String get introATitle => 'A big conversation\nis coming.\nYou’ll be ready.';
+
+  @override
+  String get introAThought =>
+      'A doctor, a landlord, an interview, the bank. Name the event — the plan builds itself around it.';
+
+  @override
+  String get introALineNative => '';
+
+  @override
+  String get introSceneAirport => 'airport';
+
+  @override
+  String get introSceneBank => 'bank';
+
+  @override
+  String get introSceneInterview => 'interview';
+
+  @override
+  String get introSceneRent => 'rent';
+
+  @override
+  String get introSceneDoctor => 'doctor';
+
+  @override
+  String get introBTitle => 'A language\nfor every conversation.';
+
+  @override
+  String get introBThought =>
+      'English, German, Romanian, Polish, Spanish, Italian, French. Pick it per plan; hints stay in your own language.';
+
+  @override
+  String get introCBrow => '6 days · 20 min a day';
+
+  @override
+  String get introCToday => 'today';
+
+  @override
+  String get introCDate => 'October 2';
+
+  @override
+  String get introCEvent => 'doctor’s appointment';
+
+  @override
+  String get introStageWords => 'Words';
+
+  @override
+  String get introStagePhrases => 'Phrases';
+
+  @override
+  String get introStageDialogue => 'Dialogue';
+
+  @override
+  String get introStageListen => 'Listen';
+
+  @override
+  String get introStageSpeak => 'Speak';
+
+  @override
+  String get introStageTalk => 'Talk';
+
+  @override
+  String get introCTitle => 'Twenty minutes a day —\nout loud.';
+
+  @override
+  String get introCThought =>
+      'Words, phrases, dialogue: you listen and speak, not type. Exactly the days left before the event.';
+
+  @override
+  String get introDLineNative => '';
+
+  @override
+  String get introDTap => 'tap to speak';
+
+  @override
+  String get introDTitle => 'A live conversation\nwith AI — no script.';
+
+  @override
+  String get introDThought =>
+      'It hears what you said and answers that. Ask again, wander off — it keeps up.';
+
+  @override
+  String get introECaption => 'three sets from the store · your own words from plans';
+
+  @override
+  String get introECoverCity => 'Home and city';
+
+  @override
+  String get introECoverHealth => 'Health';
+
+  @override
+  String get introECoverWork => 'Work';
+
+  @override
+  String introEWordCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get introETitle => 'Your words\nstay with you.';
+
+  @override
+  String get introEThought =>
+      'Your own collections and ready-made sets. Review between plans — nothing gets lost.';
+
+  @override
+  String get accountSignedInApple => 'Signed in with Apple';
+
+  @override
+  String get accountSignedInGoogle => 'Signed in with Google';
+
+  @override
+  String get accountGroupSubscription => 'Subscription';
+
+  @override
+  String get accountFree => 'Free';
+
+  @override
+  String get accountFreeValue => 'one plan, day 1';
+
+  @override
+  String get accountPremium => 'Premium';
+
+  @override
+  String accountPremiumUntil(String date) {
+    return 'renews $date';
+  }
+
+  @override
+  String get accountPremiumForever => 'no end date';
+
+  @override
+  String get accountManageSubscription => 'Manage subscription';
+
+  @override
+  String get accountRestorePurchases => 'Restore purchases';
+
+  @override
+  String get accountGroupLearning => 'Learning';
+
+  @override
+  String get accountVoice => 'Learner voice';
+
+  @override
+  String get accountVoiceMale => 'male';
+
+  @override
+  String get accountVoiceFemale => 'female';
+
+  @override
+  String get accountSessionSounds => 'Session sounds';
+
+  @override
+  String get accountUiLanguage => 'App language';
+
+  @override
+  String get accountUiRussian => 'Русский';
+
+  @override
+  String get accountUiEnglish => 'English';
+
+  @override
+  String get accountNativeLanguage => 'Native language';
+
+  @override
+  String get accountGroupReminders => 'Reminders';
+
+  @override
+  String get accountRemind => 'Remind me about the day';
+
+  @override
+  String get accountTime => 'Time';
+
+  @override
+  String get accountGroupApp => 'App';
+
+  @override
+  String get accountTerms => 'Terms';
+
+  @override
+  String get accountPrivacy => 'Privacy';
+
+  @override
+  String get accountSupport => 'Support';
+
+  @override
+  String get accountSupportValue => 'email';
+
+  @override
+  String get accountRate => 'Rate Ritora';
+
+  @override
+  String get accountSignOut => 'Sign out';
+
+  @override
+  String get accountDelete => 'Delete account';
+
+  @override
+  String get accountNameTitle => 'Name';
+
+  @override
+  String get accountNameHint => 'What’s your name';
+
+  @override
+  String get accountDone => 'Done';
+
+  @override
+  String get accountDeleteTitle => 'Delete account?';
+
+  @override
+  String accountDeleteBodyPlan(String plan) {
+    return 'Your plan “$plan”, the days you’ve done and your settings will be gone. They can’t be restored.';
+  }
+
+  @override
+  String get accountDeleteBody =>
+      'The days you’ve done and your settings will be gone. They can’t be restored.';
+
+  @override
+  String get accountDeleteNote => 'Cancel your subscription in the App Store';
+
+  @override
+  String get accountDeleteFailed => 'Couldn’t delete. Try again';
+
+  @override
+  String get accountDeleting => 'Deleting…';
+
+  @override
+  String get accountRemindersTitle => 'Reminders';
+
+  @override
+  String get accountRemindersNote =>
+      'We remind you once a day, when the next day of the plan is waiting';
+
+  @override
+  String get accountRemindersDenied => 'Notifications are off in iOS Settings — turn them on there';
+
+  @override
+  String notifyAskTitle(int day, String time) {
+    return 'Remind you about day $day tomorrow at $time?';
+  }
+
+  @override
+  String get notifyAskBody => 'Once a day, nothing more';
+
+  @override
+  String get notifyAskLater => 'Not now';
+
+  @override
+  String get notifyAskYes => 'Remind me';
+
+  @override
+  String get micAskTitle => 'Ritora listens to how you speak';
+
+  @override
+  String get micAskBody =>
+      'The microphone is how you speak: in Dialogue, Speak and the conversation';
+
+  @override
+  String get micAskLater => 'Later';
+
+  @override
+  String get micAskAllow => 'Allow microphone';
+
+  @override
+  String get planPlateNoNetwork => 'No network';
+
+  @override
+  String get planPlateBySubscription => 'with a subscription';
+
+  @override
+  String get planPlateOpensWithSubscription => 'Opens with a subscription';
+
+  @override
+  String get planPlateSubscription => 'Subscription';
+
+  @override
+  String get planRouteMetaOpensWithSubscription => 'opens with a subscription';
+
+  @override
+  String get planRouteMetaBySubscription => 'with a subscription';
+
+  @override
+  String get planKitLabel => 'Rescue kit';
+
+  @override
+  String planKitSub(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n lines for any moment',
+      one: '$n line for any moment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planKitAll(int n) {
+    return 'all $n →';
+  }
+
+  @override
+  String get planKitCollapse => 'collapse';
+
+  @override
+  String get planEntrySubscriptionTitle => 'A second plan comes with a subscription';
+
+  @override
+  String get planEntryActiveLimitTitle => 'No more than three plans at once';
+
+  @override
+  String get planEntryToTab => 'Back to the plan';
 }

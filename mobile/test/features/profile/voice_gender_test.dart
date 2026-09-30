@@ -1,16 +1,14 @@
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/plan/entry/voice_gender_sheet.dart';
-import 'package:eng_std/features/profile/build_stamp.dart';
 import 'package:eng_std/features/profile/profile_screen.dart';
 
 import '../../support/plan_goldens.dart';
+import '../../support/start_harness.dart';
 
 /// ГОЛОС СВОИХ РЕПЛИК (кадр 38-1, наряд FIX-3 §6) — спрашивается ОДИН РАЗ, пока пол в профиле не сказан, и меняется
 /// в профиле. Лист — два варианта и одна кнопка: выбор уходит на сервер (`PUT /profile` `gender`), и больше вопроса
@@ -19,18 +17,7 @@ void main() {
   setUpAll(setUpPlanGoldens);
 
   Widget app(Widget home, {String? gender, List<Map<String, dynamic>>? sent}) => ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWith((ref) {
-        final db = AppDatabase.forTesting(NativeDatabase.memory());
-        ref.onDispose(db.close);
-
-        return db;
-      }),
-      authControllerProvider.overrideWith(() => _Auth(gender: gender, sent: sent ?? [])),
-      statsProvider.overrideWith((ref) => const Stream.empty()),
-      clientBuildProvider.overrideWithValue((sha: '', at: '')),
-      backendCommitProvider.overrideWith((ref) async => 'def5678'),
-    ],
+    overrides: [...accountOverrides(auth: () => _Auth(gender: gender, sent: sent ?? []))],
     child: planGoldenShell(home),
   );
 
@@ -92,18 +79,19 @@ void main() {
     expect(chosen, isNull);
   });
 
-  // ПРАВИЛО (наряд FIX-3 §6): в профиле стоит ряд «Голос своих реплик» — «не выбран», пока сервер не знает пола, и
-  // имя голоса, когда знает; тап открывает ТОТ ЖЕ лист, и выбор уходит на сервер полем `gender`.
+  // ПРАВИЛО (наряд FIX-3 §6; кадр 42-1, наряд CLIENT-START §5): в профиле стоит ряд «Голос ученика» — «мужской», пока
+  // сервер не знает пола (так он и озвучивает до ответа), и выбранный голос, когда знает; тап открывает ТОТ ЖЕ лист
+  // 38-1, и выбор уходит на сервер полем `gender`.
   // ЛОВИТ: вопрос, который больше негде поменять, и ряд, печатающий пол сырым словом сервера.
-  testWidgets('профиль: ряд голоса — «не выбран», лист меняет его полем gender', (tester) async {
+  testWidgets('профиль: ряд «Голос ученика» — лист 38-1 меняет его полем gender', (tester) async {
     final sent = <Map<String, dynamic>>[];
     await tester.pumpWidget(app(const ProfileScreen(pushed: true), sent: sent));
     await tester.pumpAndSettle();
 
-    expect(find.text('Голос своих реплик'), findsOneWidget);
-    expect(find.text('не выбран'), findsOneWidget);
+    expect(find.text('Голос ученика'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('profile-voice')), matching: find.text('мужской')), findsOneWidget);
 
-    await tester.tap(find.text('Голос своих реплик'));
+    await tester.tap(find.text('Голос ученика'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('voice-$kVoiceFemale')));
     await tester.pump();
@@ -113,7 +101,8 @@ void main() {
     expect(sent, [
       {'gender': kVoiceFemale},
     ]);
-    expect(find.text('Женский'), findsOneWidget, reason: 'ряд говорит выбранный голос словом словаря');
+    expect(find.descendant(of: find.byKey(const ValueKey('profile-voice')), matching: find.text('женский')), findsOneWidget,
+        reason: 'ряд говорит выбранный голос словом словаря');
   });
 
   // ПРАВИЛО (наряд FIX-3 §8, зал: «Выйти» в профиле оставляло чёрный экран): без пользователя вытолкнутый профиль

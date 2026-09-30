@@ -82,7 +82,7 @@ class _VoiceSheetState extends State<_VoiceSheet> {
           const SizedBox(height: 14),
           Text(l.planVoiceInProfile, style: AppTextSession.meta),
           const SizedBox(height: 32),
-          SessionDockButton(
+          DockButton(
             key: const ValueKey('voice-gender-next'),
             label: l.planSessionNext,
             onTap: () => Navigator.of(context).pop(_chosen),

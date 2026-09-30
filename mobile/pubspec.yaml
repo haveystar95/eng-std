@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+21
+version: 1.0.0+23
 
 environment:
   sdk: ^3.12.2
@@ -145,6 +145,13 @@ flutter:
     - assets/stages/
     - assets/system-days/
     - assets/icons/
+    # THE MARK (work order CLIENT-START §1) — the wordmark «Ritora» whole and split into its six letters, the launch
+    # screen's «R» and the Google «G», cut from the brand canvas by scripts/brand/render_brand.mjs (the app bundles no
+    # Literata 600). Resolution variants in 2.0x/ and 3.0x/.
+    - assets/brand/
+    # THE «WHY» SHEETS' PHOTOS (41-2) — the canvas's slots; warm placeholders until the owner picks the photos
+    # (scripts/brand/intro_placeholders.swift). Same names as the canvas: a real photo replaces a placeholder as is.
+    - assets/intro/
 
   # Bundled fonts — offline-first, no runtime fetch. Instanced from the OFL
   # variable fonts down to exactly the token-list weights (no extra weights);

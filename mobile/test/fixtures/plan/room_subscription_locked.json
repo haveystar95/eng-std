@@ -1,0 +1,473 @@
+{
+  "plan_id": "01M3F4WDHZX7VNSD35C6P67P7Z",
+  "day": {
+    "id": "01M3F4WDJHK53JGBKXXXCKK8FT",
+    "number": 2,
+    "type": "scene",
+    "status": "locked",
+    "lock_reason": "subscription",
+    "scene_id": "01M3F4WDJADQ38CXVB6E608664",
+    "title_native": "Начало беседы",
+    "title_target": "Începutul interviului",
+    "teaches_native": "представиться и понять вопросы",
+    "lesson_status": "pending",
+    "opens_on": null,
+    "slot": {
+      "code": "tomorrow",
+      "date": "2026-09-28",
+      "label_native": "завтра"
+    },
+    "cards_total": 0,
+    "cards_done": 0,
+    "minutes_spent": 0,
+    "opened_at": null,
+    "closed_at": null,
+    "stages": [
+      {
+        "stage": "words",
+        "state": "locked"
+      },
+      {
+        "stage": "phrases",
+        "state": "locked"
+      },
+      {
+        "stage": "dialogue",
+        "state": "locked"
+      },
+      {
+        "stage": "listen",
+        "state": "locked"
+      },
+      {
+        "stage": "speak",
+        "state": "locked"
+      },
+      {
+        "stage": "conversation",
+        "state": "locked"
+      }
+    ]
+  },
+  "scene": {
+    "id": "01M3F4WDJADQ38CXVB6E608664",
+    "order": 2,
+    "kind": "situation",
+    "priority": 2,
+    "title_native": "Начало беседы",
+    "title_target": "Începutul interviului",
+    "teaches_native": "представиться и понять вопросы",
+    "goals_native": [
+      "поздороваться вежливо",
+      "коротко представиться",
+      "сказать, зачем пришли",
+      "попросить повторить вопрос"
+    ],
+    "learner_role_target": "Candidat",
+    "learner_role_native": "Кандидат",
+    "partner_role_target": "Intervievator",
+    "partner_role_native": "Интервьюер",
+    "image": {
+      "url": "https://images.pexels.com/photos/5668857/pexels-photo-5668857.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "author": "Sora Shimazaki",
+      "author_url": "https://www.pexels.com/@sora-shimazaki",
+      "tone": "#828285",
+      "url_112": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/images/01M3F4WDJADQ38CXVB6E608664/112?v=6c527f729b9f",
+      "url_448": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/images/01M3F4WDJADQ38CXVB6E608664/448?v=6c527f729b9f"
+    },
+    "lesson_status": "pending",
+    "lesson_fail_reason": null,
+    "day_number": 2,
+    "cost_usd": null,
+    "latency_ms": null,
+    "prompt_version": null
+  },
+  "stages": [
+    {
+      "stage": "words",
+      "total": 0,
+      "done": 0,
+      "state": "absent",
+      "cards": []
+    },
+    {
+      "stage": "phrases",
+      "total": 0,
+      "done": 0,
+      "state": "absent",
+      "cards": []
+    },
+    {
+      "stage": "dialogue",
+      "total": 0,
+      "done": 0,
+      "state": "absent",
+      "cards": []
+    },
+    {
+      "stage": "listen",
+      "total": 0,
+      "done": 0,
+      "state": "absent",
+      "cards": []
+    },
+    {
+      "stage": "speak",
+      "total": 0,
+      "done": 0,
+      "state": "absent",
+      "cards": []
+    },
+    {
+      "stage": "recall",
+      "total": 0,
+      "done": 0,
+      "state": "absent",
+      "cards": []
+    },
+    {
+      "stage": "repetition",
+      "total": 0,
+      "done": 0,
+      "state": "absent",
+      "cards": []
+    }
+  ],
+  "metrics": null,
+  "program": [],
+  "window": {
+    "day": {
+      "index": 2,
+      "type": "scene",
+      "title_native": "Начало беседы",
+      "title_target": "Începutul interviului",
+      "image": {
+        "url": "https://images.pexels.com/photos/5668857/pexels-photo-5668857.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+        "author": "Sora Shimazaki",
+        "author_url": "https://www.pexels.com/@sora-shimazaki",
+        "tone": "#828285",
+        "url_112": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/images/01M3F4WDJADQ38CXVB6E608664/112?v=6c527f729b9f",
+        "url_448": "http://greedily-thermos-finer.ngrok-free.dev/api/v1/plans/images/01M3F4WDJADQ38CXVB6E608664/448?v=6c527f729b9f"
+      },
+      "image_tone": "#828285",
+      "status": "locked",
+      "minutes_estimate": null,
+      "minutes_spent": null,
+      "goals": [
+        {
+          "text": "поздороваться вежливо",
+          "passed": false
+        },
+        {
+          "text": "коротко представиться",
+          "passed": false
+        },
+        {
+          "text": "сказать, зачем пришли",
+          "passed": false
+        },
+        {
+          "text": "попросить повторить вопрос",
+          "passed": false
+        }
+      ]
+    },
+    "stages": [
+      {
+        "stage": "words",
+        "state": "locked",
+        "done_count": null,
+        "total": null,
+        "minutes_left": null,
+        "minutes": 0,
+        "share": 0.0,
+        "talk_title_native": null,
+        "scenes_count": null,
+        "targets": null,
+        "again": true,
+        "summary": {
+          "done": 0,
+          "total": 0,
+          "first_try": 0,
+          "returns": 0
+        }
+      },
+      {
+        "stage": "phrases",
+        "state": "locked",
+        "done_count": null,
+        "total": null,
+        "minutes_left": null,
+        "minutes": 0,
+        "share": 0.0,
+        "talk_title_native": null,
+        "scenes_count": null,
+        "targets": null,
+        "again": true,
+        "summary": {
+          "done": 0,
+          "total": 0,
+          "first_try": 0,
+          "returns": 0
+        }
+      },
+      {
+        "stage": "dialogue",
+        "state": "locked",
+        "done_count": null,
+        "total": null,
+        "minutes_left": null,
+        "minutes": 0,
+        "share": 0.0,
+        "talk_title_native": null,
+        "scenes_count": null,
+        "targets": null,
+        "again": true,
+        "summary": {
+          "done": 0,
+          "total": 0,
+          "first_try": 0,
+          "returns": 0
+        }
+      },
+      {
+        "stage": "listen",
+        "state": "locked",
+        "done_count": null,
+        "total": null,
+        "minutes_left": null,
+        "minutes": 0,
+        "share": 0.0,
+        "talk_title_native": null,
+        "scenes_count": null,
+        "targets": null,
+        "again": true,
+        "summary": {
+          "done": 0,
+          "total": 0,
+          "first_try": 0,
+          "returns": 0
+        }
+      },
+      {
+        "stage": "speak",
+        "state": "locked",
+        "done_count": null,
+        "total": null,
+        "minutes_left": null,
+        "minutes": 0,
+        "share": 0.0,
+        "talk_title_native": null,
+        "scenes_count": null,
+        "targets": null,
+        "again": true,
+        "summary": {
+          "done": 0,
+          "total": 0,
+          "first_try": 0,
+          "returns": 0
+        }
+      },
+      {
+        "stage": "conversation",
+        "state": "locked",
+        "done_count": null,
+        "total": null,
+        "minutes_left": null,
+        "minutes": 5,
+        "share": 0.0,
+        "talk_title_native": null,
+        "scenes_count": 0,
+        "targets": [],
+        "again": false,
+        "summary": null
+      }
+    ],
+    "sources": [
+      {
+        "scene_id": "01M3F4WDJADQ38CXVB6E608664",
+        "title_native": "Начало беседы",
+        "day_number": 2,
+        "partner_gender": "female"
+      }
+    ],
+    "day_progress": 0.0,
+    "program": {
+      "words": {
+        "summary": {
+          "total": 0,
+          "done": 0,
+          "returns": 0
+        },
+        "items": []
+      },
+      "phrases": {
+        "summary": {
+          "total": 0,
+          "done": 0,
+          "returns": 0
+        },
+        "items": []
+      },
+      "dialogue": {
+        "summary": {
+          "total": 0,
+          "done": 0,
+          "returns": 0
+        },
+        "items": []
+      }
+    },
+    "allowed_action": null,
+    "highlights": [],
+    "listening": []
+  },
+  "speech": {
+    "unstressed_words": [
+      "un",
+      "o",
+      "unei",
+      "unui",
+      "niște",
+      "a",
+      "al",
+      "ai",
+      "ale",
+      "de",
+      "la",
+      "cu",
+      "în",
+      "într",
+      "dintr",
+      "printr",
+      "pe",
+      "pentru",
+      "din",
+      "spre",
+      "prin",
+      "despre",
+      "fără",
+      "până",
+      "după",
+      "către",
+      "să",
+      "este",
+      "e",
+      "sunt",
+      "ești",
+      "suntem",
+      "sunteți",
+      "era",
+      "fi",
+      "fost",
+      "am",
+      "are",
+      "avem",
+      "aveți",
+      "au",
+      "aș",
+      "ar",
+      "ați",
+      "va",
+      "vom",
+      "veți",
+      "vor",
+      "pot",
+      "poți",
+      "poate",
+      "putem",
+      "puteți",
+      "trebuie"
+    ],
+    "articles": [],
+    "abbreviations": [
+      "dl.",
+      "dna.",
+      "dra.",
+      "dr.",
+      "dvs.",
+      "dv.",
+      "prof.",
+      "ing.",
+      "nr.",
+      "str.",
+      "bd.",
+      "bl.",
+      "sc.",
+      "et.",
+      "ap.",
+      "jud.",
+      "tel.",
+      "pag.",
+      "aprox.",
+      "cca.",
+      "min.",
+      "a.m.",
+      "p.m.",
+      "etc.",
+      "de ex.",
+      "p. ex.",
+      "ș.a.",
+      "ș.a.m.d."
+    ],
+    "number_words": {
+      "zero": "0",
+      "unu": "1",
+      "una": "1",
+      "doi": "2",
+      "două": "2",
+      "trei": "3",
+      "patru": "4",
+      "cinci": "5",
+      "șase": "6",
+      "șapte": "7",
+      "opt": "8",
+      "nouă": "9",
+      "zece": "10",
+      "unsprezece": "11",
+      "doisprezece": "12",
+      "douăsprezece": "12",
+      "treisprezece": "13",
+      "paisprezece": "14",
+      "patrusprezece": "14",
+      "cincisprezece": "15",
+      "șaisprezece": "16",
+      "șaptesprezece": "17",
+      "optsprezece": "18",
+      "nouăsprezece": "19",
+      "unșpe": "11",
+      "doișpe": "12",
+      "treișpe": "13",
+      "paișpe": "14",
+      "cinșpe": "15",
+      "șaișpe": "16",
+      "șaptișpe": "17",
+      "optișpe": "18",
+      "nouășpe": "19",
+      "douăzeci": "20",
+      "treizeci": "30",
+      "patruzeci": "40",
+      "cincizeci": "50",
+      "șaizeci": "60",
+      "șaptezeci": "70",
+      "optzeci": "80",
+      "nouăzeci": "90",
+      "sută": "100",
+      "sute": "100",
+      "o sută": "100",
+      "mii": "1000",
+      "o mie": "1000",
+      "milion": "1000000",
+      "milioane": "1000000",
+      "un milion": "1000000",
+      "miliard": "1000000000",
+      "miliarde": "1000000000",
+      "un miliard": "1000000000"
+    },
+    "number_joiners": [],
+    "number_tens_joiners": [
+      "și"
+    ],
+    "repeat_misses": 0
+  }
+}
