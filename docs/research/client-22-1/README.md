@@ -229,7 +229,20 @@ PHPStan 0, Pest 3135 passed, `flutter analyze` чисто — 159 с с холо
 «+»); подпись прошла сама — профиль бесплатной команды, выпущенный сборкой (24) под телефон, ещё жив. `Runner.app`
 54 МБ, «Ritora», `com.denis.engstd`, 1.0.0 (25). Установлена на iPhone (Denis) `00008110-000A7CCC3492801E` поверх (24)
 тем же `devicectl device install app`; проверка `devicectl device info apps --bundle-id com.denis.engstd` → «Ritora
-com.denis.engstd 1.0.0 25», 01.10 08:14 UTC. Обновление на месте: база и вход сохранены.
+com.denis.engstd 1.0.0 25», 01.10 08:14 UTC. Обновление на месте — данные приложения и связка ключей при обновлении
+остаются; само приложение после установки не запускал.
+
+**Слияние и уборка (01.10):**
+- Холостое `git merge-tree --write-tree main client-22-1` — без конфликтов; `mobile` слитого дерева = дереву ветки,
+  `backend2` = `main` (ветка backend2 не трогала — бой, смонтированный на `main`, слияние не меняет). Влито
+  merge-коммитом **`a8019370`** (не ff: `main` ушёл вперёд на 55062396); дерево совпало с холостым прогоном. Правки
+  соседней сессии в рабочем дереве `main` (`backend2/config/playground.php`, неотслеживаемые) не тронуты.
+- С этого коммита в `main` действует новый хук ворот (§6); в основном дереве он ведёт себя как прежний.
+- **Не запушено**: `git push` запрещён правилом `.claude/settings.local.json` (deny `Bash(git push:*)`) — пушит Ден.
+- Worktree `eng-std-client-22-1` снесён (`git worktree remove --force`: вне git там были только сборка, кеши и копии
+  `vendor/`/`.env` от хука), ветка `client-22-1` удалена (`-d`, целиком в `main`). Базы проверки
+  `wordtrainer_eng_std_client_22_1_test` и `…_test_test_1…10` сняты (11). `shots.zip` и `shots-dorabotka.zip` — здесь же,
+  не в git.
 
 ## Сообщение Дену
 
