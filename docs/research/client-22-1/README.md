@@ -155,14 +155,18 @@ PHPStan 0, Pest 3135 passed, `flutter analyze` чисто — 159 с с холо
 
 ## Выкладка
 
-- **Сборка 1.0.0 (24) ждёт входа Apple ID в Xcode beta.** `scripts/build_ios.sh build` (Xcode beta через
-  `DEVELOPER_DIR`, команда 7A5U4R66CB) остановилась на подписи: «No Accounts: Add a new account in Accounts settings»,
-  профилей `com.denis.engstd` нет. В Xcode beta список аккаунтов пуст, папка профилей пуста; сертификат «Apple
-  Development: haveystar95@gmail.com (2VJG8U244J)» в связке на месте. Войти может только владелец: Xcode beta
-  (`~/Documents/privar_sert/Xcode-beta.app`) → Settings → Accounts → «+» → Apple ID. Дальше — без участия:
-  `DEVELOPER_DIR=…/Xcode-beta.app/Contents/Developer ./scripts/build_ios.sh build`, затем
-  `xcrun devicectl device install app --device 00008110-000A7CCC3492801E build/ios/iphoneos/Runner.app` (поверх (23):
-  база и вход сохраняются). На телефоне сейчас «Ritora 1.0.0 (23)» (`devicectl device info apps`, 01.10).
+- **Подпись.** Первая сборка остановилась: в Xcode beta слетел Apple ID («No Accounts», список аккаунтов пуст, профилей
+  `com.denis.engstd` нет; сертификат в связке был на месте). Ден вошёл в Xcode beta → Settings → Accounts. После входа
+  `flutter build ios` (без устройства) сказал «Your team has no devices from which to generate a provisioning profile»:
+  у бесплатной команды профиль выпускается под подключённое устройство — собрано `scripts/build_ios.sh run
+  00008110-000A7CCC3492801E` (Xcode регистрирует телефон и выпускает профиль; запуск по Wi-Fi, как и раньше, «Could not
+  run» — ставится отдельно).
+- **Сборка**: штамп `BUILD_SHA=2a4ca035` (код тот же, что `ddbebb41`; сверху только отчёт), `BUILD_AT=2026-10-01 10:13`;
+  `Runner.app` 55 МБ, `CFBundleDisplayName` «Ritora», `com.denis.engstd`, 1.0.0 (24).
+- **Установлена** на iPhone (Denis) `00008110-000A7CCC3492801E` поверх (23): `DEVELOPER_DIR=…/Xcode-beta.app/Contents/Developer
+  xcrun devicectl device install app --device 00008110-000A7CCC3492801E build/ios/iphoneos/Runner.app`; проверка
+  `devicectl device info apps --bundle-id com.denis.engstd` → «Ritora com.denis.engstd 1.0.0 24», 01.10 07:16 UTC.
+  Обновление на месте: база и вход сохранены.
 - Не запушено; ветка не слита — до приёмки кадров.
 - Базы проверки ветки `wordtrainer_eng_std_client_22_1_test` (+ `…_test_test_N`) оставлены для следующих прогонов хука
   в этом worktree; снести вместе с worktree.
@@ -178,7 +182,7 @@ PHPStan 0, Pest 3135 passed, `flutter analyze` чисто — 159 с с холо
 
 ## Сообщение Дену
 
-Отправить после установки (24):
+После установки (24) — текст:
 
 > Ден, на телефоне сборка 1.0.0 (24) — поставлена поверх (23), вход и данные на месте.
 >
