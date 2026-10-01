@@ -3268,15 +3268,15 @@
   "@planEntryGoalStoriesTitle": {
     "description": "Метка списка историй под полем цели (кадр 22-1, entry.goal.stories.title)."
   },
-  "planEntryGoalStory1": "Собеседование в пятницу, боюсь вопросов про опыт",
+  "planEntryGoalStory1": "Собеседование на повара в пятницу — три года в ресторане, боюсь вопросов про опыт",
   "@planEntryGoalStory1": {
-    "description": "История «так пишут другие» — тап подставляет её в поле (кадр 22-1, entry.goal.story.1)."
+    "description": "История «так пишут другие» — с деталями ученика, как просит спутник: профессия, опыт, город, сроки (доработка CLIENT-22-1); тап подставляет её в поле (кадр 22-1, entry.goal.story.1)."
   },
-  "planEntryGoalStory2": "К врачу с ребёнком, первый раз в местной клинике",
+  "planEntryGoalStory2": "К врачу с ребёнком в Берлине, первый раз в местной клинике — у сына температура",
   "@planEntryGoalStory2": {
     "description": "История «так пишут другие» (кадр 22-1, entry.goal.story.2)."
   },
-  "planEntryGoalStory3": "Звонок арендодателю про залог",
+  "planEntryGoalStory3": "Звонок арендодателю про залог — снимаю квартиру год, съезжаю в мае",
   "@planEntryGoalStory3": {
     "description": "История «так пишут другие» (кадр 22-1, entry.goal.story.3)."
   },

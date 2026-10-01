@@ -11,11 +11,14 @@ import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
+import 'package:eng_std/l10n/app_localizations_ru.dart';
 import 'package:eng_std/theme/theme.dart';
 
-import '../../support/nbsp.dart';
 import '../../support/held_recognizer.dart';
 import '../../support/plan_goldens.dart';
+
+/// The stories of «Так пишут другие» as the interface shows them — the tests tap them by the `.arb`, not by a copy.
+final _ru = AppLocalizationsRu();
 
 /// ВХОД В ПЛАН, ШАГ ЗА ШАГОМ — кадры 22-1 … 22-4d (наряд PLAN-UI-2).
 ///
@@ -71,7 +74,7 @@ void main() {
 
     // Тап по истории «так пишут другие» подставляет её текст в поле; спутник возвращается к обычному тексту. Кадр — когда
     // и перетекание спутника, и чернила тапа по карточке истории закончились.
-    await tester.tap(find.text(nbTypo('Звонок арендодателю про залог')));
+    await tester.tap(find.text(_ru.planEntryGoalStory3));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1));
     await tester.pump(const Duration(seconds: 1));
@@ -149,7 +152,7 @@ void main() {
       'plan/22-2-language-level-full',
       size: const Size(390, 1240),
       prime: (tester) async {
-        await tester.tap(find.text(nbTypo('Звонок арендодателю про залог')));
+        await tester.tap(find.text(_ru.planEntryGoalStory3));
         await tester.pump();
         await tester.tap(find.text('Далее'));
         await tester.pump();
@@ -218,7 +221,7 @@ void main() {
 
 /// Доводит вход до шага ДАТЫ: история в поле, «Далее» трижды.
 Future<void> _toDate(WidgetTester tester) async {
-  await tester.tap(find.text(nbTypo('К врачу с ребёнком, первый раз в местной клинике')));
+  await tester.tap(find.text(_ru.planEntryGoalStory2));
   await tester.pump();
   for (var i = 0; i < 3; i++) {
     await tester.tap(find.text('Далее'));

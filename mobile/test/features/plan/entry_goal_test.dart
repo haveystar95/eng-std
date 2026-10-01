@@ -11,6 +11,8 @@ import 'package:eng_std/data/typography.dart';
 import 'package:eng_std/features/plan/entry/dictation_wave.dart' show DictatedText;
 import 'package:eng_std/features/plan/entry/entry_goal_step.dart';
 import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
+import 'package:eng_std/l10n/app_localizations_en.dart';
+import 'package:eng_std/l10n/app_localizations_ru.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../support/held_recognizer.dart';
@@ -175,16 +177,52 @@ void main() {
   });
 
   // RULE (§1d, §2): a story from «Так пишут другие» comes in as words — the no-break spaces of its display (the `.arb`'s
-  // typography) stay out of the field and out of the goal.
-  // CATCHES: «К врачу с<nbsp>ребёнком…» sent to the server.
+  // typography) stay out of the field and out of the goal. The stories carry the learner's details, as the companion asks
+  // (доработка CLIENT-22-1): who, where, what is wrong.
+  // CATCHES: «К<nbsp>врачу с<nbsp>ребёнком…» sent to the server; a story with no details about the learner.
   testWidgets('a tapped story is entered with plain spaces, and sent so', (tester) async {
     final api = await open(tester);
-    const story = 'К врачу с ребёнком, первый раз в местной клинике';
-    await tester.tap(find.text(nbTypo(story)));
+    final shown = AppLocalizationsRu().planEntryGoalStory2;
+    final story = shown.replaceAll(kNoBreakSpace, ' ');
+    expect(story, 'К врачу с ребёнком в Берлине, первый раз в местной клинике — у сына температура');
+    expect(shown, isNot(story), reason: 'the card shows the story set by the rule');
+    await tester.tap(find.text(shown));
     await tester.pump();
     expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, story);
     await _toPreview(tester);
     expect(api.goals, [story]);
+  });
+
+  // RULE (§2): wherever the entry SHOWS the learner's goal it is set by the rule of their language — the summary rows and
+  // the quote of «— это про что?» (22-4d) alike; what leaves for the server is the goal as entered.
+  // CATCHES: «с ребёнком в / Берлине, первый раз в / местной клинике» — the quote laid out raw (the build before this one).
+  testWidgets('the goal quoted by «— это про что?» (22-4d) is set by the rule, and sent as entered', (tester) async {
+    final api = await open(tester)..status = 'unclear';
+    final ru = AppLocalizationsRu();
+    await tester.tap(find.text(ru.planEntryGoalStory2));
+    await tester.pump();
+    await _toPreview(tester);
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text(ru.planEntryPreviewUnclearQuote(ru.planEntryGoalStory2)), findsOneWidget);
+    expect(ru.planEntryGoalStory2, contains('в$kNoBreakSpaceБерлине'));
+    expect(api.goals.single.contains(kNoBreakSpace), isFalse);
+  });
+
+  // The three stories of the canon (доработка CLIENT-22-1), as the interface shows them, in both languages.
+  test('the stories: the learner\'s details in each — ru and en as the work order wrote them', () {
+    String plain(String s) => s.replaceAll(kNoBreakSpace, ' ');
+    final ru = AppLocalizationsRu();
+    final en = AppLocalizationsEn();
+    expect([ru.planEntryGoalStory1, ru.planEntryGoalStory2, ru.planEntryGoalStory3].map(plain), [
+      'Собеседование на повара в пятницу — три года в ресторане, боюсь вопросов про опыт',
+      'К врачу с ребёнком в Берлине, первый раз в местной клинике — у сына температура',
+      'Звонок арендодателю про залог — снимаю квартиру год, съезжаю в мае',
+    ]);
+    expect([en.planEntryGoalStory1, en.planEntryGoalStory2, en.planEntryGoalStory3].map(plain), [
+      'Job interview as a cook on Friday — three years in a restaurant, afraid of questions about experience',
+      'To the doctor with my child in Berlin, first time at the local clinic — my son has a fever',
+      'Call to the landlord about the deposit — renting for a year, moving out in May',
+    ]);
   });
 }
 
@@ -209,11 +247,17 @@ Future<void> _toPreview(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 200));
 }
 
-/// `POST /plans` records the goal it was sent and answers «building»; the rest of the entry as the golden test has it.
+/// `POST /plans` records the goal it was sent and answers [status] («building»); the rest of the entry as the golden test
+/// has it.
 class _Api implements ApiClient {
   final goals = <String>[];
+  String status = 'building';
 
-  PlanBuild _build() => PlanBuild.fromJson({...planFixture('build_ready'), 'status': 'building'});
+  PlanBuild _build() => PlanBuild.fromJson({
+    ...planFixture('build_ready'),
+    'status': status,
+    if (status == 'unclear') 'unclear_reason': 'no_situation',
+  });
 
   @override
   Future<PlanBuild> createPlan({

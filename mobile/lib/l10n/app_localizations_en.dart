@@ -2411,13 +2411,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryGoalStoriesTitle => 'How others put it';
 
   @override
-  String get planEntryGoalStory1 => 'Interview on Friday, afraid of questions about my experience';
+  String get planEntryGoalStory1 =>
+      'Job interview as a cook on Friday — three years in a restaurant, afraid of questions about experience';
 
   @override
-  String get planEntryGoalStory2 => 'To the doctor with my child, first time at the local clinic';
+  String get planEntryGoalStory2 =>
+      'To the doctor with my child in Berlin, first time at the local clinic — my son has a fever';
 
   @override
-  String get planEntryGoalStory3 => 'Call to the landlord about the deposit';
+  String get planEntryGoalStory3 =>
+      'Call to the landlord about the deposit — renting for a year, moving out in May';
 
   @override
   String get planEntryGoalCompanion =>

@@ -57,8 +57,9 @@ class EntryPreviewStep extends StatelessWidget {
         summary: summary,
         body: _Notice(
           icon: PlanIcon.noticeUnclear,
-          // Заголовок цитирует то, что человек написал: «"Английский" — это про что?»
-          title: l.planEntryPreviewUnclearQuote(state.goal.trim()),
+          // Заголовок цитирует то, что человек написал: «"Английский" — это про что?» — как и строки сводки, по правилу
+          // типографики его языка (CLIENT-22-1 §2); уходит на сервер цель нетронутой.
+          title: l.planEntryPreviewUnclearQuote(context.nativeText(state.goal.trim())),
           sub: l.planEntryPreviewUnclearSub,
           action: l.planEntryPreviewUnclearCta,
           onAction: onEditGoal,

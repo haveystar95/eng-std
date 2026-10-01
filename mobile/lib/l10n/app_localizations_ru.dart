@@ -2516,13 +2516,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planEntryGoalStoriesTitle => 'Так пишут другие';
 
   @override
-  String get planEntryGoalStory1 => 'Собеседование в пятницу, боюсь вопросов про опыт';
+  String get planEntryGoalStory1 =>
+      'Собеседование на повара в пятницу — три года в ресторане, боюсь вопросов про опыт';
 
   @override
-  String get planEntryGoalStory2 => 'К врачу с ребёнком, первый раз в местной клинике';
+  String get planEntryGoalStory2 =>
+      'К врачу с ребёнком в Берлине, первый раз в местной клинике — у сына температура';
 
   @override
-  String get planEntryGoalStory3 => 'Звонок арендодателю про залог';
+  String get planEntryGoalStory3 =>
+      'Звонок арендодателю про залог — снимаю квартиру год, съезжаю в мае';
 
   @override
   String get planEntryGoalCompanion =>

@@ -299,7 +299,7 @@ void main() {
         child: planGoldenShell(PlanEntryScreen(now: () => DateTime(2026, 9, 12, 12))),
       ));
       await tester.pump();
-      await tester.tap(find.text(nbTypo('К врачу с ребёнком, первый раз в местной клинике')));
+      await tester.tap(find.text(AppLocalizationsRu().planEntryGoalStory2));
       await tester.pump();
       for (var i = 0; i < 3; i++) {
         await tester.tap(find.text('Далее'));
