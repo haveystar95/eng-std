@@ -42,6 +42,9 @@ return [
                 env('OPENAI_ENRICH_MODEL', 'gpt-4o-mini'),
                 env('OPENAI_SUMMARY_MODEL', 'gpt-4o-mini'),
                 env('OPENAI_COMPARE_MODEL'),
+                // Tried by hand in the sandbox, not (yet) run by production — added on request.
+                'gpt-5.6-sol',
+                'gpt-5.6-luna',
             ],
         ],
 
@@ -54,6 +57,9 @@ return [
                 // one to try them on.
                 env('ANTHROPIC_PLAYGROUND_MODEL', 'claude-haiku-4-5'),
                 env('ANTHROPIC_GENERATE_MODEL', 'claude-opus-5'),
+                // Both strong models side by side, whichever one ANTHROPIC_GENERATE_MODEL points at.
+                'claude-sonnet-5',
+                'claude-opus-5',
             ],
         ],
     ],
