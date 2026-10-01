@@ -19,6 +19,7 @@ import 'package:eng_std/features/plan/session/session_mic.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/rehearsal_run.dart';
 import '../../../support/server_fixtures.dart' show serverFixtureJson;
 import '../../../support/session_harness.dart' show SilentRecognizer, enterHeard;
@@ -156,7 +157,7 @@ void main() {
       expect(find.text(last), findsOneWidget);
       final wave = inTurn(lastPartner.index, find.byKey(const ValueKey('talk-line-wave')));
       expect(wave, findsOneWidget, reason: 'the edge wave while the line sounds');
-      expect(tester.getRect(wave).top - tester.getRect(inTurn(lastPartner.index, find.text(lastPartner.textNative!))).bottom, moreOrLessEquals(10, epsilon: 0.5));
+      expect(tester.getRect(wave).top - tester.getRect(inTurn(lastPartner.index, find.text(nt(lastPartner.textNative!)))).bottom, moreOrLessEquals(10, epsilon: 0.5));
       expect(plate(lastPartner.index).bottom - tester.getRect(wave).bottom, moreOrLessEquals(12, epsilon: 0.5), reason: 'on the bottom edge');
       expect(tester.widget<SessionListenButton>(inTurn(lastPartner.index, find.byType(SessionListenButton))).playing, isFalse,
           reason: 'the circle stays «прослушать»');
@@ -430,8 +431,8 @@ void main() {
       expect(ring.width, 8);
       // The ring stands up to 8 outside the button's 88 box; the words stand clear of it (14 in the frame).
       final ringBox = tester.getRect(find.byKey(const ValueKey('talk-mic'))).inflate(ring.width);
-      expect(tester.getRect(find.text('говори, я слушаю')).bottom, lessThanOrEqualTo(ringBox.top), reason: 'над кнопкой, мимо кольца');
-      expect(tester.getRect(find.text('тишина — конец')).top, greaterThanOrEqualTo(ringBox.bottom), reason: 'под кнопкой, мимо кольца');
+      expect(tester.getRect(find.text(nbTypo('говори, я слушаю'))).bottom, lessThanOrEqualTo(ringBox.top), reason: 'над кнопкой, мимо кольца');
+      expect(tester.getRect(find.text(nbTypo('тишина — конец'))).top, greaterThanOrEqualTo(ringBox.bottom), reason: 'под кнопкой, мимо кольца');
       expect(find.byKey(const ValueKey('talk-hint')), findsNothing, reason: 'пока пишет — «Не понял» и кнопка');
       expect(find.byKey(const ValueKey('talk-rescue')), findsOneWidget);
 
@@ -460,8 +461,8 @@ void main() {
       expect(ring.color, AppColors.brassInk, reason: 'латунь, не шалфей');
       expect(ring.width, 2);
       final mic = tester.getRect(find.byKey(const ValueKey('talk-mic')));
-      expect(tester.getRect(find.text('тап — говорить')).bottom, lessThanOrEqualTo(mic.top), reason: '«тап — говорить» над кнопкой');
-      expect(tester.getRect(find.text('не расслышал — скажи ещё раз')).top, greaterThanOrEqualTo(mic.bottom), reason: 'строка под кнопкой');
+      expect(tester.getRect(find.text(nbTypo('тап — говорить'))).bottom, lessThanOrEqualTo(mic.top), reason: '«тап — говорить» над кнопкой');
+      expect(tester.getRect(find.text(nbTypo('не расслышал — скажи ещё раз'))).top, greaterThanOrEqualTo(mic.bottom), reason: 'строка под кнопкой');
       expect(probe.moves, isEmpty);
       await settleTalk(tester);
     });
@@ -508,7 +509,7 @@ void main() {
       await finishLine(tester, clauseOnly);
       expect(open.hints.sentence, isNull, reason: 'фикстура до FIX-4b');
       expect(find.byKey(const ValueKey('talk-hint-plate')), findsNothing);
-      expect(find.text('я сдаю в багаж …'), findsNothing, reason: 'hints.native не читается');
+      expect(find.text(nbTypo('я сдаю в багаж …')), findsNothing, reason: 'hints.native не читается');
       await settleTalk(tester);
     });
   });
@@ -595,7 +596,7 @@ void main() {
       await _say(tester);
       expect(probe.moves, hasLength(1));
       expect(stand.talk.trouble, TalkTrouble.offline);
-      expect(find.text('Связь пропала — разговор продолжится отсюда'), findsOneWidget);
+      expect(find.text(nbTypo('Связь пропала — разговор продолжится отсюда')), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('talk-retry')));
       await tester.pump();
@@ -640,7 +641,7 @@ void main() {
 
       await _say(tester);
       expect(stand.talk.trouble, TalkTrouble.agentSilent);
-      expect(find.text('Собеседник не отвечает — попробуй ещё раз'), findsOneWidget);
+      expect(find.text(nbTypo('Собеседник не отвечает — попробуй ещё раз')), findsOneWidget);
       expect(find.textContaining('ошибка'), findsNothing);
       expect(find.textContaining('сервер'), findsNothing);
 
@@ -670,8 +671,8 @@ void main() {
       await tester.pump();
 
       expect(stand.mics.single.state, MicState.unavailable);
-      expect(find.text('тап — говорить'), findsNothing, reason: 'не звать туда, где ничего не случится');
-      expect(find.text('Нужен микрофон — без него разговор не пройти'), findsOneWidget);
+      expect(find.text(nbTypo('тап — говорить')), findsNothing, reason: 'не звать туда, где ничего не случится');
+      expect(find.text(nbTypo('Нужен микрофон — без него разговор не пройти')), findsOneWidget);
       expect(find.byKey(const ValueKey('talk-rescue')), findsOneWidget, reason: '«Не понял» остаётся');
       expect(probe.moves, isEmpty, reason: 'запись, которой не было, не покупает ход');
 
@@ -682,7 +683,7 @@ void main() {
       expect(recognizer.asked, 1);
       expect(stand.mics.single.state, MicState.idle);
       expect(find.byKey(const ValueKey('talk-allow-mic')), findsNothing);
-      expect(find.text('тап — говорить'), findsOneWidget, reason: 'система разрешила — кнопка снова зовёт');
+      expect(find.text(nbTypo('тап — говорить')), findsOneWidget, reason: 'система разрешила — кнопка снова зовёт');
       await settleTalk(tester);
     });
 
@@ -697,7 +698,7 @@ void main() {
       await tester.pump();
       expect(probe.moves, isEmpty);
       expect(stand.talk.trouble, TalkTrouble.unheard);
-      expect(find.text('не расслышал — скажи ещё раз'), findsOneWidget);
+      expect(find.text(nbTypo('не расслышал — скажи ещё раз')), findsOneWidget);
       await settleTalk(tester);
     });
   });
@@ -829,16 +830,16 @@ void main() {
 
       final sheet = find.byKey(const ValueKey('talk-construction-sheet'));
       expect(sheet, findsOneWidget);
-      expect(find.descendant(of: sheet, matching: find.text('Конструкции в разговоре')), findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.text(nbTypo('Конструкции в разговоре'))), findsOneWidget);
       // A construction the learner filled with a word OF THEIR OWN: the sheet says theirs, not the lesson's.
       final own = open.targets.firstWhere((t) => t.said && t.valueTarget != t.exampleTarget);
       final ownCard = find.byKey(ValueKey('talk-construction-card-${own.sceneId}-${own.ref}'));
-      expect(find.descendant(of: ownCard, matching: find.text('ты сказал: ${own.saidWith(own.valueTarget)}')), findsOneWidget);
+      expect(find.descendant(of: ownCard, matching: find.text('${nbTypo('ты сказал:')} ${own.saidWith(own.valueTarget)}')), findsOneWidget);
       final notSaid = open.targets.firstWhere((t) => !t.said);
       final notSaidCard = find.byKey(ValueKey('talk-construction-card-${notSaid.sceneId}-${notSaid.ref}'));
       await tester.ensureVisible(notSaidCard);
-      expect(find.descendant(of: notSaidCard, matching: find.text('из урока: ${notSaid.lessonLine}')), findsOneWidget);
-      expect(find.descendant(of: notSaidCard, matching: find.textContaining('ты сказал')), findsNothing);
+      expect(find.descendant(of: notSaidCard, matching: find.text('${nbTypo('из урока:')} ${notSaid.lessonLine}')), findsOneWidget);
+      expect(find.descendant(of: notSaidCard, matching: find.textContaining(nbTypo('ты сказал'))), findsNothing);
       for (final t in open.targets) {
         expect(find.byKey(ValueKey('talk-construction-card-${t.sceneId}-${t.ref}')), findsOneWidget, reason: t.ref);
       }
@@ -899,8 +900,8 @@ void main() {
       final phrases = talk.summary!.phrases;
       expect(phrases.where((p) => p.said), isNotEmpty);
       expect(phrases.where((p) => !p.said), isNotEmpty);
-      expect(find.text('КОНСТРУКЦИИ В РАЗГОВОРЕ'), findsOneWidget);
-      expect(find.textContaining('ИЗ 7'), findsNothing, reason: 'счётчика на итоге нет');
+      expect(find.text(nbTypo('КОНСТРУКЦИИ В РАЗГОВОРЕ')), findsOneWidget);
+      expect(find.textContaining(nbTypo('ИЗ 7')), findsNothing, reason: 'счётчика на итоге нет');
 
       final tops = <double>[];
       for (final p in phrases) {
@@ -912,7 +913,7 @@ void main() {
           expect(box.color, AppColors.sessionSageWash, reason: '${p.ref}: шалфей 15 %');
           expect(box.border, isNull);
           expect(check, findsOneWidget);
-          expect(find.descendant(of: row, matching: find.text('ты сказал: ${p.saidWith(p.valueTarget)}')), findsOneWidget);
+          expect(find.descendant(of: row, matching: find.text('${nbTypo('ты сказал:')} ${p.saidWith(p.valueTarget)}')), findsOneWidget);
         } else {
           expect(box.color, isNull, reason: '${p.ref}: без подложки');
           expect((box.border! as Border).top.color, AppColors.markerOutline);
@@ -937,7 +938,7 @@ void main() {
       });
       await pumpSummary(tester, talk);
       expect(talk.summary!.returnsTomorrow, isFalse);
-      expect(find.text('Ты готов к разговору'), findsOneWidget);
+      expect(find.text(nbTypo('Ты готов к разговору')), findsOneWidget);
       expect(find.byKey(const ValueKey('talk-summary-understood-check')), findsOneWidget);
       final check = tester.getRect(find.byKey(const ValueKey('talk-summary-understood-check')));
       final understood = tester.getRect(find.byKey(const ValueKey('talk-summary-understood')));
@@ -1026,7 +1027,7 @@ void main() {
     // ЛОВИТ: документ сервера, который клиент перестал разбирать, и цель, прочитанную как фразу.
     test('разбор: цели — каркасы с окном, ход называет цель парой, итог — тот же список', () {
       final open = serverTalk('conversation-day-open');
-      expect(open.titleNative, 'Поговори с сотрудником стойки');
+      expect(open.titleNative, 'Поговори с сотрудником стойки', reason: 'the model holds the server\'s title as it came');
       expect(open.targets, hasLength(7));
       expect(open.targets.first.frameTarget, 'Here is ___.');
       expect(open.targets.first.exampleTarget, 'my passport');

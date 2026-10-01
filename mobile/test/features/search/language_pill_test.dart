@@ -12,6 +12,7 @@ import 'package:eng_std/features/search/search_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
+import '../../support/nbsp.dart';
 
 /// The two pills — the control that says which pair the answer comes back in.
 ///
@@ -127,8 +128,8 @@ void main() {
 
     // The arrow answers «which way»; only these two answer «which of them am I learning», which is
     // the question a swap re-opens every time.
-    expect(find.text('С КАКОГО'), findsOneWidget);
-    expect(find.text('НА КАКОЙ'), findsOneWidget);
+    expect(find.text(nbTypo('С КАКОГО')), findsOneWidget);
+    expect(find.text(nbTypo('НА КАКОЙ')), findsOneWidget);
   });
 
   testWidgets('sends the pair on every call', (tester) async {

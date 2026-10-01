@@ -11,6 +11,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../support/nbsp.dart';
 
 /// «НЕТ ДНЯ» — THREE SITUATIONS, THREE PICTURES. And a server that is down says so.
 ///
@@ -80,7 +81,7 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(HomeBlockKeys.unreachable), findsOneWidget);
-      expect(find.text('Сервер не отвечает'), findsOneWidget);
+      expect(find.text(nbTypo('Сервер не отвечает')), findsOneWidget);
       expect(find.textContaining('Потяни вниз'), findsOneWidget);
       // …and the door that does not need the day is still there, under the sentence.
       expect(find.byKey(HomeBlockKeys.generate), findsOneWidget);

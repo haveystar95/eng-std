@@ -51,7 +51,7 @@ void main() {
       for (final line in first.lines.take(3)) {
         expect(find.byKey(ValueKey('recall-line-${first.sceneId}-${line.ref}')), findsOneWidget);
         expect(find.text(line.textTarget), findsOneWidget);
-        expect(find.text(line.textNative), findsOneWidget);
+        expect(find.text(nt(line.textNative)), findsOneWidget);
       }
       expect(find.byKey(const ValueKey('recall-dot-0-current')), findsOneWidget);
       expect(find.byKey(const ValueKey('recall-dot-1')), findsOneWidget);
@@ -62,7 +62,7 @@ void main() {
       expect(probe.answers, isEmpty, reason: 'turning a page is not an answer');
       expect(shown, [first.sceneId, last.sceneId]);
       expect(find.byKey(const ValueKey('recall-dot-1-current')), findsOneWidget);
-      expect(find.text('Дальше — повтори вслух'), findsOneWidget);
+      expect(find.text(nbTypo('Дальше — повтори вслух')), findsOneWidget);
       expect(find.text(last.lines.first.textTarget), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('recall-next')));
@@ -79,7 +79,7 @@ void main() {
       await tester.fling(find.byKey(const ValueKey('recall-pages')), const Offset(-300, 0), 1500);
       await tester.pumpAndSettle();
       expect(shown.last, last.sceneId);
-      expect(find.text('Дальше — повтори вслух'), findsOneWidget);
+      expect(find.text(nbTypo('Дальше — повтори вслух')), findsOneWidget);
       await settleCard(tester);
     });
 
@@ -128,20 +128,20 @@ void main() {
       final backend = _Backend(sessionFixtureJson('day-rehearsal'));
       await _open(tester, backend);
       expect(find.text('Вспомнить'), findsWidgets);
-      expect(find.text('Свои реплики всех сцен — посмотри, послушай и скажи вслух'), findsOneWidget);
-      expect(find.textContaining('Запись к врачу'), findsOneWidget, reason: 'the entry names the first scene');
+      expect(find.text(nbTypo('Свои реплики всех сцен — посмотри, послушай и скажи вслух')), findsOneWidget);
+      expect(find.textContaining(nbTypo('Запись к врачу')), findsOneWidget, reason: 'the entry names the first scene');
 
       await tester.tap(find.text('Начать'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Вспомни свои реплики'), findsOneWidget);
-      expect(find.text(nb('≈ 4 мин')), findsOneWidget, reason: 'the stage\'s minutes from the window, not a count of lines');
+      expect(find.text(nbTypo('≈ 4 мин')), findsOneWidget, reason: 'the stage\'s minutes from the window, not a count of lines');
       expect(_beads(), findsNothing);
-      expect(find.textContaining('Запись к врачу'), findsOneWidget);
+      expect(find.textContaining(nbTypo('Запись к врачу')), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('recall-next')));
       await tester.pump();
-      expect(find.textContaining('Приём у врача'), findsOneWidget, reason: 'the second page — the second scene');
+      expect(find.textContaining(nbTypo('Приём у врача')), findsOneWidget, reason: 'the second page — the second scene');
 
       await tester.tap(find.byKey(const ValueKey('recall-next')));
       for (var i = 0; i < 6; i++) {
@@ -149,9 +149,9 @@ void main() {
       }
       expect(backend.answered, [overview.id]);
       expect(find.text('Повтори свою реплику'), findsOneWidget);
-      expect(find.text(nb('ещё 9 реплик')), findsOneWidget);
+      expect(find.text(nbTypo('ещё 9 реплик')), findsOneWidget);
       expect(_beads(), findsNWidgets(9));
-      expect(find.textContaining('Запись к врачу'), findsOneWidget, reason: 'the first retell is the first scene\'s');
+      expect(find.textContaining(nbTypo('Запись к врачу')), findsOneWidget, reason: 'the first retell is the first scene\'s');
       await tester.pump(const Duration(seconds: 2));
     });
   });

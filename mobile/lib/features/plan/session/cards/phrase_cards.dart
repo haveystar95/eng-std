@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/day_window.dart' show WindowPair;
 import '../../../../data/plan/session/session_models.dart';
@@ -86,9 +87,10 @@ class _LessonSheet extends StatelessWidget {
           const SizedBox(height: 6),
           Text(text, key: const ValueKey('lesson-reading'), style: AppTextSession.meta),
         ],
+        // The native sentence is the learner's language — set by its typography; the phrase above stays as it came.
         if (native case final text?) ...[
           const SizedBox(height: 4),
-          Text(text, key: const ValueKey('lesson-native'), style: AppTextSession.body),
+          Text(context.nativeText(text), key: const ValueKey('lesson-native'), style: AppTextSession.body),
         ],
         if (listen != null || bottomLeft != null) ...[
           SizedBox(height: listenGap),
@@ -176,7 +178,7 @@ class _MeaningPlates extends StatelessWidget {
                 children: [
                   Text(f.target, style: AppTextSession.meaning),
                   const SizedBox(height: 2),
-                  Text(f.native, style: AppTextSession.body),
+                  Text(context.nativeText(f.native), style: AppTextSession.body),
                 ],
               ),
             ),
@@ -504,7 +506,7 @@ class _PhraseAssembleCardState extends State<PhraseAssembleCard> {
         children: [
           SessionQuestionSheet(
             eyebrow: l.planSessionBrowTranslation,
-            text: Text(p.targetNative, style: AppTextSession.question),
+            text: Text(context.nativeText(p.targetNative), style: AppTextSession.question),
             translation: null,
           ),
           const SizedBox(height: 24),
@@ -633,7 +635,7 @@ class _PhraseSlotCardState extends State<PhraseSlotCard> with ChoiceCardState<Ph
             constraints: const BoxConstraints(minHeight: 68),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(p.promptNative, key: const ValueKey('slot-native'), style: AppTextSession.question),
+              child: Text(context.nativeText(p.promptNative), key: const ValueKey('slot-native'), style: AppTextSession.question),
             ),
           ),
           const SizedBox(height: 20),
@@ -716,7 +718,7 @@ class _PhraseSlotListenCardState extends State<PhraseSlotListenCard> with Choice
           slot: answered ? p.correctOption?.text : null,
           look: answered ? SlotLook.sage : SlotLook.empty,
         ),
-        translation: answered ? _native(p.frame, said) : p.frame.frameNative,
+        translation: context.nativeText(answered ? _native(p.frame, said) : p.frame.frameNative),
       ),
       bottom: optionsDock(context, target: true),
     );
@@ -920,7 +922,7 @@ class _PhraseSayWholeCardState extends State<PhraseSayWholeCard> with VoiceCardS
       final outcome = await env.judge(heard);
       if (!mounted) return false;
       setState(() {
-        _reason = outcome.accepted ? null : (outcome.reasonNative ?? '');
+        _reason = outcome.accepted ? null : context.nativeText(outcome.reasonNative ?? '');
         _judgedHeard = outcome.heard;
         if (outcome.accepted && outcome.slotValue != null) _heardSlot = outcome.slotValue;
       });
@@ -1292,7 +1294,7 @@ class _PhraseCombineCardState extends State<PhraseCombineCard> {
                 children: [
                   Expanded(
                     child: Text(
-                      '${line.textTarget} · ${line.textNative}',
+                      '${line.textTarget} · ${context.nativeText(line.textNative)}',
                       key: const ValueKey('combine-partner-line'),
                       style: AppTextSession.sceneLine,
                     ),

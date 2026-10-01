@@ -86,7 +86,8 @@ final accountLinksProvider = Provider<AccountLinks>((ref) => const SystemAccount
 /// The App Store's own page of the learner's subscriptions («Управлять подпиской»).
 const kAppStoreSubscriptions = 'https://apps.apple.com/account/subscriptions';
 
-/// «1.0.0 (22)» — the version line at the foot of the profile; empty until iOS has answered.
+/// «1.0.0 (24)» — the version line at the foot of the profile, as the installed bundle says it ([appVersionProvider]);
+/// empty until iOS has answered.
 final profileVersionProvider = FutureProvider<String>((ref) async {
   final version = await ref.watch(appVersionProvider.future);
   return version ?? '';

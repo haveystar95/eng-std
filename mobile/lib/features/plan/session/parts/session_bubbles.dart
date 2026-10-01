@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/session/dialogue_feed.dart';
 import '../../../../data/plan/session/heard_words.dart';
@@ -69,7 +70,8 @@ class SessionBubble extends StatelessWidget {
           child ?? Text(text ?? '', style: lineStyle(own: own)),
           if (translation != null && translation!.trim().isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(translation!, style: translationStyle(own: own)),
+            // The translation is the learner's language — set by its typography; the line above stays as it came.
+            Text(context.nativeText(translation!), style: translationStyle(own: own)),
           ],
           ?footer,
         ],

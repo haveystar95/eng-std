@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/api_client.dart';
+import 'package:eng_std/data/app_version.dart';
 import 'package:eng_std/data/auth_repository.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
@@ -150,8 +151,12 @@ List<Override> accountOverrides({
   notifyPermissionProbeProvider.overrideWithValue(probe ?? FakeNotifyProbe()),
   accountLinksProvider.overrideWithValue(links ?? RecordingLinks()),
   devMenuProvider.overrideWithValue(false),
-  profileVersionProvider.overrideWith((ref) async => '1.0.0 (22)'),
+  appVersionProvider.overrideWith((ref) async => kFakeBuildVersion),
 ];
+
+/// THE VERSION A TEST'S DEVICE REPORTS — obviously fake (наряд CLIENT-22-1 §3): a golden that showed «1.0.0 (22)» was
+/// taken for the build on the phone. Only the device's answer is faked; the profile reads it the way the app does.
+const kFakeBuildVersion = '0.0.0 (0)';
 
 /// `/auth/*` over a recording adapter — the real repository and the real controller, the server faked at the wire.
 class AuthWire implements HttpClientAdapter {

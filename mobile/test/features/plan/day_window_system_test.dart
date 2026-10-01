@@ -51,7 +51,7 @@ void main() {
       tester.widgetList<WindowStageRow>(find.byType(WindowStageRow)).firstWhere((r) => r.stage.stage == stage);
   Finder inRow(PlanStage stage, String text) => find.descendant(
     of: find.byWidgetPredicate((w) => w is WindowStageRow && w.stage.stage == stage),
-    matching: find.text(nb(text)),
+    matching: find.text(nbTypo(text)),
   );
 
   /// The reply as the window of a day NOT STARTED gets it: no card dealt yet.
@@ -80,18 +80,18 @@ void main() {
       expect(find.text('ПОВТОРЕНИЕ'), findsOneWidget);
       expect(find.text('Что уже было'), findsOneWidget);
       expect(textOf(tester, 'window-system-status'), 'идёт');
-      expect(textOf(tester, 'window-system-lead'), 'Вернёшь фразы прошлых дней и поговоришь с собеседником');
+      expect(textOf(tester, 'window-system-lead'), nbTypo('Вернёшь фразы прошлых дней и поговоришь с собеседником'));
       expect([for (final r in tester.widgetList<WindowStageRow>(find.byType(WindowStageRow))) r.stage.stage],
           [PlanStage.repetition, PlanStage.conversation], reason: 'ряды — ровно `window.stages` сервера');
       expect(inRow(PlanStage.repetition, 'Повторение'), findsOneWidget);
       // The frames of 37-1 / 37-2 say the minutes in words, as the status line does (BACK-TAILS-2's contract quotes them).
-      expect(inRow(PlanStage.repetition, 'идёт · около 3 минут'), findsOneWidget, reason: 'у текущего — остаток `minutes_left`');
-      expect(inRow(PlanStage.conversation, 'около 4 минут'), findsOneWidget, reason: 'у ряда впереди — его `minutes`');
+      expect(inRow(PlanStage.repetition, nbTypo('идёт · около 3 минут')), findsOneWidget, reason: 'у текущего — остаток `minutes_left`');
+      expect(inRow(PlanStage.conversation, nbTypo('около 4 минут')), findsOneWidget, reason: 'у ряда впереди — его `minutes`');
       expect(rowOf(tester, PlanStage.conversation).stage.minutes, 4);
       expect(find.byType(WindowPill), findsNothing, reason: 'вкладок программы у повторения нет');
 
-      expect(textOf(tester, 'window-sources-brow'), 'ИЗ КАКИХ ДНЕЙ');
-      expect(find.text('День 1 · Приём у врача'), findsOneWidget);
+      expect(textOf(tester, 'window-sources-brow'), nbTypo('ИЗ КАКИХ ДНЕЙ'));
+      expect(find.text(nbTypo('День 1 · Приём у врача')), findsOneWidget);
       final card = tester.getRect(find.byKey(ValueKey('window-source-${visit.id}')));
       expect(find.byKey(ValueKey('window-source-lines-${visit.id}')), findsNothing, reason: '«N карточек» сервер не шлёт — числа нет');
       expect(card.height, greaterThanOrEqualTo(72));
@@ -106,7 +106,7 @@ void main() {
       final json = dayJson('day-review');
       (windowOf(json)['sources'] as List).add({'scene_id': booking.id, 'title_native': booking.titleNative, 'day_number': null});
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
-      expect(find.text('Запись к врачу'), findsOneWidget);
+      expect(find.text(nbTypo('Запись к врачу')), findsOneWidget);
       final visitCard = tester.getRect(find.byKey(ValueKey('window-source-${visit.id}')));
       expect(visitCard.top, lessThan(tester.getRect(find.byKey(ValueKey('window-source-${booking.id}'))).top));
     });
@@ -121,7 +121,7 @@ void main() {
           [PlanStage.speak, PlanStage.conversation]);
       expect(inRow(PlanStage.conversation, 'впереди'), findsOneWidget);
       expect(find.byKey(const ValueKey('window-sources-brow')), findsNothing);
-      expect(find.text('День 1 · Приём у врача'), findsNothing);
+      expect(find.text(nbTypo('День 1 · Приём у врача')), findsNothing);
 
       final empty = dayJson('day-review');
       windowOf(empty)['sources'] = <dynamic>[];
@@ -162,8 +162,8 @@ void main() {
       final json = notDealt(dayJson('day-review'));
       final estimate = windowDay(json)['minutes_estimate'] as int;
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
-      expect(textOf(tester, 'window-system-status'), nb('не начат · около $estimate минут'));
-      expect(find.text('День 1 · Приём у врача'), findsOneWidget);
+      expect(textOf(tester, 'window-system-status'), nbTypo('не начат · около $estimate минут'));
+      expect(find.text(nbTypo('День 1 · Приём у врача')), findsOneWidget);
     });
 
     testWidgets('пройден — «пройден · N минут» потраченных', (tester) async {
@@ -172,7 +172,7 @@ void main() {
         ..['status'] = 'passed'
         ..['minutes_spent'] = 9;
       await pumpDayWindow(tester, PlanDayRoom.fromJson(passed), plan: plan);
-      expect(textOf(tester, 'window-system-status'), nb('пройден · 9 минут'));
+      expect(textOf(tester, 'window-system-status'), nbTypo('пройден · 9 минут'));
     });
 
     testWidgets('пройден без минут от сервера — одно слово', (tester) async {
@@ -204,23 +204,23 @@ void main() {
     testWidgets('идёт: «перед событием · сегодня · идёт», «Из каких сцен» — список сервера без чисел', (tester) async {
       await pumpDayWindow(tester, PlanDayRoom.fromJson(dayJson('day-rehearsal')), plan: plan);
       expect(find.text('РЕПЕТИЦИЯ'), findsOneWidget);
-      expect(find.descendant(of: find.byType(WindowPlate), matching: find.text(plan.shortTitle ?? plan.displayTitle)), findsOneWidget);
+      expect(find.descendant(of: find.byType(WindowPlate), matching: find.text(nt(plan.shortTitle ?? plan.displayTitle))), findsOneWidget);
       expect(textOf(tester, 'window-system-status'), 'перед событием · сегодня · идёт');
-      expect(textOf(tester, 'window-system-lead'), 'Проговоришь весь разговор с собеседником');
+      expect(textOf(tester, 'window-system-lead'), nbTypo('Проговоришь весь разговор с собеседником'));
       expect([for (final r in tester.widgetList<WindowStageRow>(find.byType(WindowStageRow))) r.stage.stage],
           [PlanStage.recall, PlanStage.conversation]);
-      expect(inRow(PlanStage.conversation, 'около 6 минут'), findsOneWidget);
-      expect(inRow(PlanStage.recall, 'идёт · около 4 минут'), findsOneWidget, reason: 'кадр 37-1b: остаток `minutes_left`');
-      expect(textOf(tester, 'window-sources-brow'), 'ИЗ КАКИХ СЦЕН');
+      expect(inRow(PlanStage.conversation, nbTypo('около 6 минут')), findsOneWidget);
+      expect(inRow(PlanStage.recall, nbTypo('идёт · около 4 минут')), findsOneWidget, reason: 'кадр 37-1b: остаток `minutes_left`');
+      expect(textOf(tester, 'window-sources-brow'), nbTypo('ИЗ КАКИХ СЦЕН'));
       final tops = <double>[];
       for (final s in [booking, visit]) {
         expect(find.byKey(ValueKey('window-source-${s.id}')), findsOneWidget);
-        expect(find.descendant(of: find.byKey(ValueKey('window-source-${s.id}')), matching: find.text(s.titleNative)), findsOneWidget);
+        expect(find.descendant(of: find.byKey(ValueKey('window-source-${s.id}')), matching: find.text(nt(s.titleNative))), findsOneWidget);
         expect(find.byKey(ValueKey('window-source-lines-${s.id}')), findsNothing);
         tops.add(tester.getRect(find.byKey(ValueKey('window-source-${s.id}'))).top);
       }
       expect(tops.first, lessThan(tops.last), reason: 'порядок сервера: сцены плана по порядку');
-      expect(find.text('День 1 · Приём у врача'), findsNothing, reason: 'у репетиции сцены — без дня');
+      expect(find.text(nbTypo('День 1 · Приём у врача')), findsNothing, reason: 'у репетиции сцены — без дня');
     });
 
     // ПРАВИЛО: до раздачи — тот же список сервера; день недели — из даты слота («в четверг»), «сегодня» и «завтра» — как
@@ -236,7 +236,7 @@ void main() {
       final json = notStarted(dayJson('day-rehearsal'));
       final estimate = windowDay(json)['minutes_estimate'] as int;
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
-      expect(textOf(tester, 'window-system-status'), nb('перед событием · в четверг · не начат · около $estimate минут'));
+      expect(textOf(tester, 'window-system-status'), nbTypo('перед событием · в четверг · не начат · около $estimate минут'));
       for (final s in [booking, visit]) {
         expect(find.byKey(ValueKey('window-source-${s.id}')), findsOneWidget);
       }
@@ -257,11 +257,11 @@ void main() {
       final json = dayJson('day-doctor');
       rowsOf(json).firstWhere((r) => r['stage'] == 'speak').remove('minutes');
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json));
-      expect(inRow(PlanStage.words, 'идёт · ≈ 3 мин'), findsOneWidget);
-      expect(inRow(PlanStage.phrases, '≈ 14 мин'), findsOneWidget);
-      expect(inRow(PlanStage.dialogue, '≈ 4 мин'), findsOneWidget);
-      expect(inRow(PlanStage.listen, '≈ 3 мин'), findsOneWidget);
-      expect(inRow(PlanStage.conversation, '≈ 5 мин'), findsOneWidget);
+      expect(inRow(PlanStage.words, nbTypo('идёт · ≈ 3 мин')), findsOneWidget);
+      expect(inRow(PlanStage.phrases, nbTypo('≈ 14 мин')), findsOneWidget);
+      expect(inRow(PlanStage.dialogue, nbTypo('≈ 4 мин')), findsOneWidget);
+      expect(inRow(PlanStage.listen, nbTypo('≈ 3 мин')), findsOneWidget);
+      expect(inRow(PlanStage.conversation, nbTypo('≈ 5 мин')), findsOneWidget);
       expect(inRow(PlanStage.speak, 'впереди'), findsOneWidget, reason: 'ряд без `minutes`');
     });
 
@@ -272,7 +272,7 @@ void main() {
         ..['minutes_spent'] = 21;
       (json['day'] as Map<String, dynamic>)['slot'] = {'code': 'tomorrow', 'date': '2026-09-22', 'label_native': 'завтра'};
       await pumpDayWindow(tester, PlanDayRoom.fromJson(json), plan: plan);
-      expect(textOf(tester, 'window-system-status'), nb('перед событием · завтра · пройден · 21 минута'));
+      expect(textOf(tester, 'window-system-status'), nbTypo('перед событием · завтра · пройден · 21 минута'));
     });
   });
 }

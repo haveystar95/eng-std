@@ -7,6 +7,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/plan/entry/voice_gender_sheet.dart';
 import 'package:eng_std/features/profile/profile_screen.dart';
 
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
 import '../../support/start_harness.dart';
 
@@ -41,10 +42,10 @@ void main() {
     expect(find.byKey(const ValueKey('voice-gender-sheet')), findsOneWidget);
     expect(find.text('Каким голосом озвучивать твои реплики?'), findsOneWidget);
     expect(find.text('Мужской'), findsOneWidget);
-    expect(find.text('ниже и спокойнее'), findsOneWidget);
+    expect(find.text(nbTypo('ниже и спокойнее')), findsOneWidget);
     expect(find.text('Женский'), findsOneWidget);
-    expect(find.text('выше и мягче'), findsOneWidget);
-    expect(find.text('Можно поменять в профиле'), findsOneWidget);
+    expect(find.text(nbTypo('выше и мягче')), findsOneWidget);
+    expect(find.text(nbTypo('Можно поменять в профиле')), findsOneWidget);
     expect(tester.getSize(find.byKey(const ValueKey('voice-$kVoiceMale'))).height, 132);
     expect(find.descendant(of: find.byKey(const ValueKey('voice-$kVoiceMale')), matching: find.byKey(const ValueKey('voice-chosen'))),
         findsOneWidget, reason: 'по умолчанию — мужской, как звучит сервер до ответа');

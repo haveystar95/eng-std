@@ -60,8 +60,8 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Прогресс'), findsOneWidget);
-    expect(find.text(nb('12 дней подряд')), findsOneWidget);
-    expect(find.text(nb('Лучший результат — 19 дней')), findsOneWidget);
+    expect(find.text(nbTypo('12 дней подряд')), findsOneWidget);
+    expect(find.text(nbTypo('Лучший результат — 19 дней')), findsOneWidget);
     expect(find.text('82'), findsOneWidget); // «Выучено всего» = mastered
     expect(find.text('12'), findsNWidgets(2)); // «За неделю» + «Повторений сегодня», both local
     // The status vocabulary, the same three words the collection screen uses (Ч.4).

@@ -12,6 +12,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/features/plan/session/parts/session_bubbles.dart';
 import 'package:eng_std/features/plan/session/parts/session_tiles.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 
@@ -21,6 +22,15 @@ void main() {
   final day = sessionFixture('day-doctor');
 
   SessionCard dialogueAt(int position) => day.stageOf(PlanStage.dialogue)!.cards.firstWhere((c) => c.position == position);
+  // The lines as the fixture has them today (наряд CLIENT-22-1 §4): the lesson is rewritten with every generation, what a
+  // test holds is where each line stands and when it opens, not its words.
+  String partnerAt(int position) => switch (dialogueAt(position).payload) {
+    DialoguePartnerPayload p => p.partnerLine.textTarget,
+    DialogueAnswerPayload p => p.partnerLine!.textTarget,
+    _ => throw StateError('no partner line at $position'),
+  };
+  /// The reply of the ask at 12 — the partner's line the check is about.
+  final reply = partnerAt(12);
   List<SessionResult> results(CardProbe probe) => [for (final a in probe.answers) a.result];
   /// THE LINE SOUNDS, AND THEN THE CARD ASKS (наряд FIX-3 §1): the autoplay waits 280, the sound ends at once on a
   /// quiet voice — and the question with its options comes up.
@@ -40,9 +50,9 @@ void main() {
       final probe = CardProbe();
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
-      expect(find.text('О каких двух местах спрашивает врач?'), findsOneWidget, reason: 'the task line is the server\'s question');
+      expect(find.text(nbTypo('О каких двух местах спрашивает врач?')), findsOneWidget, reason: 'the task line is the server\'s question');
       expect(find.byKey(const ValueKey('partner-wave')), findsOneWidget);
-      expect(find.text('Where does it hurt: his upper back or his lower back?'), findsNothing);
+      expect(find.text(partnerAt(1)), findsNothing);
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played, ['x1@1.0'], reason: 'the partner\'s line plays once when the card opens');
 
@@ -50,8 +60,8 @@ void main() {
       await tapText(tester, 'Верх или низ спины');
       expect(results(probe), [SessionResult.passed]);
       await tester.pump(const Duration(milliseconds: 250));
-      expect(find.text('Where does it hurt: his upper back or his lower back?'), findsOneWidget);
-      expect(find.text('Где болит: вверху спины или в пояснице?'), findsOneWidget);
+      expect(find.text(partnerAt(1)), findsOneWidget);
+      expect(find.text(nt((dialogueAt(1).payload as DialoguePartnerPayload).partnerLine.textNative)), findsOneWidget);
       await settleCard(tester);
       expect(probe.nexts, 1);
     });
@@ -107,7 +117,7 @@ void main() {
         expect(tester.getRect(question).bottom, lessThanOrEqualTo(o.top), reason: 'вопрос над вариантами — один блок');
         expect(o.bottom, lessThanOrEqualTo(844), reason: 'варианты на экране');
       }
-      expect(find.descendant(of: find.byKey(const ValueKey('check-block')), matching: find.text(payload.questionNative)), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const ValueKey('check-block')), matching: find.text(nt(payload.questionNative))), findsOneWidget);
       await settleCard(tester);
     });
   });
@@ -120,10 +130,10 @@ void main() {
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(dialogueAt(2), probe, voice: voice, level: PlanLevel.beginner));
       expect(find.text('Собери ответ'), findsOneWidget);
-      expect(find.text('любое — твой ответ'), findsOneWidget);
+      expect(find.text(nbTypo('любое — твой ответ')), findsOneWidget);
       expect(ownFrame(tester).slot, isNull);
       expect(ownFrame(tester).look, SlotLook.empty);
-      expect(find.text('У него болит ___.'), findsOneWidget);
+      expect(find.text(nbTypo('У него болит ___.')), findsOneWidget);
       expect(dockEnabled(tester, 'Дальше'), isFalse);
 
       await tester.tap(find.byKey(const ValueKey('chip-1')));
@@ -132,7 +142,7 @@ void main() {
       expect(probe.answers.single.response?.mode, 'chips');
       expect(probe.answers.single.response?.fillerIndex, 1);
       expect(ownFrame(tester).slot, 'neck');
-      expect(find.text('У него болит шея.'), findsOneWidget);
+      expect(find.text(nbTypo('У него болит шея.')), findsOneWidget);
       expect(tester.widget<SessionTile>(find.byKey(const ValueKey('chip-1'))).selected, isTrue);
       expect(voice.played, contains('p1.f2@1.0'), reason: 'the chip voices the phrase with its filler');
       expect(dockEnabled(tester, 'Дальше'), isTrue);
@@ -147,7 +157,7 @@ void main() {
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(dialogueAt(2), probe));
       expect(find.text('Скажи свою реплику'), findsOneWidget);
-      expect(find.text('У него болит поясница.'), findsOneWidget);
+      expect(find.text(nbTypo('У него болит поясница.')), findsOneWidget);
       final line = tester.widget<SessionFrameText>(find.byType(SessionFrameText).first);
       expect(line.before, 'It hurts in his lower back.');
       expect(line.underline, const TextRange(start: 0, end: 15), reason: 'the key «It hurts in his»');
@@ -174,7 +184,7 @@ void main() {
         expect(results(probe), [SessionResult.passed]);
         expect(probe.answers.single.response?.mode, 'voice_blind');
         expect(ownFrame(tester).slot, 'neck');
-        expect(find.text('У него болит шея.'), findsOneWidget);
+        expect(find.text(nbTypo('У него болит шея.')), findsOneWidget);
         await settleCard(tester);
       }
 
@@ -207,16 +217,16 @@ void main() {
       expect(check.options, hasLength(3), reason: 'сколько отдал сервер — столько и вариантов (наряд FIX-3 §1)');
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
       expect(find.text('Скажи свою реплику'), findsOneWidget);
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing);
-      expect(find.text(check.questionNative), findsNothing, reason: 'the check waits for the learner to speak');
+      expect(find.text(reply), findsNothing);
+      expect(find.text(nt(check.questionNative)), findsNothing, reason: 'the check waits for the learner to speak');
 
       await sayDebug(tester, 'Do we need an X-ray');
       expect(probe.answers, isEmpty, reason: 'the answer waits for the choice — both fly together');
       await tester.pump();
       expect(find.text('Проверь, что понял'), findsOneWidget);
-      expect(find.text(check.questionNative), findsOneWidget);
+      expect(find.text(nt(check.questionNative)), findsOneWidget);
       expect(find.byKey(const ValueKey('reply-wave')), findsOneWidget, reason: 'the reply sounds with its text closed');
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing);
+      expect(find.text(reply), findsNothing);
       expect(voice.played, contains('x7@1.0'));
       for (final o in check.options) {
         expect(find.byKey(ValueKey('option-${o.id}')), findsOneWidget);
@@ -226,7 +236,7 @@ void main() {
       await tester.pump();
       expect(results(probe), [SessionResult.passed], reason: 'the voice result, as it was when the learner spoke');
       expect(probe.answers.single.choice, check.correct, reason: 'the choice rides beside it (BACK-TAILS-1 §1)');
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget, reason: 'the text opens');
+      expect(find.text(reply), findsOneWidget, reason: 'the text opens');
       await settleCard(tester);
       expect(probe.nexts, 1, reason: 'a right answer leaves by itself, as in every other check');
     });
@@ -254,7 +264,7 @@ void main() {
       voice.letGo();
       await tester.pump();
       await tester.pump();
-      expect(find.text(check.questionNative), findsOneWidget, reason: 'the check comes up after the line');
+      expect(find.text(nt(check.questionNative)), findsOneWidget, reason: 'the check comes up after the line');
       await tapText(tester, check.options.firstWhere((o) => o.id == check.correct).text);
       await tester.pump();
       expect(results(probe), [SessionResult.passed]);
@@ -278,7 +288,7 @@ void main() {
       await tester.pump();
       expect(probe.answers.single.choice, wrong.id, reason: 'the server needs the wrong choice too — it returns the exchange');
       expect(probe.answers.single.result, SessionResult.passed, reason: 'the voice result does not change with the choice');
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
+      expect(find.text(reply), findsOneWidget);
       await settleCard(tester);
       expect(probe.nexts, 0);
       await tapText(tester, 'Дальше');
@@ -332,8 +342,8 @@ void main() {
       await pumpCard(tester, probeEnv(card, CardProbe(), feed: DialogueFeed.before(day.stageOf(PlanStage.dialogue)!.cards, card)));
       await sayDebug(tester, 'Do we need an X-ray');
       await tester.pump();
-      expect(find.text(check.questionNative), findsOneWidget);
-      expect(find.text(other.questionNative), findsNothing, reason: 'the question of another exchange');
+      expect(find.text(nt(check.questionNative)), findsOneWidget);
+      expect(find.text(nt(other.questionNative)), findsNothing, reason: 'the question of another exchange');
       for (final o in other.options) {
         if (check.options.any((own) => own.text == o.text)) continue;
         expect(find.text(o.text), findsNothing, reason: 'the option «${o.text}» belongs to another exchange');
@@ -361,15 +371,15 @@ void main() {
       expect(find.byKey(const ValueKey('reply-wave')), findsOneWidget, reason: 'the reply comes closed');
       expect(voice.played, contains('x7@1.0'), reason: 'and sounds by itself');
       expect(find.text('Проверь, что понял'), findsOneWidget);
-      expect(find.text(check.questionNative), findsOneWidget);
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsNothing, reason: 'the text stays closed');
+      expect(find.text(nt(check.questionNative)), findsOneWidget);
+      expect(find.text(reply), findsNothing, reason: 'the text stays closed');
       expect(probe.answers, isEmpty, reason: 'the answer waits for the choice — both fly together');
 
       await tapText(tester, check.options.firstWhere((o) => o.id == check.correct).text);
       await tester.pump();
       expect(results(probe), [SessionResult.skipped], reason: 'the voice result is what it was');
       expect(probe.answers.single.choice, check.correct);
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
+      expect(find.text(reply), findsOneWidget);
       await settleCard(tester);
     });
 
@@ -400,7 +410,7 @@ void main() {
       await tester.pump();
       expect(results(probe), [SessionResult.passed], reason: 'nothing to wait for — the answer flies at once');
       expect(probe.answers.single.choice, isNull);
-      expect(find.text('No, an X-ray is not needed for a muscle strain.'), findsOneWidget);
+      expect(find.text(reply), findsOneWidget);
       await tapText(tester, 'Дальше');
       expect(probe.nexts, 1);
       await settleCard(tester);
@@ -413,7 +423,7 @@ void main() {
       final probe = CardProbe();
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(dialogueAt(10), probe, voice: voice));
-      expect(find.text('Не понял — переспроси'), findsOneWidget);
+      expect(find.text(nbTypo('Не понял — переспроси')), findsOneWidget);
       expect(find.text('It looks like a muscle strain, so he should rest and use a heating pad.'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played, ['x5@1.0']);
@@ -449,7 +459,7 @@ void main() {
       final current = cards.firstWhere((c) => c.position == 4);
       await pumpCard(tester, probeEnv(current, CardProbe(), feed: DialogueFeed.before(cards, current)));
       expect(find.byKey(const ValueKey('session-feed')), findsOneWidget);
-      expect(find.text('Where does it hurt: his upper back or his lower back?'), findsOneWidget);
+      expect(find.text(partnerAt(1)), findsOneWidget);
       expect(find.text('It hurts in his lower back.'), findsOneWidget);
       expect(find.byKey(const ValueKey('bubble-mark-passed')), findsOneWidget);
       expect(find.text('Did it start today, or earlier this week?'), findsOneWidget, reason: 'the current exchange once');
@@ -498,7 +508,7 @@ void main() {
       final current = cards.last;
       await pumpCard(tester, probeEnv(current, CardProbe(), feed: DialogueFeed.before(cards, current)), size: const Size(375, 667));
       expect(tester.takeException(), isNull);
-      final first = find.text('Where does it hurt: his upper back or his lower back?');
+      final first = find.text(partnerAt(1));
       expect(tester.getRect(first).top, lessThan(0), reason: 'the beginning stands above the screen');
       final task = tester.getRect(find.byType(SessionTask));
       expect(task.top, greaterThanOrEqualTo(0), reason: 'the task line is on the screen, whatever the conversation does');

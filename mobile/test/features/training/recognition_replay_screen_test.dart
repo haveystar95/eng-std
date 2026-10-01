@@ -148,7 +148,7 @@ void main() {
 
     // Card 3 of 3 was LAID OUT as rung 2. It must be dealt as rung 1: the term back as the prompt,
     // the translations back as the options — and not the reverse card's English ones.
-    expect(find.text(nb('3 из 3')), findsOneWidget);
+    expect(find.text(nbTypo('3 из 3')), findsOneWidget);
     expect(find.text(term), findsOneWidget);
     expect(find.text('Где я могу найти корм для собак?'), findsOneWidget);
     expect(find.text('canned food'), findsNothing, reason: 'the reverse card was not dealt');
@@ -168,7 +168,7 @@ void main() {
     await answer(tester, 'grain-free');
 
     // The reverse card, as planned: the translation asks and the English options answer.
-    expect(find.text(nb('3 из 3')), findsOneWidget);
+    expect(find.text(nbTypo('3 из 3')), findsOneWidget);
     expect(find.text('grain-free'), findsOneWidget, reason: 'a reverse-card option');
     expect(sync.uploaded.first, (termId: termId, ladderStep: 1));
     expect(tester.takeException(), isNull);

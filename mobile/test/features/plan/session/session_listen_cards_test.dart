@@ -28,7 +28,7 @@ void main() {
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(listenAt(1), probe, voice: voice, day: day));
       expect(find.text('Послушай разговор'), findsOneWidget);
-      expect(find.text(nb('8 обменов')), findsOneWidget);
+      expect(find.text(nbTypo('8 обменов')), findsOneWidget);
       expect(find.text('0:41'), findsOneWidget, reason: 'the whole length — total_ms 41 090');
       for (var i = 0; i < 8; i++) {
         expect(find.byKey(ValueKey('player-mark-$i')), findsOneWidget);
@@ -115,7 +115,7 @@ void main() {
     testWidgets('the pair of faces: one caption, the ring on the one that speaks', (tester) async {
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(listenAt(1), CardProbe(), voice: voice, day: day));
-      expect(find.text('регистратор и ты'), findsOneWidget);
+      expect(find.text(nbTypo('регистратор и ты')), findsOneWidget);
       expect(find.text('ты'), findsNothing, reason: 'one caption for the pair, not a label per circle');
       expect(find.byKey(const ValueKey('player-role-partner')), findsOneWidget);
       expect(find.byKey(const ValueKey('player-role-learner')), findsOneWidget);
@@ -142,9 +142,9 @@ void main() {
       final probe = CardProbe();
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(listenAt(2), probe, voice: voice));
-      expect(find.text('Что ты понял?'), findsOneWidget);
-      expect(find.text('Что болит у ребёнка?'), findsOneWidget);
-      expect(find.text('по памяти · звука нет'), findsOneWidget);
+      expect(find.text(nbTypo('Что ты понял?')), findsOneWidget);
+      expect(find.text(nbTypo('Что болит у ребёнка?')), findsOneWidget);
+      expect(find.text(nbTypo('по памяти · звука нет')), findsOneWidget);
       await tapText(tester, 'Поясница');
       expect(results(probe), [SessionResult.passed]);
       await settleCard(tester);
@@ -242,13 +242,13 @@ void main() {
       final options = (card.payload as ListenPredictPayload).options;
       expect(options, hasLength(3));
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
-      expect(find.text('Послушай и выбери ответ'), findsOneWidget);
-      expect(find.text('Слушай целиком — ответ один'), findsOneWidget);
-      expect(find.text('Что прозвучит в ответ?'), findsNothing, reason: 'вопрос ушёл в задание — сверху стоит своя реплика');
+      expect(find.text(nbTypo('Послушай и выбери ответ')), findsOneWidget);
+      expect(find.text(nbTypo('Слушай целиком — ответ один')), findsOneWidget);
+      expect(find.text(nbTypo('Что прозвучит в ответ?')), findsNothing, reason: 'вопрос ушёл в задание — сверху стоит своя реплика');
       expect(find.byKey(const ValueKey('predict-own-wave')), findsOneWidget);
       for (final o in options) {
         expect(find.text(o.textTarget), findsNothing, reason: 'no English before the answer');
-        expect(find.text(o.textNative), findsNothing, reason: 'and no translation either');
+        expect(find.text(nt(o.textNative)), findsNothing, reason: 'and no translation either');
       }
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played, ['x7b@1.0'], reason: 'the learner\'s own question sounds on open');
@@ -278,7 +278,7 @@ void main() {
       expect(results(probe), [SessionResult.passed]);
       for (final o in options) {
         expect(find.text(o.textTarget), findsOneWidget, reason: 'every sheet opens after the answer');
-        expect(find.text(o.textNative), findsOneWidget);
+        expect(find.text(nt(o.textNative)), findsOneWidget);
       }
       await settleCard(tester);
       expect(probe.nexts, 1);
@@ -353,22 +353,22 @@ void main() {
       final probe = CardProbe();
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(listenAt(8), probe, voice: voice));
-      expect(find.text('А теперь в обычном темпе'), findsOneWidget);
-      expect(find.text(nb('МЕДЛЕННО · 0.75×')), findsOneWidget);
-      expect(find.text('Is the pain sharp, or more of a dull ache?'), findsOneWidget);
+      expect(find.text(nbTypo('А теперь в обычном темпе')), findsOneWidget);
+      expect(find.text(nbTypo('МЕДЛЕННО · 0.75×')), findsOneWidget);
+      expect(find.text((listenAt(8).payload as ListenPacePayload).partnerLine.textTarget), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
       expect(voice.played, ['x3@0.75', 'x3@1.0']);
-      expect(find.text('В ОБЫЧНОМ ТЕМПЕ'), findsOneWidget);
+      expect(find.text(nbTypo('В ОБЫЧНОМ ТЕМПЕ')), findsOneWidget);
       expect(find.text('текст закрыт'), findsOneWidget);
-      expect(find.text('Is the pain sharp, or more of a dull ache?'), findsNothing);
+      expect(find.text((listenAt(8).payload as ListenPacePayload).partnerLine.textTarget), findsNothing);
 
       await tester.tap(find.byKey(const ValueKey('pace-slowly')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
       expect(voice.played.last, 'x3@0.75');
-      expect(find.text('Is the pain sharp, or more of a dull ache?'), findsOneWidget);
+      expect(find.text((listenAt(8).payload as ListenPacePayload).partnerLine.textTarget), findsOneWidget);
 
       await tapText(tester, 'Понял');
       expect(results(probe), [SessionResult.passed]);

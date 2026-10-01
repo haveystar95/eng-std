@@ -19,6 +19,7 @@ import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../support/nbsp.dart';
 import '../../support/speech_probe_channel.dart';
 
 /// A recogniser that returns whatever the test says, in order.
@@ -398,7 +399,7 @@ void main() {
 
       expect(answers, isEmpty, reason: 'a microphone that heard nothing is not an answer');
       expect(skips, 0);
-      expect(find.textContaining('Не расслышал'), findsOneWidget);
+      expect(find.textContaining(nbTypo('Не расслышал')), findsOneWidget);
       // Still answerable: the card did not lock itself after one failure.
       expect(recordButton(), findsWidgets);
     });
@@ -418,7 +419,7 @@ void main() {
       // …but the moment the card says the channel let them down, the way out is on screen with it:
       // the message and the button are the same fact. Two more taps to reach it left «Не помню» —
       // a lapse — as the only action, which is the scheduler punishing a hardware refusal.
-      expect(find.textContaining('Не расслышал'), findsOneWidget);
+      expect(find.textContaining(nbTypo('Не расслышал')), findsOneWidget);
       expect(find.text('Пропустить'), findsOneWidget);
     });
 
@@ -433,7 +434,7 @@ void main() {
       expect(find.textContaining('Микрофон недоступен'), findsOneWidget);
       expect(find.text('Пропустить'), findsOneWidget);
       // The other exit is still «Не помню», untouched: a learner who HAS forgotten may still say so.
-      expect(find.text('Не помню'), findsOneWidget);
+      expect(find.text(nbTypo('Не помню')), findsOneWidget);
       expect(answers, isEmpty);
     });
 
@@ -490,7 +491,7 @@ void main() {
       await record(tester);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Разреши распознавание речи в настройках'), findsOneWidget);
+      expect(find.textContaining(nbTypo('Разреши распознавание речи в настройках')), findsOneWidget);
       expect(find.text('Открыть настройки'), findsOneWidget);
       // …и общая строка про недоступность УХОДИТ: две подряд читаются как два разных сбоя.
       expect(find.textContaining('Микрофон недоступен'), findsNothing);
@@ -812,7 +813,7 @@ void main() {
 
       // No microphone attempt needed first: someone who knows they have forgotten should not have
       // to fail three recordings to say so.
-      await tester.tap(find.text('Не помню'));
+      await tester.tap(find.text(nbTypo('Не помню')));
       await tester.pumpAndSettle();
 
       expect(answers, hasLength(1));
@@ -899,8 +900,9 @@ void main() {
       for (final (heard, expected) in [
         ('Could you take a photo of us?', 'Верно'),
         // Четыре слова из шести — ниже порога чтения (0.9) и выше пола «почти» (0.5).
-        ('could you take photo', 'Почти — не хватило: of, us'),
-        ('something else entirely', 'Не то'),
+        // The interface's words set by its typography, the missed words of the target as they are.
+        ('could you take photo', '${nbTypo('Почти — не хватило:')} of, us'),
+        ('something else entirely', nbTypo('Не то')),
       ]) {
         await tester.pumpWidget(const SizedBox.shrink());
         final recognizer = _FakeRecognizer([SpeechAttempt.heard(heard)]);
@@ -930,9 +932,9 @@ void main() {
       await tester.pumpWidget(host(keyedLine(), _FakeRecognizer(const [])));
       await tester.pumpAndSettle();
 
-      expect(find.text('Скажи фразу, главное — «a place to rent».'), findsOneWidget);
+      expect(find.text('Скажи фразу, главное$nbsp— «a place to rent».'), findsOneWidget);
       // And the old sentence, which promised something else, is gone from this card.
-      expect(find.text('Проверяем, вспомнил ли ты слово, а не произношение.'), findsNothing);
+      expect(find.text(nbTypo('Проверяем, вспомнил ли ты слово, а не произношение.')), findsNothing);
     });
 
     testWidgets('a line with no key asks for the whole thing, out loud', (tester) async {

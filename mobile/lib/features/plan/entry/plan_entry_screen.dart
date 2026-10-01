@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/dot_join.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../data/api_client.dart';
 import '../../../data/image_loader.dart';
@@ -14,6 +15,7 @@ import '../../../data/languages.dart';
 import '../../../data/plan/plan_languages.dart';
 import '../../../data/plan/plan_models.dart';
 import '../../../data/providers.dart';
+import '../../../data/typography.dart';
 import '../plan_format.dart';
 import '../../profile/profile_screen.dart';
 import '../plan_providers.dart';
@@ -192,7 +194,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   // ── the build (кадры 22-4a … 22-4d) ────────────────────────────────────────────────────────
 
   ({String goal, String lang, PlanLevel level, int days, DateTime? date}) get _answers => (
-    goal: _s.goal.trim(),
+    goal: _s.goal,
     lang: _s.targetLang,
     level: _s.level,
     days: _s.days,
@@ -219,8 +221,10 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       return;
     }
     try {
+      // THE GOAL LEAVES AS IT WAS ENTERED (наряд CLIENT-22-1 §1d) — no trimming, no cutting, no typography: every word
+      // the learner wrote about themselves is a detail the server builds the lessons from.
       final build = await ref.read(apiClientProvider).createPlan(
-        goalText: _s.goal.trim(),
+        goalText: _s.goal,
         targetLang: _s.targetLang,
         level: _s.level,
         daysTotal: _s.days,
@@ -365,8 +369,12 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
   }
 
   /// Тап по истории «так пишут другие» — текст встаёт в поле, курсор в конце (22-1).
-  void _story(String text) {
+  ///
+  /// The story comes in as words, with plain spaces: its no-break spaces are the typography of its display (the
+  /// `.arb`'s, CLIENT-22-1 §2), and a text in the field is input, not display.
+  void _story(String story) {
     AppHaptics.light();
+    final text = story.replaceAll(kNoBreakSpace, ' ');
     _goal.value = TextEditingValue(
       text: text,
       selection: TextSelection.collapsed(offset: text.length),
@@ -426,7 +434,9 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
       PlanLevel.intermediate => l.planEntryLevelIntermediate,
     };
     final languageValue = l.planEntryTapeLanguageValue(languageName, levelName);
-    final goal = _s.goal.trim();
+    // The goal as the steps' summary rows SHOW it — the learner's own words, set by their typography (CLIENT-22-1 §2);
+    // what is sent is `_s.goal`, untouched.
+    final goal = context.nativeText(_s.goal.trim());
 
     final Widget body = switch (_s.step) {
       EntryStep.goal => EntryGoalStep(
@@ -536,7 +546,7 @@ class _PlanEntryScreenState extends ConsumerState<PlanEntryScreen> {
     if (date != null) {
       final when = PlanFormat.date(date, locale);
       final event = (_s.plan?.eventNative ?? '').trim();
-      parts.add(event.isEmpty ? when : '${event.toLowerCase()} $when');
+      parts.add(event.isEmpty ? when : '${context.nativeText(event.toLowerCase())} $when');
     }
 
     return dotJoin(parts);

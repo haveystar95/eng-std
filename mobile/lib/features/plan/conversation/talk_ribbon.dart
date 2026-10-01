@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/plan/conversation/conversation_models.dart';
@@ -95,7 +96,7 @@ class TalkPartnerBubble extends StatelessWidget {
       onTap: onListen,
     );
     final cut = interrupted ? Text(l.planTalkInterrupted, key: const ValueKey('talk-interrupted'), style: AppTextSession.meta) : null;
-    return SessionPartnerRow(bubble: open ? _openPlate(listen, cut) : _closedPlate(l, listen, cut));
+    return SessionPartnerRow(bubble: open ? _openPlate(context, listen, cut) : _closedPlate(l, listen, cut));
   }
 
   /// The wave along the bottom edge, 10 under what stands above it.
@@ -106,7 +107,7 @@ class TalkPartnerBubble extends StatelessWidget {
 
   /// 37-6…37-11, 35-2: the words, and the circle in the top right corner — its touch box stands 8 into the padding;
   /// while the line sounds, the wave under the words.
-  Widget _openPlate(Widget listen, Widget? cut) => SessionBubble(
+  Widget _openPlate(BuildContext context, Widget listen, Widget? cut) => SessionBubble(
     own: false,
     padding: EdgeInsets.zero,
     shadow: kTalkPlateShadow,
@@ -122,7 +123,7 @@ class TalkPartnerBubble extends StatelessWidget {
               Text(text, style: SessionBubble.lineStyle(own: false)),
               if (translation case final t? when t.trim().isNotEmpty) ...[
                 const SizedBox(height: 2),
-                Text(t, style: SessionBubble.translationStyle(own: false)),
+                Text(context.nativeText(t), style: SessionBubble.translationStyle(own: false)),
               ],
               if (_sounding) _edgeWave,
             ],
@@ -397,7 +398,7 @@ class TalkHintPlate extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(sentence, key: const ValueKey('talk-hint-sentence'), style: AppTextSession.text15),
+          Text(context.nativeText(sentence), key: const ValueKey('talk-hint-sentence'), style: AppTextSession.text15),
           if (second != null) ...[
             const SizedBox(height: 4),
             Text(second, key: const ValueKey('talk-hint-line'), style: AppTextSession.phrase17.copyWith(color: AppColors.ink)),

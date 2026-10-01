@@ -11,6 +11,7 @@ import 'package:eng_std/features/plan/session/parts/session_choice.dart';
 import 'package:eng_std/features/plan/session/parts/session_tiles.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/session_harness.dart';
 
 /// SESSION CARDS BY KIND (work order SESSION-1b §6, polish pass SESSION-1b′): each of the 15 kinds (words 6,
@@ -33,8 +34,8 @@ void main() {
       expect(find.text('лоуэр бэк'), findsOneWidget);
       expect(find.text('поясница'), findsOneWidget);
       expect(find.text('the part of the back above the hips'), findsOneWidget);
-      expect(find.text('В РАЗГОВОРЕ'), findsOneWidget);
-      expect(find.text('У него болит поясница.'), findsOneWidget);
+      expect(find.text(nbTypo('В РАЗГОВОРЕ')), findsOneWidget);
+      expect(find.text(nbTypo('У него болит поясница.')), findsOneWidget);
       await settleCard(tester);
       expect(voice.played, ['v1@1.0'], reason: 'the word plays by itself when the card appears');
 
@@ -67,15 +68,15 @@ void main() {
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
       expect(find.text('Скажи слово вслух'), findsOneWidget);
-      expect(find.text('Скажи, как слышишь — регистратор поймёт'), findsOneWidget);
-      expect(find.text('тап — говорить'), findsOneWidget);
+      expect(find.text(nbTypo('Скажи, как слышишь — регистратор поймёт')), findsOneWidget);
+      expect(find.text(nbTypo('тап — говорить')), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played, ['v1@0.85']);
 
       await sayDebug(tester, 'Lower back');
       expect(results(probe), [SessionResult.passed]);
       expect(probe.answers.single.response?.heard, 'Lower back');
-      expect(find.text('услышал — так же, как в записи'), findsOneWidget);
+      expect(find.text(nbTypo('услышал — так же, как в записи')), findsOneWidget);
       expect(find.text('услышал'), findsOneWidget);
       await settleCard(tester);
       expect(probe.nexts, 1, reason: 'after a pass — auto-advance');
@@ -84,7 +85,7 @@ void main() {
       await pumpCard(tester, probeEnv(card, miss));
       await sayDebug(tester, 'lower');
       expect(miss.answers, isEmpty);
-      expect(find.text('не расслышал, ещё раз'), findsOneWidget);
+      expect(find.text(nbTypo('не расслышал, ещё раз')), findsOneWidget);
       await sayDebug(tester, 'neck');
       expect(results(miss), [SessionResult.skipped]);
       expect(miss.answers.single.attempts, 2);
@@ -114,12 +115,12 @@ void main() {
       await pumpCard(tester, probeEnv(card, miss));
       await enterHeard(tester, 'lower');
       await tester.pump(const Duration(milliseconds: 1050));
-      expect(find.text('не расслышал, ещё раз'), findsNothing, reason: '«back» not heard yet — the silence waits for it');
+      expect(find.text(nbTypo('не расслышал, ещё раз')), findsNothing, reason: '«back» not heard yet — the silence waits for it');
       expect(miss.answers, isEmpty);
       await tester.pump(const Duration(milliseconds: 900));
-      expect(find.text('не расслышал, ещё раз'), findsNothing, reason: 'still inside the longer pause');
+      expect(find.text(nbTypo('не расслышал, ещё раз')), findsNothing, reason: 'still inside the longer pause');
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the 2 s pause closes an incomplete recording');
+      expect(find.text(nbTypo('не расслышал, ещё раз')), findsOneWidget, reason: 'the 2 s pause closes an incomplete recording');
       await settleCard(tester);
     });
 
@@ -184,7 +185,7 @@ void main() {
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(card, probe, voice: voice, day: intermediate));
       expect(find.text('Выбери, что услышал'), findsOneWidget);
-      expect(find.text('Что ты услышал?'), findsOneWidget);
+      expect(find.text(nbTypo('Что ты услышал?')), findsOneWidget);
       expect(tester.widgetList<SessionOption>(find.byType(SessionOption)).map((o) => o.target), everyElement(isFalse));
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played, ['v4@1.0']);
@@ -206,8 +207,8 @@ void main() {
       final p = card.payload as WordAssemblePayload;
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
-      expect(find.text('Собери из частей'), findsOneWidget);
-      expect(find.text('по частям'), findsOneWidget);
+      expect(find.text(nbTypo('Собери из частей')), findsOneWidget);
+      expect(find.text(nbTypo('по частям')), findsOneWidget);
       Future<void> tray(String word) async {
         final key = ValueKey('tray-${p.tiles.indexOf(word)}');
         await tester.ensureVisible(find.byKey(key));
@@ -234,18 +235,21 @@ void main() {
     });
 
     testWidgets('word_in_line (31-7): a line with a slot and its full translation; correct — passed; wrong — failed', (tester) async {
+      // The texts are the fixture's own (наряд CLIENT-22-1 §4): the line, its translation and the options as the server
+      // sends them today — the lesson is rewritten with every generation, the card's behaviour is what stays.
       final card = fixtureCard(intermediate, SessionKind.wordInLine);
+      final p = card.payload as WordInLinePayload;
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
-      expect(find.text('Вставь слово в окно'), findsOneWidget);
-      expect(find.text('Боль острая или скорее ноющая?'), findsOneWidget);
-      await tapText(tester, 'sharp');
+      expect(find.text(nbTypo('Вставь слово в окно')), findsOneWidget);
+      expect(find.text(nt(p.line.textNative)), findsOneWidget, reason: 'the full translation, set by the learner\'s typography');
+      await tapText(tester, p.options.firstWhere((o) => o.id == p.correct).text);
       expect(results(probe), [SessionResult.passed]);
       await settleCard(tester);
 
       final wrong = CardProbe();
       await pumpCard(tester, probeEnv(card, wrong));
-      await tapText(tester, 'fever');
+      await tapText(tester, p.options.firstWhere((o) => o.id != p.correct).text);
       expect(results(wrong), [SessionResult.failed]);
       await settleCard(tester);
     });
@@ -269,7 +273,7 @@ void main() {
       final voice = QuietVoice();
       final card = fixtureCard(intermediate, SessionKind.phraseIntro);
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
-      expect(find.text('Посмотри и послушай'), findsOneWidget);
+      expect(find.text(nbTypo('Посмотри и послушай')), findsOneWidget);
       expect(find.text('эту часть можно менять'), findsOneWidget);
       expect(find.byType(SessionTile), findsNothing, reason: 'ни одного чипа на уроке');
       final sheet = find.byKey(const ValueKey('lesson-sheet'));
@@ -281,7 +285,7 @@ void main() {
         expect(word, findsOneWidget);
         expect(tester.widget<Text>(word).style!.fontSize, 17, reason: 'слово Literata 17');
         expect(tester.widget<Text>(word).style!.fontFamily, AppFonts.literata);
-        expect(find.descendant(of: plate, matching: find.text(f.native)), findsOneWidget, reason: 'перевод под словом');
+        expect(find.descendant(of: plate, matching: find.text(nt(f.native))), findsOneWidget, reason: 'перевод под словом');
         final box = tester.widget<Container>(plate).decoration! as BoxDecoration;
         expect(box.color, AppColors.meaningPlate, reason: 'нейтральная серая плашка');
         expect(box.border, isNull, reason: 'ничего не обведено — и то, что в окне, тоже');
@@ -289,7 +293,7 @@ void main() {
       expect(frameLine(tester).slot, 'lower back', reason: 'в окне — значение, которое говорит диалог');
       expect(find.descendant(of: sheet, matching: find.byType(SessionFrameText)), findsOneWidget, reason: 'каркас — в листе');
       expect(find.descendant(of: sheet, matching: find.byKey(const ValueKey('lesson-reading'))), findsOneWidget);
-      expect(find.descendant(of: sheet, matching: find.text('У него болит поясница.')), findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.text(nbTypo('У него болит поясница.'))), findsOneWidget);
       final listen = find.descendant(of: sheet, matching: find.byType(SessionListenButton));
       expect(tester.widget<SessionListenButton>(listen).size, 44, reason: '«прослушать» 44 в углу листа');
 
@@ -319,7 +323,7 @@ void main() {
       expect(frameLine(tester).slot, other.target, reason: 'значение встало в окно');
       expect(voice.played, ['${other.audio!.ref}@1.0'], reason: 'звучит фраза с этим значением — сразу, по тапу');
       expect(voice.fallbacks, ['It hurts in his neck.'], reason: 'без файла телефон читает каркас с этим значением');
-      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, 'У него болит шея.');
+      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, nbTypo('У него болит шея.'));
       expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-reading'))).data, 'ит хёртс ин хиз нэк');
       expect(probe.answers, isEmpty, reason: 'тап — не ответ');
       BoxDecoration boxOf(int index) => tester.widget<Container>(find.byKey(ValueKey('meaning-$index'))).decoration! as BoxDecoration;
@@ -364,8 +368,8 @@ void main() {
       expect(frameLine(tester).window, isFalse, reason: 'окна нет: менять нечего');
       expect(frameLine(tester).before, 'It hurts in his lower back.');
       expect(find.byKey(const ValueKey('meaning-plates')), findsNothing);
-      expect(find.text('Эту фразу говорят целиком — в ней ничего не меняется'), findsOneWidget);
-      expect(find.text('В РАЗГОВОРЕ'), findsOneWidget);
+      expect(find.text(nbTypo('Эту фразу говорят целиком — в ней ничего не меняется')), findsOneWidget);
+      expect(find.text(nbTypo('В РАЗГОВОРЕ')), findsOneWidget);
       expect(find.byKey(const ValueKey('in-talk-partner')), findsOneWidget);
       expect(find.byKey(const ValueKey('in-talk-learner')), findsOneWidget);
       await settleCard(tester);
@@ -387,7 +391,7 @@ void main() {
       final first = payload.frame.filler(payload.rounds.first.fillerIndex)!;
       expect(frameLine(tester).slot, first.target);
       expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-reading'))).data, 'ит хёртс ин хиз лоуэр бэк');
-      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, payload.rounds.first.taskNative);
+      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, nt(payload.rounds.first.taskNative));
       final listen = find.descendant(of: sheet, matching: find.byType(SessionListenButton));
       expect(tester.widget<SessionListenButton>(listen).size, 44);
       final box = tester.getRect(sheet);
@@ -402,9 +406,9 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 700));
       }
-      expect(find.text('а теперь со своим словом'), findsOneWidget);
+      expect(find.text(nbTypo('а теперь со своим словом')), findsOneWidget);
       expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-reading'))).data, payload.frame.framePronunciationNative);
-      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, payload.ownRound!.taskNative);
+      expect(tester.widget<Text>(find.byKey(const ValueKey('lesson-native'))).data, nt(payload.ownRound!.taskNative));
       expect(find.descendant(of: sheet, matching: find.byType(SessionListenButton)), findsOneWidget, reason: '«прослушать» и на своём слове');
       await settleCard(tester);
     });
@@ -433,7 +437,7 @@ void main() {
       final beginner = sessionFixture('day-doctor-beginner');
       final card = fixtureCard(beginner, SessionKind.phraseSlot);
       await pumpCard(tester, probeEnv(card, CardProbe(), day: beginner, level: PlanLevel.beginner));
-      expect(find.text('Вставь в окно'), findsOneWidget);
+      expect(find.text(nbTypo('Вставь в окно')), findsOneWidget);
       final options = (card.payload as PhraseSlotPayload).options;
       for (final o in options) {
         expect(find.byKey(ValueKey('option-${o.id}')), findsOneWidget);
@@ -467,7 +471,7 @@ void main() {
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
       expect(find.text('Собери фразу'), findsOneWidget);
-      expect(find.text('У него болит шея.'), findsOneWidget);
+      expect(find.text(nbTypo('У него болит шея.')), findsOneWidget);
       Future<void> tray(int i) async {
         await tester.ensureVisible(find.byKey(ValueKey('tray-$i')));
         await tester.tap(find.byKey(ValueKey('tray-$i')));
@@ -561,7 +565,7 @@ void main() {
       final wrong = CardProbe();
       await pumpCard(tester, probeEnv(card, wrong));
       // A wrong option is another FRAME's sentence now, never another value of this window (FIX-2 §1).
-      await tapText(tester, 'Температуры у него нет.');
+      await tapText(tester, nbTypo('Температуры у него нет.'));
       expect(results(wrong), [SessionResult.failed]);
       await settleCard(tester);
     });
@@ -601,10 +605,10 @@ void main() {
       final card = fixtureCard(beginner, SessionKind.phraseSlot);
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe, day: beginner));
-      expect(find.text('Вставь в окно'), findsOneWidget);
+      expect(find.text(nbTypo('Вставь в окно')), findsOneWidget);
       expect(find.text('ПЕРЕВОД'), findsNothing);
       final native = tester.widget<Text>(find.byKey(const ValueKey('slot-native')));
-      expect(native.data, 'У него болит плечо.');
+      expect(native.data, nbTypo('У него болит плечо.'));
       expect(native.style, AppTextSession.question, reason: 'Literata 26 — the task itself');
       final sheet = tester.getRect(find.byType(SessionSheet).first);
       expect(tester.getRect(find.byKey(const ValueKey('slot-native'))).bottom, lessThan(sheet.top), reason: 'over the card');
@@ -629,10 +633,10 @@ void main() {
       await pumpCard(tester, probeEnv(card, probe, voice: voice));
       await tester.pump(const Duration(milliseconds: 300));
       expect(voice.played, ['p1@1.0']);
-      expect(find.text('НА СЛУХ'), findsOneWidget);
+      expect(find.text(nbTypo('НА СЛУХ')), findsOneWidget);
       await tapText(tester, 'lower back');
       expect(results(probe), [SessionResult.passed]);
-      expect(find.text('У него болит поясница.'), findsOneWidget);
+      expect(find.text(nbTypo('У него болит поясница.')), findsOneWidget);
       await settleCard(tester);
 
       final wrong = CardProbe();
@@ -681,18 +685,18 @@ void main() {
       final rounds = payload.rounds;
       final probe = CardProbe();
       await pumpCard(tester, probeEnv(card, probe));
-      expect(find.text('Скажи фразу с каждым значением'), findsOneWidget);
-      expect(find.text('Выбери, что вставить, и скажи фразу целиком'), findsNothing, reason: 'the chips choose nothing');
+      expect(find.text(nbTypo('Скажи фразу с каждым значением')), findsOneWidget);
+      expect(find.text(nbTypo('Выбери, что вставить, и скажи фразу целиком')), findsNothing, reason: 'the chips choose nothing');
       expect(frameLine(tester).slot, 'lower back', reason: 'the first meaning of the card stands in the window');
       expect(chip(tester, 'chip-0').selected, isTrue, reason: '«now» is the chip of this round');
       expect(chip(tester, 'chip-0').onTap, isNull, reason: 'a state, not a button');
       expect(chip(tester, 'chip-1').selected, isFalse);
-      expect(find.text('У него болит поясница.'), findsOneWidget);
+      expect(find.text(nbTypo('У него болит поясница.')), findsOneWidget);
 
       // Round 1: the phrase with the first meaning; another meaning is not this round's phrase.
       await sayDebug(tester, 'It hurts in his neck');
       await tester.pump();
-      expect(find.text('не расслышал, ещё раз'), findsOneWidget, reason: 'the round is graded on ITS meaning');
+      expect(find.text(nbTypo('не расслышал, ещё раз')), findsOneWidget, reason: 'the round is graded on ITS meaning');
       await sayDebug(tester, 'It hurts in his lower back');
       await tester.pump();
       expect(probe.answers, isEmpty, reason: 'a round is not an answer — the card has one');
@@ -702,7 +706,7 @@ void main() {
       expect(frameLine(tester).slot, 'neck');
       expect(chip(tester, 'chip-1').selected, isTrue);
       expect(chip(tester, 'chip-0').trailing, isNotNull, reason: 'the meaning already said is checked');
-      expect(find.text('У него болит шея.'), findsOneWidget);
+      expect(find.text(nbTypo('У него болит шея.')), findsOneWidget);
 
       // …and so on through every round the stage's ceiling left the card (DECISIONS п. 354): the rounds are the
       // server's, and the window follows them.
@@ -714,7 +718,7 @@ void main() {
       }
 
       // The last round — the learner's own word: no chip for it, the window is empty, the task says so.
-      expect(find.text('а теперь со своим словом'), findsOneWidget);
+      expect(find.text(nbTypo('а теперь со своим словом')), findsOneWidget);
       expect(frameLine(tester).slot, isNull);
       expect(frameLine(tester).look, SlotLook.empty);
       for (final round in rounds) {
@@ -739,8 +743,9 @@ void main() {
       final probe = CardProbe();
       final voice = QuietVoice();
       await pumpCard(tester, probeEnv(card, probe, voice: voice, day: intermediate));
-      expect(find.text('Что ты ответишь?'), findsOneWidget);
-      expect(find.text('Where does it hurt: his upper back or his lower back?'), findsOneWidget);
+      expect(find.text(nbTypo('Что ты ответишь?')), findsOneWidget);
+      // The partner's line as the fixture has it today (наряд CLIENT-22-1 §4) — a target line, printed as it came.
+      expect(find.text((card.payload as PhraseCombinePayload).partnerLine!.textTarget), findsOneWidget);
       expect(find.text('РЕГИСТРАТОР · СПРАШИВАЕТ'), findsOneWidget);
       for (final sentence in _combineSentences) {
         expect(find.text(sentence), findsOneWidget, reason: 'the option is a whole sentence');
@@ -823,7 +828,7 @@ void main() {
       final probe = CardProbe()
         ..verdict = (_) => const SessionJudgeOutcome(accepted: true, slotValue: 'my elbow', attempts: 1);
       await pumpCard(tester, probeEnv(card, probe));
-      expect(find.text('Скажи фразу с каждым значением'), findsOneWidget);
+      expect(find.text(nbTypo('Скажи фразу с каждым значением')), findsOneWidget);
       expect(find.text('СВОЁ ОКНО'), findsNothing, reason: 'the eyebrow went with the separate trainer');
       expect(find.text('своё…'), findsNothing, reason: 'the chip with the microphone is gone');
       expect(frameLine(tester).slot, 'lower back', reason: 'the first meaning stands in the window');
@@ -836,7 +841,7 @@ void main() {
       }
 
       // The own word: the judge — and the card's own answer, because the server does not close it (FIX-2 §5).
-      expect(find.text('а теперь со своим словом'), findsOneWidget);
+      expect(find.text(nbTypo('а теперь со своим словом')), findsOneWidget);
       await sayDebug(tester, 'It hurts in his elbow');
       await tester.pump();
       expect(probe.judged, ['It hurts in his elbow']);
@@ -862,7 +867,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(probe.judged, ['It hurts in his big noise']);
-      expect(find.text('Ты сказал не про боль.'), findsOneWidget);
+      expect(find.text(nbTypo('Ты сказал не про боль.')), findsOneWidget);
       expect(probe.answers, isEmpty);
 
       await tapText(tester, 'Пропустить');
@@ -891,7 +896,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(probe.judged, ['It hurts in his']);
-      expect(find.text('Ты не сказал, где болит.'), findsOneWidget);
+      expect(find.text(nbTypo('Ты не сказал, где болит.')), findsOneWidget);
       await settleCard(tester);
     });
 

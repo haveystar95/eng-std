@@ -83,12 +83,14 @@ class _PlanRouteState extends State<PlanRoute> {
     final days = plan.days;
     final firstLocked = days.indexWhere((d) => PlanRouteDayState.of(d) == RouteDayTone.locked);
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
+    final native = NativeTypesetter.of(context);
 
     return RouteLine(
       days: [
         for (var i = 0; i < days.length; i++)
           _view(
             l,
+            native,
             locale,
             plan,
             days[i],
@@ -97,12 +99,13 @@ class _PlanRouteState extends State<PlanRoute> {
             dpr: dpr,
           ),
       ],
-      event: planRouteEvent(l, locale, plan),
+      event: planRouteEvent(l, native, locale, plan),
     );
   }
 
   RouteDayView _view(
     AppLocalizations l,
+    NativeTypesetter native,
     String locale,
     Plan plan,
     PlanDayRoute day, {
@@ -117,11 +120,11 @@ class _PlanRouteState extends State<PlanRoute> {
 
     return RouteDayView(
       anchor: _anchor(day.number),
-      title: l.planRouteDayTitle(day.number, planRouteDayName(l, plan, day)),
+      title: l.planRouteDayTitle(day.number, planRouteDayName(l, native, plan, day)),
       meta: _meta(l, locale, day, tone, previous: previous, explain: explain),
       circle: day.lockedBySubscription ? const RouteSubscriptionMark() : planRouteCircle(plan, day, dpr),
       tone: tone,
-      trailingToday: tone == RouteDayTone.current ? day.slot.labelNative : null,
+      trailingToday: tone == RouteDayTone.current && day.slot.labelNative != null ? native.composed(day.slot.labelNative!) : null,
       passedLine: reached,
       children: [
         for (final s in day.stages)
@@ -204,11 +207,12 @@ String planLockReason(AppLocalizations l, PlanDayRoute day, PlanDayRoute? previo
   return previous.isClosed ? l.planRouteMetaOpensTomorrow : l.planRouteMetaOpensAfter(previous.number);
 }
 
-/// Название дня: сцена — её название, повторение и репетиция — свои слова.
-String planRouteDayName(AppLocalizations l, Plan plan, PlanDayRoute day) => switch (day.type) {
+/// Название дня: сцена — её название, повторение и репетиция — свои слова. The scene's title is the server's, in the
+/// learner's language — set by [native] (наряд CLIENT-22-1 §2).
+String planRouteDayName(AppLocalizations l, NativeTypesetter native, Plan plan, PlanDayRoute day) => switch (day.type) {
   PlanDayType.review => l.planRouteDayReview,
   PlanDayType.rehearsal => l.planRouteDayRehearsal,
-  PlanDayType.scene || PlanDayType.unknown => day.titleNative ?? plan.sceneOf(day)?.titleNative ?? '',
+  PlanDayType.scene || PlanDayType.unknown => native(day.titleNative ?? plan.sceneOf(day)?.titleNative ?? ''),
 };
 
 /// Круг дня: фото сцены (кроп под плотность и тон), или своя иллюстрация системного дня.
@@ -223,13 +227,13 @@ RouteCircle planRouteCircle(Plan plan, PlanDayRoute day, double dpr) => switch (
 };
 
 /// Мишень события — «Приём · 17 сентября · четверг», пунктир без даты, ink с галкой после.
-RouteEventView? planRouteEvent(AppLocalizations l, String locale, Plan plan) {
+RouteEventView? planRouteEvent(AppLocalizations l, NativeTypesetter native, String locale, Plan plan) {
   final event = (plan.eventNative ?? '').trim();
   final date = PlanFormat.parseWireDate(plan.eventDate);
   if (event.isEmpty && date == null) return null;
 
   return RouteEventView(
-    title: event.isEmpty ? l.planRouteEventFallback : event,
+    title: event.isEmpty ? l.planRouteEventFallback : native(event),
     meta: date == null ? l.planRouteEventNoDate : '${PlanFormat.date(date, locale)} · ${PlanFormat.weekday(date, locale)}',
     passed: plan.status == PlanStatus.overdue || plan.status == PlanStatus.finished,
     dated: date != null,

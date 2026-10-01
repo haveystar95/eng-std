@@ -51,7 +51,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String triageMoreLaterBody(int count) {
-    return '$count more after syncing — come back when you\'re online.';
+    return '$count more after syncing — come back when you\'re online.';
   }
 
   @override
@@ -89,7 +89,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeGeneratePlaceholder => 'e.g. a visit to the doctor';
+  String get homeGeneratePlaceholder => 'e.g. a visit to the doctor';
 
   @override
   String get homeGenerateChipInterview => 'Job interview';
@@ -156,7 +156,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collectionPracticeButton => 'Free practice';
 
   @override
-  String get collectionPracticeSubtitle => 'Nothing urgent — just practice';
+  String get collectionPracticeSubtitle => 'Nothing urgent — just practice';
 
   @override
   String get collectionWordsLabel => 'Words';
@@ -171,22 +171,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionReferenceHint =>
-      'A reference collection: read the words and hear them. There are no trainers for this language yet.';
+      'A reference collection: read the words and hear them. There are no trainers for this language yet.';
 
   @override
-  String get collectionAddWord => 'Add a word';
+  String get collectionAddWord => 'Add a word';
 
   @override
   String get collectionEmptyTitle => 'No words yet';
 
   @override
-  String get collectionEmptyBody => 'Tap “Add a word” to start';
+  String get collectionEmptyBody => 'Tap “Add a word” to start';
 
   @override
   String get collectionTriageBannerTitle => 'Sort the set';
 
   @override
-  String get collectionTriageBannerBody => 'Mark what you already know — the rest goes to practice';
+  String get collectionTriageBannerBody => 'Mark what you already know — the rest goes to practice';
 
   @override
   String get collectionTriageBannerStart => 'Start';
@@ -206,7 +206,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collectionDeleteWordMessage => 'The word stays in other sets; your progress is kept.';
 
   @override
-  String get wordSheetAddTitle => 'Add a word';
+  String get wordSheetAddTitle => 'Add a word';
 
   @override
   String get wordSheetEditTitle => 'Edit word';
@@ -221,7 +221,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wordTermHint => 'word or phrase';
 
   @override
-  String get wordTranslationHintOptional => 'optional — we\'ll fill it in';
+  String get wordTranslationHintOptional => 'optional — we\'ll fill it in';
 
   @override
   String get wordSheetAddHelper => 'Transcription, example and photo are added automatically.';
@@ -271,7 +271,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionUnsubscribeMessage =>
-      'The set leaves «Mine». Its words and your progress are kept — you can add it again from the store.';
+      'The set leaves «Mine». Its words and your progress are kept — you can add it again from the store.';
 
   @override
   String collectionDeleteTitle(String title) {
@@ -280,7 +280,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionDeleteMessage =>
-      'The collection goes; the words stay in training. A word leaves training only from its own card.';
+      'The collection goes; the words stay in training. A word leaves training only from its own card.';
 
   @override
   String get commonCancel => 'Cancel';
@@ -306,19 +306,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collectionsEmptyTitle => 'No collections yet';
 
   @override
-  String get collectionsEmptyBody => 'Describe a situation — AI will build your first set.';
+  String get collectionsEmptyBody => 'Describe a situation — AI will build your first set.';
 
   @override
   String get collectionsCreateManual => 'Create manually';
 
   @override
-  String get collectionsCreateManualHint => 'An empty collection — you add the words';
+  String get collectionsCreateManualHint => 'An empty collection — you add the words';
 
   @override
   String get collectionsCreateGenerate => 'Generate';
 
   @override
-  String get collectionsCreateGenerateHint => 'AI builds a set from a situation you describe';
+  String get collectionsCreateGenerateHint => 'AI builds a set from a situation you describe';
 
   @override
   String get collectionsNewCollection => 'New collection';
@@ -361,7 +361,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String generationQuotaBody(String topic, String time) {
-    return '“$topic” wasn\'t created. The limit resets at $time — you can retry then.';
+    return '“$topic” wasn\'t created. The limit resets at $time — you can retry then.';
   }
 
   @override
@@ -388,7 +388,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String generationReadyLoading(String topic) {
-    return 'Ready — loading “$topic”…';
+    return 'Ready — loading “$topic”…';
   }
 
   @override
@@ -407,22 +407,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get generateSituationHelper =>
-      'The more specific the situation, the sharper the set. E.g. “first doctor\'s visit — symptoms and lab tests”.';
+      'The more specific the situation, the sharper the set. E.g. “first doctor\'s visit — symptoms and lab tests”.';
 
   @override
-  String get generatePlaceholder0 => 'Renting a flat — talking to the agent';
+  String get generatePlaceholder0 => 'Renting a flat — talking to the agent';
 
   @override
-  String get generatePlaceholder1 => 'First doctor\'s visit — symptoms and tests';
+  String get generatePlaceholder1 => 'First doctor\'s visit — symptoms and tests';
 
   @override
-  String get generatePlaceholder2 => 'IT interview — talking through projects';
+  String get generatePlaceholder2 => 'IT interview — talking through projects';
 
   @override
-  String get generatePlaceholder3 => 'Opening a bank account';
+  String get generatePlaceholder3 => 'Opening a bank account';
 
   @override
-  String get generatePlaceholder4 => 'Ordering food at a café';
+  String get generatePlaceholder4 => 'Ordering food at a café';
 
   @override
   String get generateSizeLabel => 'Size';
@@ -468,10 +468,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generateSubmit => 'Generate';
 
   @override
-  String get generatePremiumUpsell => 'Need more? Premium — up to 20 a day';
+  String get generatePremiumUpsell => 'Need more? Premium — up to 20 a day';
 
   @override
-  String get generateManual => 'Build a collection manually';
+  String get generateManual => 'Build a collection manually';
 
   @override
   String generateVoiceListening(String time) {
@@ -483,11 +483,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get generateVoiceHelper =>
-      'Text appears in the field as it\'s recognised — after you stop you can edit it by hand.';
+      'Text appears in the field as it\'s recognised — after you stop you can edit it by hand.';
 
   @override
   String get generateVoicePermissionDenied =>
-      'Microphone and speech recognition access is needed — enable it in Settings';
+      'Microphone and speech recognition access is needed — enable it in Settings';
 
   @override
   String get collectionSheetCreateTitle => 'New collection';
@@ -505,7 +505,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collectionSheetCreateButton => 'Create';
 
   @override
-  String get searchFieldHint => 'Find a word';
+  String get searchFieldHint => 'Find a word';
 
   @override
   String get searchRecentLabel => 'You searched';
@@ -525,7 +525,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchBuildCard => 'Build the card';
 
   @override
-  String get searchBuildCardNote => 'Meaning and example. Again — free';
+  String get searchBuildCardNote => 'Meaning and example. Again — free';
 
   @override
   String get searchLooking => 'Looking…';
@@ -541,7 +541,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchBuildNote =>
-      'A couple of seconds. You can close this — the card will be in search.';
+      'A couple of seconds. You can close this — the card will be in search.';
 
   @override
   String searchLimitUsed(int used, int cap) {
@@ -555,7 +555,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLookupFailed => 'Could not look this word up';
 
   @override
-  String get searchNotRecognized => 'Couldn’t make that out — check the spelling';
+  String get searchNotRecognized => 'Couldn’t make that out — check the spelling';
 
   @override
   String get searchQueryTooLong => 'Search is for words and short phrases';
@@ -606,18 +606,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchPairNoDefault =>
-      '“Saved” is a collection of another pair. Pick a collection of this pair, or make a new one.';
+      '“Saved” is a collection of another pair. Pick a collection of this pair, or make a new one.';
 
   @override
-  String get searchPairMismatchTitle => 'A word of another language';
+  String get searchPairMismatchTitle => 'A word of another language';
 
   @override
   String searchPairMismatchMessage(String expected, String actual) {
-    return 'This collection studies $expected, and the word is in $actual. One collection, one pair — so this word needs a collection of its own pair.';
+    return 'This collection studies $expected, and the word is in $actual. One collection, one pair — so this word needs a collection of its own pair.';
   }
 
   @override
-  String get searchPairMismatchCreate => 'Make a collection';
+  String get searchPairMismatchCreate => 'Make a collection';
 
   @override
   String get wordCardExampleLabel => 'Example';
@@ -628,7 +628,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get wordCardFolderHint => 'On the right — pick another collection';
+  String get wordCardFolderHint => 'On the right — pick another collection';
 
   @override
   String wordCardSavedIn(String folder) {
@@ -682,8 +682,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Best result — $count days',
-      one: 'Best result — $count day',
+      other: 'Best result — $count days',
+      one: 'Best result — $count day',
     );
     return '$_temp0';
   }
@@ -761,14 +761,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeOfflineBanner =>
-      'No connection. Reviews work as usual — we\'ll sync when you\'re back online.';
+      'No connection. Reviews work as usual — we\'ll sync when you\'re back online.';
 
   @override
   String get homeUnreachableTitle => 'The server isn\'t answering';
 
   @override
   String get homeUnreachableBody =>
-      'Today\'s plan couldn\'t be loaded. Pull down to try again — everything saved is still here.';
+      'Today\'s plan couldn\'t be loaded. Pull down to try again — everything saved is still here.';
 
   @override
   String get profileTitle => 'Profile';
@@ -839,7 +839,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionClozeInsert => 'Insert the word';
 
   @override
-  String get sessionChipReturnHint => 'Tap a word in the line to send it back';
+  String get sessionChipReturnHint => 'Tap a word in the line to send it back';
 
   @override
   String get sessionHintFirstLetter => 'Hint: first letter';
@@ -849,7 +849,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionWrongKeyboard =>
-      'That looks like the wrong keyboard — switch it and type again';
+      'That looks like the wrong keyboard — switch it and type again';
 
   @override
   String get sessionCheck => 'Check';
@@ -876,7 +876,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionSpeakListening => 'Listening…';
 
   @override
-  String get sessionSpeakNotHeard => 'Didn\'t catch that. Try again — a little closer to the mic.';
+  String get sessionSpeakNotHeard => 'Didn\'t catch that. Try again — a little closer to the mic.';
 
   @override
   String get sessionSpeakNoMic => 'The microphone isn\'t available. You can skip this card.';
@@ -908,7 +908,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speechPermissionRecognitionDenied =>
-      'Speech recognition is off. Allow speech recognition in Settings — without it the phone hears you but cannot understand.';
+      'Speech recognition is off. Allow speech recognition in Settings — without it the phone hears you but cannot understand.';
 
   @override
   String get speechPermissionMicDenied =>
@@ -916,36 +916,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speechPermissionBothDenied =>
-      'Allow the microphone and speech recognition in Settings — both are needed.';
+      'Allow the microphone and speech recognition in Settings — both are needed.';
 
   @override
   String get speechPermissionOpenSettings => 'Open Settings';
 
   @override
-  String get sessionSpeakCutOff => 'Didn\'t catch the whole thing — say it again.';
+  String get sessionSpeakCutOff => 'Didn\'t catch the whole thing — say it again.';
 
   @override
   String get sessionSpeakSkip => 'Skip';
 
   @override
   String get sessionSpeakSkipHint =>
-      'Skipping costs nothing — the word will come back in its own time.';
+      'Skipping costs nothing — the word will come back in its own time.';
 
   @override
-  String get sessionSpeakYourTurn => 'Your turn — tap and speak';
+  String get sessionSpeakYourTurn => 'Your turn — tap and speak';
 
   @override
   String get sessionSpeakWaitForRole => 'They\'re still speaking';
 
   @override
-  String get sessionSpeakRecording => 'Recording — say it, then tap Done';
+  String get sessionSpeakRecording => 'Recording — say it, then tap Done';
 
   @override
   String get sessionSpeakVerdictCorrect => 'Right';
 
   @override
   String sessionSpeakVerdictAlmost(String words) {
-    return 'Almost — missing: $words';
+    return 'Almost — missing: $words';
   }
 
   @override
@@ -957,7 +957,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sessionSpeakHintKey(String key) {
-    return 'Say the line — what counts is “$key”.';
+    return 'Say the line — what counts is “$key”.';
   }
 
   @override
@@ -1016,7 +1016,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusLegendTitle => 'What the dots mean';
 
   @override
-  String get poolKnownLegend => 'Marked “I know it” — it never walked the ladder.';
+  String get poolKnownLegend => 'Marked “I know it” — it never walked the ladder.';
 
   @override
   String get ladderKnownDash => 'known';
@@ -1037,10 +1037,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionFeedbackAlmost => 'Almost:';
 
   @override
-  String get sessionFeedbackWrong => 'Not quite — the correct form is below';
+  String get sessionFeedbackWrong => 'Not quite — the correct form is below';
 
   @override
-  String get sessionFeedbackWrongAbove => 'Not quite — the correct answer is marked above';
+  String get sessionFeedbackWrongAbove => 'Not quite — the correct answer is marked above';
 
   @override
   String get sessionDueToday => 'today';
@@ -1120,8 +1120,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'Streak — $days days',
-      one: 'Streak — $days day',
+      other: 'Streak — $days days',
+      one: 'Streak — $days day',
     );
     return '$_temp0';
   }
@@ -1136,7 +1136,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionStrugglingBody =>
-      'This one\'s tricky. Try a different example — sometimes it\'s the context, not the word.';
+      'This one\'s tricky. Try a different example — sometimes it\'s the context, not the word.';
 
   @override
   String get sessionNewExample => 'New example';
@@ -1145,13 +1145,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionNewExampleExhausted => 'You\'ve used today\'s examples';
 
   @override
-  String get sessionPracticeBanner => 'Free practice — progress doesn\'t change';
+  String get sessionPracticeBanner => 'Free practice — progress doesn\'t change';
 
   @override
   String get sessionExitTitle => 'End the session?';
 
   @override
-  String get sessionExitBody => 'Answered words are saved — you can come back any time.';
+  String get sessionExitBody => 'Answered words are saved — you can come back any time.';
 
   @override
   String get sessionExitConfirm => 'Exit';
@@ -1188,7 +1188,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String practiceDialogPrestartBody(String lang) {
-    return 'The AI will speak with you in the collection\'s language — $lang. Answer out loud and try to use these words.';
+    return 'The AI will speak with you in the collection\'s language — $lang. Answer out loud and try to use these words.';
   }
 
   @override
@@ -1215,7 +1215,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get practiceDialogExitTitle => 'End the conversation?';
 
   @override
-  String get practiceDialogExitMessage => 'The conversation will end and you\'ll see a recap.';
+  String get practiceDialogExitMessage => 'The conversation will end and you\'ll see a recap.';
 
   @override
   String get practiceDialogExitConfirm => 'End';
@@ -1235,7 +1235,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get practiceDialogFinaleDone => 'Done';
 
   @override
-  String get practiceDialogErrorSubscription => 'Conversations are a Premium feature.';
+  String get practiceDialogErrorSubscription => 'Conversations are a Premium feature.';
 
   @override
   String practiceDialogErrorRateLimited(String time) {
@@ -1247,7 +1247,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No conversations left today. Try again tomorrow.';
 
   @override
-  String get practiceDialogErrorOffline => 'You\'re offline. A conversation needs internet.';
+  String get practiceDialogErrorOffline => 'You\'re offline. A conversation needs internet.';
 
   @override
   String get practiceDialogErrorGeneric => 'Couldn\'t start the conversation. Please try again.';
@@ -1342,13 +1342,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallSubtitleStore =>
-      'Premium collections are curated and all unlock at once — we don\'t sell them one by one.';
+      'Premium collections are curated and all unlock at once — we don\'t sell them one by one.';
 
   @override
   String get paywallSubtitleGeneric => 'One plan unlocks everything that makes learning faster.';
 
   @override
-  String get paywallBenefitGenerations => 'Up to 20 generations a day';
+  String get paywallBenefitGenerations => 'Up to 20 generations a day';
 
   @override
   String get paywallBenefitStore => 'Every premium collection in the store';
@@ -1357,7 +1357,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallBenefitModes => 'Future training modes';
 
   @override
-  String get paywallFreeForever => 'Reviews, sorting and offline — always free.';
+  String get paywallFreeForever => 'Reviews, sorting and offline — always free.';
 
   @override
   String get paywallPeriodYear => 'Year';
@@ -1424,7 +1424,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get perfMonitorToggle => 'Record stalls, slow frames and slow taps';
 
   @override
-  String get perfMonitorToggleHint => 'Off by default — costs nothing while off';
+  String get perfMonitorToggleHint => 'Off by default — costs nothing while off';
 
   @override
   String get perfMonitorEmpty => 'nothing recorded';
@@ -1447,7 +1447,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionLoadFailed => 'Couldn\'t load the session';
 
   @override
-  String get syncStuckBanner => 'Answers aren\'t reaching the server — check your connection';
+  String get syncStuckBanner => 'Answers aren\'t reaching the server — check your connection';
 
   @override
   String get syncUnreachableBanner => 'Server unreachable · showing what\'s saved';
@@ -1468,7 +1468,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get poolUnenrollMessage =>
-      'The word stops coming up in your sessions. Its progress and history are kept — you can bring it back at any time.';
+      'The word stops coming up in your sessions. Its progress and history are kept — you can bring it back at any time.';
 
   @override
   String get poolUnenrollConfirm => 'Stop';
@@ -1513,7 +1513,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myWordsEmptyMessage =>
-      'Words land here when you sweep a collection with “don’t know” or “not sure” — or tap “Learn this word” on a word card.';
+      'Words land here when you sweep a collection with “don’t know” or “not sure” — or tap “Learn this word” on a word card.';
 
   @override
   String get myWordsNothingFound => 'Nothing found';
@@ -1531,8 +1531,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count in a row',
-      one: '$count in a row',
+      other: '$count in a row',
+      one: '$count in a row',
     );
     return '$_temp0';
   }
@@ -1545,17 +1545,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String challengeAnswer(String term, String translation) {
-    return '$term — $translation';
+    return '$term — $translation';
   }
 
   @override
   String challengeExample(String sentence, String translation) {
-    return '$sentence — $translation';
+    return '$sentence — $translation';
   }
 
   @override
   String challengeMistake(String chosen, String term) {
-    return 'You picked “$chosen” — that is $term';
+    return 'You picked “$chosen” — that is $term';
   }
 
   @override
@@ -1565,7 +1565,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get challengeTomorrow => 'New one tomorrow';
 
   @override
-  String get challengeCollapsed => 'A new word tomorrow';
+  String get challengeCollapsed => 'A new word tomorrow';
 
   @override
   String get challengeLearning => 'In your queue';
@@ -1708,7 +1708,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeIdleTakeNew => 'Take new words';
 
   @override
-  String get homeIdleQueueStalled => 'No new words taken today — the queue is standing still.';
+  String get homeIdleQueueStalled => 'No new words taken today — the queue is standing still.';
 
   @override
   String homeNextReviewLine(String when, int count) {
@@ -1805,10 +1805,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeGenerateCardTitle => 'Generate a set';
+  String get homeGenerateCardTitle => 'Generate a set';
 
   @override
-  String get homeGenerateCardHint => 'Describe the situation — we’ll build a set for it';
+  String get homeGenerateCardHint => 'Describe the situation — we’ll build a set for it';
 
   @override
   String get homeStoreShowcaseTitle => 'Ready-made sets';
@@ -1819,7 +1819,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeFirstDayPromise => '5 minutes a day — 20 words a week';
+  String get homeFirstDayPromise => '5 minutes a day — 20 words a week';
 
   @override
   String get homeGenerateChipVet => 'At the vet';
@@ -1828,7 +1828,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGenerateChipMoving => 'Moving abroad';
 
   @override
-  String get homeFirstDayTitle => 'Let\'s start with a first set';
+  String get homeFirstDayTitle => 'Let\'s start with a first set';
 
   @override
   String homeSortOffer(int count, String title) {
@@ -1878,7 +1878,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devVoicesLead =>
-      'The same five lines of the qa plan, read by every candidate at one pace. Judge them on the phone rather than in the files: the speaker and the headphones decide more than a spectrogram.';
+      'The same five lines of the qa plan, read by every candidate at one pace. Judge them on the phone rather than in the files: the speaker and the headphones decide more than a spectrogram.';
 
   @override
   String get devVoicesSystem => 'The phone\'s own voice';
@@ -1908,10 +1908,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEmptyTitle => 'The conversation you are getting ready for';
 
   @override
-  String get planEmptySub => 'a scene a day · 20 minutes · a rehearsal out loud';
+  String get planEmptySub => 'a scene a day · 20 minutes · a rehearsal out loud';
 
   @override
-  String get planRuleSituation => 'One situation a day. Days open one at a time';
+  String get planRuleSituation => 'One situation a day. Days open one at a time';
 
   @override
   String get planRuleStages =>
@@ -1921,7 +1921,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planRuleReturn => 'Whatever did not work comes back the next day. Nothing is lost';
 
   @override
-  String get planExampleDoctorTitle => 'A doctor\'s visit';
+  String get planExampleDoctorTitle => 'A doctor\'s visit';
 
   @override
   String get planExampleDoctorDay1 => 'Booking the visit';
@@ -1930,7 +1930,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planExampleDoctorGoal11 => 'ask about the time';
 
   @override
-  String get planExampleDoctorGoal12 => 'agree on a slot';
+  String get planExampleDoctorGoal12 => 'agree on a slot';
 
   @override
   String get planExampleDoctorGoal13 => 'name your insurance';
@@ -1960,7 +1960,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planExampleDoctorGoal33 => 'ask for an alternative';
 
   @override
-  String get planExampleInterviewTitle => 'A job interview';
+  String get planExampleInterviewTitle => 'A job interview';
 
   @override
   String get planExampleInterviewDay1 => 'Introductions';
@@ -1978,13 +1978,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planExampleInterviewDay2 => 'Questions about the job';
 
   @override
-  String get planExampleInterviewGoal21 => 'describe a project';
+  String get planExampleInterviewGoal21 => 'describe a project';
 
   @override
   String get planExampleInterviewGoal22 => 'answer about deadlines';
 
   @override
-  String get planExampleInterviewGoal23 => 'own a mistake';
+  String get planExampleInterviewGoal23 => 'own a mistake';
 
   @override
   String get planExampleInterviewDay3 => 'Salary';
@@ -1996,10 +1996,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planExampleInterviewGoal32 => 'ask about bonuses';
 
   @override
-  String get planExampleInterviewGoal33 => 'agree a start date';
+  String get planExampleInterviewGoal33 => 'agree a start date';
 
   @override
-  String get planExampleLandlordTitle => 'A call to the landlord';
+  String get planExampleLandlordTitle => 'A call to the landlord';
 
   @override
   String get planExampleLandlordDay1 => 'The deposit';
@@ -2020,10 +2020,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planExampleLandlordGoal21 => 'describe what broke';
 
   @override
-  String get planExampleLandlordGoal22 => 'ask for a repairman';
+  String get planExampleLandlordGoal22 => 'ask for a repairman';
 
   @override
-  String get planExampleLandlordGoal23 => 'agree on a time';
+  String get planExampleLandlordGoal23 => 'agree on a time';
 
   @override
   String get planExampleLandlordDay3 => 'The lease';
@@ -2057,7 +2057,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planExampleWhole => 'the whole plan';
 
   @override
-  String get planEmptyCta => 'Build a plan';
+  String get planEmptyCta => 'Build a plan';
 
   @override
   String get planFinishedTitle => 'Finished plans';
@@ -2153,7 +2153,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planPlateBuildingSub => 'about a minute · you can close the app';
+  String get planPlateBuildingSub => 'about a minute · you can close the app';
 
   @override
   String get planPlateFailedTitle => 'Couldn’t put the day together';
@@ -2236,7 +2236,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planRouteMetaOpensTomorrow => 'opens tomorrow';
 
   @override
-  String get planRouteEventNoDate => 'set a date';
+  String get planRouteEventNoDate => 'set a date';
 
   @override
   String get planRouteEventFallback => 'Event';
@@ -2257,11 +2257,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planDoneCollection(String name) {
-    return 'The plan\'s words and phrases stay in the collection “$name” — they will keep coming back for review';
+    return 'The plan\'s words and phrases stay in the collection “$name” — they will keep coming back for review';
   }
 
   @override
-  String get planDoneCta => 'Build a new plan';
+  String get planDoneCta => 'Build a new plan';
 
   @override
   String get planDoneCtaReadonly => 'Open the collection';
@@ -2270,7 +2270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planMenuDate => 'Change the date';
 
   @override
-  String get planMenuNew => 'Build a new plan';
+  String get planMenuNew => 'Build a new plan';
 
   @override
   String get planMenuCollection => 'Open the collection';
@@ -2310,7 +2310,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDateRemove => 'No date';
 
   @override
-  String get planNewTitle => 'Start a different plan?';
+  String get planNewTitle => 'Start a different plan?';
 
   @override
   String planNewBody(int n, int total, String name) {
@@ -2318,7 +2318,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planNewCta => 'Build a new one';
+  String get planNewCta => 'Build a new one';
 
   @override
   String get planNewKeep => 'Keep this one';
@@ -2366,7 +2366,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planHintFirstReturn => 'These cards come back the next day — that is how they stick';
+  String get planHintFirstReturn => 'These cards come back the next day — that is how they stick';
 
   @override
   String get planSheetTitle => 'How the plan works';
@@ -2394,29 +2394,41 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tell the situation in your own words: what happens, who you talk to, what worries you';
 
   @override
-  String get planEntryGoalTyping1 => 'Interview on Friday, afraid of…';
+  String get planEntryGoalExample1 =>
+      'Job interview as a cook on Friday. Worked three years in a restaurant';
 
   @override
-  String get planEntryGoalTyping2 => 'Calling the bank, can\'t follow on the phone…';
+  String get planEntryGoalExample2 =>
+      'Doctor\'s appointment in Berlin — my back hurts, I need a prescription';
 
   @override
-  String get planEntryGoalTyping3 => 'Going to the doctor…';
+  String get planEntryGoalExample3 => 'Renting a flat in Lisbon for a year, with a dog';
+
+  @override
+  String get planEntryGoalExample4 => 'Calling the bank: my card is blocked, I\'m not a resident';
 
   @override
   String get planEntryGoalStoriesTitle => 'How others put it';
 
   @override
-  String get planEntryGoalStory1 => 'Interview on Friday, afraid of questions about my experience';
+  String get planEntryGoalStory1 =>
+      'Job interview as a cook on Friday — three years in a restaurant, afraid of questions about experience';
 
   @override
-  String get planEntryGoalStory2 => 'To the doctor with my child, first time at the local clinic';
+  String get planEntryGoalStory2 =>
+      'To the doctor with my child in Berlin, first time at the local clinic — my son has a fever';
 
   @override
-  String get planEntryGoalStory3 => 'Call to the landlord about the deposit';
+  String get planEntryGoalStory3 =>
+      'Call to the landlord about the deposit — renting for a year, moving out in May';
 
   @override
-  String get planEntryGoalShortHint =>
-      'Add who you talk to and what matters — the plan gets sharper';
+  String get planEntryGoalCompanion =>
+      'Who you are and what matters — job, experience, city. The plan is built around it.';
+
+  @override
+  String get planEntryGoalCompanionShort =>
+      'Add a few words about yourself: your job, your experience — and the plan will be about you';
 
   @override
   String get planEntryGoalDictate => 'or dictate it';
@@ -2456,13 +2468,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryLevelBeginner => 'Beginner';
 
   @override
-  String get planEntryLevelBeginnerSub => 'I know some words';
+  String get planEntryLevelBeginnerSub => 'I know some words';
 
   @override
   String get planEntryLevelIntermediate => 'Intermediate';
 
   @override
-  String get planEntryLevelIntermediateSub => 'I follow simple speech, I speak with mistakes';
+  String get planEntryLevelIntermediateSub => 'I follow simple speech, I speak with mistakes';
 
   @override
   String get planEntryDaysTitle => 'How many days until the conversation?';
@@ -2513,7 +2525,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planEntryDateUnknown => 'No date yet';
 
   @override
-  String get planEntryDateUnknownSub => 'a plan with no date, days run back to back';
+  String get planEntryDateUnknownSub => 'a plan with no date, days run back to back';
 
   @override
   String get planEntryDateOther => 'Another date';
@@ -2523,7 +2535,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planEntryDateRehearsalOn(String date) {
-    return 'The rehearsal lands on $date — the day before the conversation';
+    return 'The rehearsal lands on $date — the day before the conversation';
   }
 
   @override
@@ -2564,22 +2576,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planEntryPreviewErrorSub =>
-      'Your answers are saved — try again, no need to retell anything';
+      'Your answers are saved — try again, no need to retell anything';
 
   @override
   String get planEntryPreviewErrorRetry => 'Try again';
 
   @override
-  String get planEntryPreviewUnclearTitle => 'A little more, please';
+  String get planEntryPreviewUnclearTitle => 'A little more, please';
 
   @override
   String planEntryPreviewUnclearQuote(String goal) {
-    return '“$goal” — what is it about?';
+    return '“$goal” — what is it about?';
   }
 
   @override
   String get planEntryPreviewUnclearSub =>
-      'Say where you will be speaking and with whom: a doctor\'s visit, a call to the bank, a chat with a neighbour';
+      'Say where you will be speaking and with whom: a doctor\'s visit, a call to the bank, a chat with a neighbour';
 
   @override
   String get planEntryPreviewUnclearCta => 'Back to the goal';
@@ -2589,12 +2601,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planEntryPushBody(String until, String dayTitle) {
-    return '$until. Day 1 — “$dayTitle”';
+    return '$until. Day 1 — “$dayTitle”';
   }
 
   @override
   String planEntryPushBodyNoDate(String days, String dayTitle) {
-    return '$days. Day 1 — “$dayTitle”';
+    return '$days. Day 1 — “$dayTitle”';
   }
 
   @override
@@ -2604,7 +2616,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planNotifyDayReadyBody(String title) {
-    return '“$title” — you can start';
+    return '“$title” — you can start';
   }
 
   @override
@@ -2614,7 +2626,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planNotifyReminderBody(String title) {
-    return '“$title” — pick up where you left off';
+    return '“$title” — pick up where you left off';
   }
 
   @override
@@ -2626,7 +2638,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planNotifyEventTodayTitleNoName => 'Today is the conversation';
 
   @override
-  String get planNotifyEventTodayBody => 'Say it yourself first — run it out loud';
+  String get planNotifyEventTodayBody => 'Say it yourself first — run it out loud';
 
   @override
   String planNotifySkippedTitle(int n) {
@@ -2643,7 +2655,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planBannerAppMark => 'S';
 
   @override
-  String get planEntryOffline => 'The plan cannot be built without a network';
+  String get planEntryOffline => 'The plan cannot be built without a network';
 
   @override
   String get planWindowBack => 'Back';
@@ -2758,7 +2770,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$n words of the day',
       one: '$n word of the day',
     );
-    return '$_temp0 — look, listen and say them aloud';
+    return '$_temp0 — look, listen and say them aloud';
   }
 
   @override
@@ -2769,7 +2781,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$n phrases of the day',
       one: '$n phrase of the day',
     );
-    return '$_temp0 — one slot changes, the phrase stays';
+    return '$_temp0 — one slot changes, the phrase stays';
   }
 
   @override
@@ -2781,7 +2793,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionDescSpeak =>
-      'They ask — answer about yourself, in your own words. You know the frames; the slot is yours';
+      'They ask — answer about yourself, in your own words. You know the frames; the slot is yours';
 
   @override
   String get planSessionNoHints => 'No hints';
@@ -2790,7 +2802,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionNoHintsSub => 'Dialogue and “Speak myself” go straight to voice';
 
   @override
-  String get planSessionNoHintsTalk => 'In the talk — no hints, the partner\'s text stays closed';
+  String get planSessionNoHintsTalk => 'In the talk — no hints, the partner\'s text stays closed';
 
   @override
   String get planSessionStart => 'Start';
@@ -2838,7 +2850,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planSessionCompanionSayWord(String role) {
-    return 'Say it the way you hear it — $role will understand';
+    return 'Say it the way you hear it — $role will understand';
   }
 
   @override
@@ -2937,7 +2949,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionMicMissed => 'didn\'t catch that, once more';
 
   @override
-  String get planSessionEcho => 'heard — just like the recording';
+  String get planSessionEcho => 'heard — just like the recording';
 
   @override
   String get planSessionSkip => 'Skip';
@@ -2966,7 +2978,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planSessionExitBody(String stage) {
-    return 'The cards you\'ve done in “$stage” stay done — you\'ll pick up where you left off.';
+    return 'The cards you\'ve done in “$stage” stay done — you\'ll pick up where you left off.';
   }
 
   @override
@@ -2977,7 +2989,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSessionOffline =>
-      'no connection — the answer will be sent once you\'re back online';
+      'no connection — the answer will be sent once you\'re back online';
 
   @override
   String get planSessionLoadFailed => 'The day didn\'t load';
@@ -3023,7 +3035,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskSayLine => 'Say your line';
 
   @override
-  String get planSessionTaskRescue => 'Didn\'t catch it — ask again';
+  String get planSessionTaskRescue => 'Didn\'t catch it — ask again';
 
   @override
   String get planSessionAnyChip => 'any of them is your answer';
@@ -3132,7 +3144,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionTaskAnswerOwnWords => 'Answer in your own words';
 
   @override
-  String get planSessionTaskRepeatPause => 'Repeat after a pause';
+  String get planSessionTaskRepeatPause => 'Repeat after a pause';
 
   @override
   String get planSessionTaskRetell => 'Say in your language what you heard';
@@ -3147,7 +3159,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionWaiting => 'waiting';
 
   @override
-  String get planSessionNotThat => 'not that — let\'s try again';
+  String get planSessionNotThat => 'not that — let\'s try again';
 
   @override
   String get planSessionHintAction => 'Hint';
@@ -3198,16 +3210,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planSessionNextDayBuilding(int n) {
-    return 'Day $n — building';
+    return 'Day $n — building';
   }
 
   @override
   String planSessionNextDayReady(int n) {
-    return 'Day $n — ready';
+    return 'Day $n — ready';
   }
 
   @override
-  String get planSessionCloseFailed => 'The day didn\'t close — no connection';
+  String get planSessionCloseFailed => 'The day didn\'t close — no connection';
 
   @override
   String get planPlateStageTalk => 'Talk';
@@ -3274,16 +3286,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTalkSilenceEnds => 'silence ends it';
 
   @override
-  String get planTalkUnheard => 'didn\'t catch that — say it again';
+  String get planTalkUnheard => 'didn\'t catch that — say it again';
 
   @override
-  String get planTalkOffline => 'Connection lost — the talk goes on from here';
+  String get planTalkOffline => 'Connection lost — the talk goes on from here';
 
   @override
-  String get planTalkSilent => 'No answer — try once more';
+  String get planTalkSilent => 'No answer — try once more';
 
   @override
-  String get planTalkOpenFailed => 'The talk did not start — try once more';
+  String get planTalkOpenFailed => 'The talk did not start — try once more';
 
   @override
   String get planTalkNotInDay => 'This day has no talk';
@@ -3313,8 +3325,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: 'You got the questions but $n — they come back',
-      one: 'You got the questions but one — it comes back',
+      other: 'You got the questions but $n — they come back',
+      one: 'You got the questions but one — it comes back',
     );
     return '$_temp0';
   }
@@ -3337,10 +3349,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planTalkHighlights => 'What went well';
 
   @override
-  String get planSessionListenWholeOne => 'Listen to the whole of it — only one answer fits';
+  String get planSessionListenWholeOne => 'Listen to the whole of it — only one answer fits';
 
   @override
-  String get planSessionFrameWhole => 'This phrase is said whole — nothing in it changes';
+  String get planSessionFrameWhole => 'This phrase is said whole — nothing in it changes';
 
   @override
   String get planSessionChangeable => 'this part can change';
@@ -3352,17 +3364,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSessionOwnWordChip => 'your own word';
 
   @override
-  String get planTalkNoMic => 'Microphone needed — the talk can\'t go on without it';
+  String get planTalkNoMic => 'Microphone needed — the talk can\'t go on without it';
 
   @override
   String get planSessionDescRecall =>
-      'Your own lines from every scene — look, listen and say them aloud';
+      'Your own lines from every scene — look, listen and say them aloud';
 
   @override
   String get planSessionRecallTask => 'Recall your lines';
 
   @override
-  String get planSessionRecallLast => 'Next — say them aloud';
+  String get planSessionRecallLast => 'Next — say them aloud';
 
   @override
   String get planWindowRehearsalBefore => 'before the event';
@@ -3532,28 +3544,28 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: 'asked again $n times — the $role said it slower',
-      two: 'asked again twice — the $role said it slower',
-      one: 'asked again — the $role said it slower',
+      other: 'asked again $n times — the $role said it slower',
+      two: 'asked again twice — the $role said it slower',
+      one: 'asked again — the $role said it slower',
     );
     return '$_temp0';
   }
 
   @override
-  String get planSessionWarmWords => 'You know these words now — next they turn up in phrases';
+  String get planSessionWarmWords => 'You know these words now — next they turn up in phrases';
 
   @override
   String get planSessionWarmPhrases =>
-      'The phrases are built and said aloud — they will come in handy in the dialogue';
+      'The phrases are built and said aloud — they will come in handy in the dialogue';
 
   @override
   String get planSessionWarmListen => 'You understand the other side by ear';
 
   @override
-  String get planSessionWarmSpeak => 'You said your lines yourself — next comes a live talk';
+  String get planSessionWarmSpeak => 'You said your lines yourself — next comes a live talk';
 
   @override
-  String get planSessionWarmRecall => 'Your lines are in place — next comes the whole talk';
+  String get planSessionWarmRecall => 'Your lines are in place — next comes the whole talk';
 
   @override
   String get planSessionWarmRepetition => 'Everything that came back has been said once more';
@@ -3592,7 +3604,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String planTalkAlmostLine(String line) {
-    return 'almost — say it whole: $line';
+    return 'almost — say it whole: $line';
   }
 
   @override
@@ -3601,13 +3613,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get planTalkAlmostJudge => 'Almost — say it whole';
+  String get planTalkAlmostJudge => 'Almost — say it whole';
 
   @override
   String get planTalkExtraSaid => 'You also used';
 
   @override
-  String get planTalkEndedByTime => 'The talk ran out of time — what you did not say comes back';
+  String get planTalkEndedByTime => 'The talk ran out of time — what you did not say comes back';
 
   @override
   String get planTalkEndedByTimeOnly => 'The talk ran out of time';
@@ -3659,7 +3671,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planWindowTalkReplayLimit =>
-      'The talk was already replayed today — come back tomorrow';
+      'The talk was already replayed today — come back tomorrow';
 
   @override
   String get startSlogan => 'Prepared to speak.';

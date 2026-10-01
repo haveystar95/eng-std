@@ -734,7 +734,7 @@ void main() {
     final talk = {...rows(data).first, 'stage': 'conversation', 'again': false};
     rows(data).add(talk);
     await pumpWindowShot(tester, PlanDayRoom.fromJson(json), of: planFrom('plan_window'));
-    expect(find.text('лимит на сегодня'), findsOneWidget);
+    expect(find.text(nbTypo('лимит на сегодня')), findsOneWidget);
     await shoot(tester, '29b-23-0a-passed-talk-limit');
   });
 
@@ -759,7 +759,7 @@ void main() {
     await pumpSessionShot(tester, dayJson('day-rehearsal'), number: 3);
     final row = find.ancestor(of: find.text('идёт'), matching: find.byType(Row)).first;
     expect(find.descendant(of: row, matching: find.text('Вспомнить')), findsOneWidget);
-    expect(find.text('не начат'), findsNothing);
+    expect(find.text(nbTypo('не начат')), findsNothing);
     await shoot(tester, '32-30-1-recall-entry-in-progress');
   });
 
@@ -788,7 +788,7 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Начни с этапа «Повторение». Остальные откроются по порядку'), findsOneWidget);
+    expect(find.text(nbTypo('Начни с этапа «Повторение». Остальные откроются по порядку')), findsOneWidget);
     await shoot(tester, '33-21-2c-review-day-first-stage-hint');
   });
 
@@ -852,7 +852,7 @@ void main() {
     await openWindowTab(tester, 'Диалог');
     await tester.drag(find.byType(WindowScroll), const Offset(0, -700));
     await tester.pump();
-    expect(find.text('ВЕРНУЛОСЬ ИЗ ДНЯ 1'), findsOneWidget);
+    expect(find.text(nbTypo('ВЕРНУЛОСЬ ИЗ ДНЯ 1')), findsOneWidget);
     expect(find.text(nb('День 1 · Ресепшен зала')), findsOneWidget);
     await shoot(tester, '37-23-0d-dialogue-returned');
   });

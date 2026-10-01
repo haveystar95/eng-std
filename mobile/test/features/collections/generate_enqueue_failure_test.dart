@@ -9,6 +9,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/collections/generate_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/ui/ui.dart';
+import '../../support/nbsp.dart';
 
 /// QA-23 — the create screen must survive a failing enqueue.
 ///
@@ -86,7 +87,7 @@ void main() {
 
     expect(controller.starts, 1);
     // The whole point: «ошибка, которую не видно» becomes visible.
-    expect(find.textContaining('Не удалось поставить генерацию в очередь'), findsOneWidget);
+    expect(find.textContaining(nbTypo('Не удалось поставить генерацию в очередь')), findsOneWidget);
     // …and the screen is still there, with the typed prompt intact.
     expect(find.text('популярные фразы и слова'), findsOneWidget);
 

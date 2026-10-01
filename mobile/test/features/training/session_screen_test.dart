@@ -53,7 +53,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Знакомство'), findsOneWidget); // off the ladder → the phase names it
-    expect(find.text(nb('1 из 1')), findsOneWidget);
+    expect(find.text(nbTypo('1 из 1')), findsOneWidget);
     expect(find.text('посадочный талон'), findsOneWidget);
     expect(find.text('boarding pass'), findsOneWidget);
     expect(find.text('baggage claim'), findsOneWidget);

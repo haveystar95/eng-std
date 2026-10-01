@@ -10,6 +10,7 @@ import 'package:eng_std/features/collections/collection_detail_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/ui/mini_flag.dart';
 import 'package:eng_std/ui/pair_badge.dart';
+import '../../support/nbsp.dart';
 
 /// A PHRASEBOOK on screen (DECISIONS пп. 84, 136).
 ///
@@ -106,7 +107,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('СПРАВОЧНИК'), findsOneWidget);
     expect(
-      find.textContaining('Тренажёров для этого языка пока нет'),
+      find.textContaining(nbTypo('Тренажёров для этого языка пока нет')),
       findsOneWidget,
       reason: 'the absence of buttons has to be explained, or the screen reads as broken',
     );

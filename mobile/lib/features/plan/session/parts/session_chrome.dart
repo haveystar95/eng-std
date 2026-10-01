@@ -9,6 +9,7 @@ import 'package:eng_std/theme/theme.dart';
 import '../../../../data/local/cached_image_provider.dart';
 import '../../../../data/plan/plan_models.dart';
 import '../../../../data/plan/session/session_queue.dart';
+import '../../../../ui/native_text.dart';
 import '../../../../ui/scene_circle.dart';
 import '../session_texts.dart';
 import 'session_bits.dart';
@@ -226,8 +227,9 @@ class SessionSceneStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final s = scene;
-    final role = SessionTexts.roleInline((this.role ?? s?.partnerRoleNative)?.trim() ?? '');
-    final title = (this.title ?? s?.titleNative)?.trim() ?? '';
+    // The scene's name and the role are the server's, in the learner's language (CLIENT-22-1 §2).
+    final role = SessionTexts.roleInline(context.nativeText((this.role ?? s?.partnerRoleNative)?.trim() ?? ''));
+    final title = context.nativeText((this.title ?? s?.titleNative)?.trim() ?? '');
     final line = role.isEmpty ? title : (title.isEmpty ? role : l.planSessionSceneLine(title, role));
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
     final photo = s?.image;

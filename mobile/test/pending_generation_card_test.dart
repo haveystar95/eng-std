@@ -73,8 +73,8 @@ void main() {
 
   testWidgets('failed state shows the reason and a retry action', (tester) async {
     await _pump(tester, _row(status: 'failed'));
-    expect(find.text('Не получилось'), findsOneWidget);
-    expect(find.textContaining('Генерация не потрачена'), findsOneWidget);
+    expect(find.text(nbTypo('Не получилось')), findsOneWidget);
+    expect(find.textContaining(nbTypo('Генерация не потрачена')), findsOneWidget);
     expect(find.text('Повторить'), findsOneWidget);
     expect(find.text('Скрыть'), findsOneWidget);
   });
@@ -92,7 +92,7 @@ void main() {
     );
     await tester.pump(); // the quota future resolves
 
-    expect(find.text('Генерации на сегодня закончились'), findsOneWidget);
+    expect(find.text(nbTypo('Генерации на сегодня закончились')), findsOneWidget);
     expect(find.textContaining('03:00'), findsOneWidget);
     expect(find.text('Открыть Premium'), findsOneWidget);
     expect(find.text('Повторить'), findsNothing, reason: 'retrying today gets the same refusal');
@@ -128,6 +128,6 @@ void main() {
     );
     expect(find.text('Готово'), findsOneWidget);
     expect(find.text('В банке'), findsOneWidget);
-    expect(find.text(nb('12 из 15')), findsOneWidget);
+    expect(find.text(nbTypo('12 из 15')), findsOneWidget);
   });
 }

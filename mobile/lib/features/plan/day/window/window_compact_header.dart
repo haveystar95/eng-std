@@ -47,7 +47,7 @@ class WindowCompactHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    l.planRouteDayTitle(day.index, WindowTexts.title(l, day)),
+                    l.planRouteDayTitle(day.index, WindowTexts.title(l, NativeTypesetter.of(context), day)),
                     maxLines: 1,
                     softWrap: false,
                     overflow: TextOverflow.clip,

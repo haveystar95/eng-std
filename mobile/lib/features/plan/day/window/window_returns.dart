@@ -55,7 +55,7 @@ class WindowReturnHeading extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
     final day = scene?.dayNumber;
-    final title = scene?.titleNative;
+    final title = context.nativeTextOrNull(scene?.titleNative);
 
     return Padding(
       padding: const EdgeInsets.only(top: 28, bottom: 12),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/session/session_models.dart';
 import '../../../../data/plan/session/session_outcomes.dart';
@@ -113,7 +114,7 @@ class _WordIntroCardState extends State<WordIntroCard> {
                             Text(term.pronunciationNative!, style: AppTextSession.meta),
                           ],
                           const SizedBox(height: 4),
-                          Text(term.textNative, style: AppTextSession.body),
+                          Text(context.nativeText(term.textNative), style: AppTextSession.body),
                         ],
                       ),
                     ),
@@ -142,7 +143,7 @@ class _WordIntroCardState extends State<WordIntroCard> {
                       children: [
                         _UnderlinedLine(text: usedIn.textTarget, span: usedIn.termSpan),
                         const SizedBox(height: 4),
-                        Text(usedIn.textNative, style: AppTextSession.body),
+                        Text(context.nativeText(usedIn.textNative), style: AppTextSession.body),
                       ],
                     ),
                   ),
@@ -274,7 +275,7 @@ class _WordRepeatCardState extends State<WordRepeatCard> with VoiceCardState<Wor
                             Text(term.pronunciationNative!, style: AppTextSession.meta),
                           ],
                           const SizedBox(height: 4),
-                          Text(term.textNative, style: AppTextSession.body),
+                          Text(context.nativeText(term.textNative), style: AppTextSession.body),
                         ],
                       ),
                     ),
@@ -368,7 +369,8 @@ class _WordChooseCardState extends State<WordChooseCard> with ChoiceCardState<Wo
         mediaHeight: answeredWrong ? 160 : 208,
         eyebrow: forward ? l.planSessionBrowWord : l.planSessionBrowTranslation,
         eyebrowTrailing: eyebrowTrailing(l),
-        text: Text(text, style: AppTextSession.question),
+        // The word as it came; its translation (the other direction) is the learner's language — set by its typography.
+        text: Text(forward ? text : context.nativeText(text), style: AppTextSession.question),
         listen: forward ? CardListen(env: env, audio: p.promptAudio, fallback: text, playKey: _promptKey) : null,
       ),
       bottom: optionsDock(
@@ -537,7 +539,7 @@ class _WordAssembleCardState extends State<WordAssembleCard> {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Expanded(child: Text(p.term.textNative, style: AppTextSession.text15)),
+                    Expanded(child: Text(context.nativeText(p.term.textNative), style: AppTextSession.text15)),
                     const SizedBox(width: 8),
                     Text(l.planSessionByParts, style: AppTextSession.meta),
                   ],
@@ -622,7 +624,7 @@ class _WordInLineCardState extends State<WordInLineCard> with ChoiceCardState<Wo
         // The full translation with the word, not `text_native_gapped`: the line's slot accepts several words of
         // the day, and only the translation makes the answer unique (owner's clarification to 31-7; the canvas is
         // wrong here).
-        translation: p.line.textNative,
+        translation: context.nativeText(p.line.textNative),
       ),
       bottom: optionsDock(
         context,

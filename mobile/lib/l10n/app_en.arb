@@ -12,7 +12,7 @@
   "triageAllDoneTitle": "All sorted",
   "triageAllDoneBody": "No new words left to sort in this set.",
   "triageMoreLaterTitle": "That's all for now",
-  "triageMoreLaterBody": "{count} more after syncing — come back when you're online.",
+  "triageMoreLaterBody": "{count} more after syncing — come back when you're online.",
   "triageDone": "Done",
   "triageSummaryBatchTitle": "Batch sorted",
   "triageSummaryDoneTitle": "Sorting complete",
@@ -21,7 +21,7 @@
   "triageTallyUnsure": "Not sure",
   "triageRemainingAfterSync": "{count, plural, one{{count} more after syncing} other{{count} more after syncing}}",
   "triageLoadError": "Couldn't load: {error}",
-  "homeGeneratePlaceholder": "e.g. a visit to the doctor",
+  "homeGeneratePlaceholder": "e.g. a visit to the doctor",
   "homeGenerateChipInterview": "Job interview",
   "tabHome": "Today",
   "tabCollections": "Collections",
@@ -36,27 +36,27 @@
   "collectionLearnButton": "Learn {count}",
   "collectionReviewButton": "Review {count}",
   "collectionPracticeButton": "Free practice",
-  "collectionPracticeSubtitle": "Nothing urgent — just practice",
+  "collectionPracticeSubtitle": "Nothing urgent — just practice",
   "collectionWordsLabel": "Words",
   "collectionReferenceBadge": "reference",
   "pairBadgeSemantics": "Language pair: {learned} with {support}",
-  "collectionReferenceHint": "A reference collection: read the words and hear them. There are no trainers for this language yet.",
-  "collectionAddWord": "Add a word",
+  "collectionReferenceHint": "A reference collection: read the words and hear them. There are no trainers for this language yet.",
+  "collectionAddWord": "Add a word",
   "collectionEmptyTitle": "No words yet",
-  "collectionEmptyBody": "Tap “Add a word” to start",
+  "collectionEmptyBody": "Tap “Add a word” to start",
   "collectionTriageBannerTitle": "Sort the set",
-  "collectionTriageBannerBody": "Mark what you already know — the rest goes to practice",
+  "collectionTriageBannerBody": "Mark what you already know — the rest goes to practice",
   "collectionTriageBannerStart": "Start",
   "actionEdit": "Edit",
   "actionDelete": "Delete",
   "collectionDeleteWordTitle": "Delete “{term}”?",
   "collectionDeleteWordMessage": "The word stays in other sets; your progress is kept.",
-  "wordSheetAddTitle": "Add a word",
+  "wordSheetAddTitle": "Add a word",
   "wordSheetEditTitle": "Edit word",
   "wordFieldTerm": "Term",
   "wordFieldTranslation": "Translation",
   "wordTermHint": "word or phrase",
-  "wordTranslationHintOptional": "optional — we'll fill it in",
+  "wordTranslationHintOptional": "optional — we'll fill it in",
   "wordSheetAddHelper": "Transcription, example and photo are added automatically.",
   "wordSheetEditHelper": "Example and photo stay unless you change the term.",
   "wordSheetAddButton": "Add to set",
@@ -78,19 +78,19 @@
   "collectionMenuDelete": "Delete set",
   "collectionMenuRemoveFromMine": "Remove from mine",
   "collectionUnsubscribeTitle": "Remove “{title}” from yours?",
-  "collectionUnsubscribeMessage": "The set leaves «Mine». Its words and your progress are kept — you can add it again from the store.",
+  "collectionUnsubscribeMessage": "The set leaves «Mine». Its words and your progress are kept — you can add it again from the store.",
   "collectionDeleteTitle": "Delete “{title}”?",
-  "collectionDeleteMessage": "The collection goes; the words stay in training. A word leaves training only from its own card.",
+  "collectionDeleteMessage": "The collection goes; the words stay in training. A word leaves training only from its own card.",
   "commonCancel": "Cancel",
   "commonCloseMenu": "Close menu",
   "approxWords": "{count, plural, one{{count} word} other{{count} words}}",
   "collectionsTitle": "Collections",
   "collectionsEmptyTitle": "No collections yet",
-  "collectionsEmptyBody": "Describe a situation — AI will build your first set.",
+  "collectionsEmptyBody": "Describe a situation — AI will build your first set.",
   "collectionsCreateManual": "Create manually",
-  "collectionsCreateManualHint": "An empty collection — you add the words",
+  "collectionsCreateManualHint": "An empty collection — you add the words",
   "collectionsCreateGenerate": "Generate",
-  "collectionsCreateGenerateHint": "AI builds a set from a situation you describe",
+  "collectionsCreateGenerateHint": "AI builds a set from a situation you describe",
   "collectionsNewCollection": "New collection",
   "collectionsTileMastered": "{count, plural, one{{count} word} other{{count} words}} · {mastered} mastered",
   "generationGeneratingTitle": "Building the collection…",
@@ -100,24 +100,24 @@
   "generationFailedTitle": "Didn't work out",
   "generationFailedBody": "The service didn't answer “{topic}”. No generation was spent.",
   "generationQuotaTitle": "Out of generations for today",
-  "generationQuotaBody": "“{topic}” wasn't created. The limit resets at {time} — you can retry then.",
+  "generationQuotaBody": "“{topic}” wasn't created. The limit resets at {time} — you can retry then.",
   "generationQuotaBodyNoTime": "“{topic}” wasn't created: today's generation limit is spent.",
   "generationQuotaPremium": "Get Premium",
   "generationRetry": "Retry",
   "generationHide": "Hide",
   "generateEnqueueFailed": "Could not queue the generation: {error}",
   "generationReadyLabel": "Ready",
-  "generationReadyLoading": "Ready — loading “{topic}”…",
+  "generationReadyLoading": "Ready — loading “{topic}”…",
   "generationUnderBadge": "{delivered} of {requested}",
   "generationReadyUnder": "Ready · fewer than asked",
   "generateScreenTitle": "New collection",
   "generateSituationLabel": "Describe the situation",
-  "generateSituationHelper": "The more specific the situation, the sharper the set. E.g. “first doctor's visit — symptoms and lab tests”.",
-  "generatePlaceholder0": "Renting a flat — talking to the agent",
-  "generatePlaceholder1": "First doctor's visit — symptoms and tests",
-  "generatePlaceholder2": "IT interview — talking through projects",
-  "generatePlaceholder3": "Opening a bank account",
-  "generatePlaceholder4": "Ordering food at a café",
+  "generateSituationHelper": "The more specific the situation, the sharper the set. E.g. “first doctor's visit — symptoms and lab tests”.",
+  "generatePlaceholder0": "Renting a flat — talking to the agent",
+  "generatePlaceholder1": "First doctor's visit — symptoms and tests",
+  "generatePlaceholder2": "IT interview — talking through projects",
+  "generatePlaceholder3": "Opening a bank account",
+  "generatePlaceholder4": "Ordering food at a café",
   "generateSizeLabel": "Size",
   "generateSizeSmall": "Small",
   "generateSizeMedium": "Medium",
@@ -129,18 +129,18 @@
   "generateQuotaRemaining": "{count, plural, one{{count} generation left today} other{{count} generations left today}}",
   "generateQuotaExhausted": "Out of generations for today · resets at {time}",
   "generateSubmit": "Generate",
-  "generatePremiumUpsell": "Need more? Premium — up to 20 a day",
-  "generateManual": "Build a collection manually",
+  "generatePremiumUpsell": "Need more? Premium — up to 20 a day",
+  "generateManual": "Build a collection manually",
   "generateVoiceListening": "Listening · {time}",
   "generateVoiceStop": "Stop",
-  "generateVoiceHelper": "Text appears in the field as it's recognised — after you stop you can edit it by hand.",
-  "generateVoicePermissionDenied": "Microphone and speech recognition access is needed — enable it in Settings",
+  "generateVoiceHelper": "Text appears in the field as it's recognised — after you stop you can edit it by hand.",
+  "generateVoicePermissionDenied": "Microphone and speech recognition access is needed — enable it in Settings",
   "collectionSheetCreateTitle": "New collection",
   "collectionSheetEditTitle": "Rename collection",
   "collectionNameLabel": "Name",
   "collectionNameHint": "e.g. Travel",
   "collectionSheetCreateButton": "Create",
-  "searchFieldHint": "Find a word",
+  "searchFieldHint": "Find a word",
   "searchRecentLabel": "You searched",
   "searchPressEnter": "Press Enter to search for “{query}” whole",
   "@searchPressEnter": {
@@ -153,12 +153,12 @@
   "searchOpenCard": "Open the card",
   "searchSimilar": "Similar",
   "searchBuildCard": "Build the card",
-  "searchBuildCardNote": "Meaning and example. Again — free",
+  "searchBuildCardNote": "Meaning and example. Again — free",
   "searchLooking": "Looking…",
   "searchBuildTranslation": "translation",
   "searchBuildMeaning": "meaning",
   "searchBuildExample": "example",
-  "searchBuildNote": "A couple of seconds. You can close this — the card will be in search.",
+  "searchBuildNote": "A couple of seconds. You can close this — the card will be in search.",
   "searchLimitUsed": "{used} of {cap} today",
   "@searchLimitUsed": {
     "placeholders": {
@@ -172,7 +172,7 @@
   },
   "searchLimitTitle": "Model-written cards come back at midnight",
   "searchLookupFailed": "Could not look this word up",
-  "searchNotRecognized": "Couldn’t make that out — check the spelling",
+  "searchNotRecognized": "Couldn’t make that out — check the spelling",
   "searchQueryTooLong": "Search is for words and short phrases",
   "searchSaveToDefault": "+ Saved",
   "searchAlreadyIn": "Already in “{collection}”",
@@ -214,9 +214,9 @@
   "searchPairFrom": "From",
   "searchPairTo": "Into",
   "searchPairSwap": "Swap the languages",
-  "searchPairNoDefault": "“Saved” is a collection of another pair. Pick a collection of this pair, or make a new one.",
-  "searchPairMismatchTitle": "A word of another language",
-  "searchPairMismatchMessage": "This collection studies {expected}, and the word is in {actual}. One collection, one pair — so this word needs a collection of its own pair.",
+  "searchPairNoDefault": "“Saved” is a collection of another pair. Pick a collection of this pair, or make a new one.",
+  "searchPairMismatchTitle": "A word of another language",
+  "searchPairMismatchMessage": "This collection studies {expected}, and the word is in {actual}. One collection, one pair — so this word needs a collection of its own pair.",
   "@searchPairMismatchMessage": {
     "placeholders": {
       "expected": {
@@ -227,7 +227,7 @@
       }
     }
   },
-  "searchPairMismatchCreate": "Make a collection",
+  "searchPairMismatchCreate": "Make a collection",
   "wordCardExampleLabel": "Example",
   "wordCardAlso": "also: {words}",
   "@wordCardAlso": {
@@ -237,7 +237,7 @@
       }
     }
   },
-  "wordCardFolderHint": "On the right — pick another collection",
+  "wordCardFolderHint": "On the right — pick another collection",
   "wordCardSavedIn": "In “{folder}”",
   "@wordCardSavedIn": {
     "placeholders": {
@@ -273,7 +273,7 @@
   "wordCardNoPhoto": "No photo",
   "progressTitle": "Progress",
   "progressStreakDays": "{count, plural, one{{count}-day streak} other{{count}-day streak}}",
-  "progressBestResult": "{count, plural, one{Best result — {count} day} other{Best result — {count} days}}",
+  "progressBestResult": "{count, plural, one{Best result — {count} day} other{Best result — {count} days}}",
   "progressDayMon": "Mon",
   "progressDayTue": "Tue",
   "progressDayWed": "Wed",
@@ -289,9 +289,9 @@
   "progressAllWords": "{count, plural, one{All {count} word} other{All {count} words}}",
   "homeLimitReachedTitle": "Daily new-word limit reached",
   "homeLimitReachedHint": "New words resume tomorrow. For now, free-practice any collection.",
-  "homeOfflineBanner": "No connection. Reviews work as usual — we'll sync when you're back online.",
+  "homeOfflineBanner": "No connection. Reviews work as usual — we'll sync when you're back online.",
   "homeUnreachableTitle": "The server isn't answering",
-  "homeUnreachableBody": "Today's plan couldn't be loaded. Pull down to try again — everything saved is still here.",
+  "homeUnreachableBody": "Today's plan couldn't be loaded. Pull down to try again — everything saved is still here.",
   "profileTitle": "Profile",
   "commonSave": "Save",
   "sessionPhaseIntro": "Getting to know",
@@ -326,7 +326,7 @@
     }
   },
   "sessionClozeInsert": "Insert the word",
-  "sessionChipReturnHint": "Tap a word in the line to send it back",
+  "sessionChipReturnHint": "Tap a word in the line to send it back",
   "sessionHintFirstLetter": "Hint: first letter",
   "sessionSizeCards": "~{count, plural, one{{count} card} other{{count} cards}}",
   "@sessionSizeCards": {
@@ -337,7 +337,7 @@
     }
   },
   "sessionDontRemember": "Don't remember",
-  "sessionWrongKeyboard": "That looks like the wrong keyboard — switch it and type again",
+  "sessionWrongKeyboard": "That looks like the wrong keyboard — switch it and type again",
   "sessionCheck": "Check",
   "sessionNext": "Next",
   "sessionDone": "Done",
@@ -348,7 +348,7 @@
   "sessionInstrSpeakExample": "read the sentence out loud",
   "sessionSpeakStop": "Done",
   "sessionSpeakListening": "Listening…",
-  "sessionSpeakNotHeard": "Didn't catch that. Try again — a little closer to the mic.",
+  "sessionSpeakNotHeard": "Didn't catch that. Try again — a little closer to the mic.",
   "sessionSpeakNoMic": "The microphone isn't available. You can skip this card.",
   "buildStamp": "client {client} · server {server}",
   "buildStampUnstamped": "unstamped",
@@ -357,21 +357,21 @@
   "qaReportButton": "Report",
   "qaReportSent": "Report saved: {id}",
   "qaReportFailed": "Report was not sent",
-  "speechPermissionRecognitionDenied": "Speech recognition is off. Allow speech recognition in Settings — without it the phone hears you but cannot understand.",
+  "speechPermissionRecognitionDenied": "Speech recognition is off. Allow speech recognition in Settings — without it the phone hears you but cannot understand.",
   "speechPermissionMicDenied": "The microphone is off. Allow microphone access in Settings.",
-  "speechPermissionBothDenied": "Allow the microphone and speech recognition in Settings — both are needed.",
+  "speechPermissionBothDenied": "Allow the microphone and speech recognition in Settings — both are needed.",
   "speechPermissionOpenSettings": "Open Settings",
-  "sessionSpeakCutOff": "Didn't catch the whole thing — say it again.",
+  "sessionSpeakCutOff": "Didn't catch the whole thing — say it again.",
   "sessionSpeakSkip": "Skip",
-  "sessionSpeakSkipHint": "Skipping costs nothing — the word will come back in its own time.",
-  "sessionSpeakYourTurn": "Your turn — tap and speak",
+  "sessionSpeakSkipHint": "Skipping costs nothing — the word will come back in its own time.",
+  "sessionSpeakYourTurn": "Your turn — tap and speak",
   "sessionSpeakWaitForRole": "They're still speaking",
-  "sessionSpeakRecording": "Recording — say it, then tap Done",
+  "sessionSpeakRecording": "Recording — say it, then tap Done",
   "sessionSpeakVerdictCorrect": "Right",
-  "sessionSpeakVerdictAlmost": "Almost — missing: {words}",
+  "sessionSpeakVerdictAlmost": "Almost — missing: {words}",
   "sessionSpeakVerdictWrong": "Not that",
   "sessionSpeakHint": "We're checking that you remembered the word, not how you pronounce it.",
-  "sessionSpeakHintKey": "Say the line — what counts is “{key}”.",
+  "sessionSpeakHintKey": "Say the line — what counts is “{key}”.",
   "sessionSpeakHintWhole": "Say the whole line.",
   "sessionSpeakHeard": "Heard: “{text}”",
   "sessionEchoTry": "Say it back",
@@ -402,13 +402,13 @@
     }
   },
   "statusLegendTitle": "What the dots mean",
-  "poolKnownLegend": "Marked “I know it” — it never walked the ladder.",
+  "poolKnownLegend": "Marked “I know it” — it never walked the ladder.",
   "ladderKnownDash": "known",
   "ladderTrainWord": "Train this word",
   "sessionFeedbackCorrect": "Correct",
   "sessionFeedbackAlmost": "Almost:",
-  "sessionFeedbackWrong": "Not quite — the correct form is below",
-  "sessionFeedbackWrongAbove": "Not quite — the correct answer is marked above",
+  "sessionFeedbackWrong": "Not quite — the correct form is below",
+  "sessionFeedbackWrongAbove": "Not quite — the correct answer is marked above",
   "sessionDueToday": "today",
   "sessionDueTomorrow": "tomorrow",
   "sessionDueInDays": "{days, plural, one{in {days} day} other{in {days} days}}",
@@ -421,15 +421,15 @@
   "sessionPracticeAgain": "Again",
   "sessionDailyGoal": "Daily goal",
   "sessionGoalClosed": "Daily goal reached",
-  "sessionStreak": "{days, plural, one{Streak — {days} day} other{Streak — {days} days}}",
+  "sessionStreak": "{days, plural, one{Streak — {days} day} other{Streak — {days} days}}",
   "sessionSessionWords": "This session's words",
   "sessionStrugglingTitle": "Struggling: {term}",
-  "sessionStrugglingBody": "This one's tricky. Try a different example — sometimes it's the context, not the word.",
+  "sessionStrugglingBody": "This one's tricky. Try a different example — sometimes it's the context, not the word.",
   "sessionNewExample": "New example",
   "sessionNewExampleExhausted": "You've used today's examples",
-  "sessionPracticeBanner": "Free practice — progress doesn't change",
+  "sessionPracticeBanner": "Free practice — progress doesn't change",
   "sessionExitTitle": "End the session?",
-  "sessionExitBody": "Answered words are saved — you can come back any time.",
+  "sessionExitBody": "Answered words are saved — you can come back any time.",
   "sessionExitConfirm": "Exit",
   "sessionExitCancel": "Continue",
   "sessionClose": "Close",
@@ -441,7 +441,7 @@
   "practiceDialogEntrySubtitle": "Voice practice with AI",
   "practiceDialogOfflineHint": "Needs internet",
   "practiceDialogPrestartTitle": "Talk with the AI",
-  "practiceDialogPrestartBody": "The AI will speak with you in the collection's language — {lang}. Answer out loud and try to use these words.",
+  "practiceDialogPrestartBody": "The AI will speak with you in the collection's language — {lang}. Answer out loud and try to use these words.",
   "practiceDialogPrestartWordsLabel": "Words to use",
   "practiceDialogStart": "Start the conversation",
   "practiceDialogStateConnecting": "connecting…",
@@ -449,16 +449,16 @@
   "practiceDialogStateListening": "listening to you",
   "practiceDialogCoverageLabel": "{used} / {total}",
   "practiceDialogExitTitle": "End the conversation?",
-  "practiceDialogExitMessage": "The conversation will end and you'll see a recap.",
+  "practiceDialogExitMessage": "The conversation will end and you'll see a recap.",
   "practiceDialogExitConfirm": "End",
   "practiceDialogExitCancel": "Keep going",
   "practiceDialogFinaleTitle": "Conversation over",
   "practiceDialogFinaleWords": "Words used: {used} of {total}",
   "practiceDialogFinaleDone": "Done",
-  "practiceDialogErrorSubscription": "Conversations are a Premium feature.",
+  "practiceDialogErrorSubscription": "Conversations are a Premium feature.",
   "practiceDialogErrorRateLimited": "No conversations left today. More after {time}.",
   "practiceDialogErrorRateLimitedNoTime": "No conversations left today. Try again tomorrow.",
-  "practiceDialogErrorOffline": "You're offline. A conversation needs internet.",
+  "practiceDialogErrorOffline": "You're offline. A conversation needs internet.",
   "practiceDialogErrorGeneric": "Couldn't start the conversation. Please try again.",
   "practiceDialogClose": "Close",
   "practiceDialogRepeat": "Practice again",
@@ -482,12 +482,12 @@
   "paywallTitleGeneric": "Premium, no limits",
   "paywallTitleStore": "{title} and {count} more sets",
   "paywallSubtitleQuota": "Premium raises the daily limit to twenty generations.",
-  "paywallSubtitleStore": "Premium collections are curated and all unlock at once — we don't sell them one by one.",
+  "paywallSubtitleStore": "Premium collections are curated and all unlock at once — we don't sell them one by one.",
   "paywallSubtitleGeneric": "One plan unlocks everything that makes learning faster.",
-  "paywallBenefitGenerations": "Up to 20 generations a day",
+  "paywallBenefitGenerations": "Up to 20 generations a day",
   "paywallBenefitStore": "Every premium collection in the store",
   "paywallBenefitModes": "Future training modes",
-  "paywallFreeForever": "Reviews, sorting and offline — always free.",
+  "paywallFreeForever": "Reviews, sorting and offline — always free.",
   "paywallPeriodYear": "Year",
   "paywallPeriodMonth": "Month",
   "paywallPriceYear": "$29.99",
@@ -508,7 +508,7 @@
   "devFlagPremium": "Premium (dev)",
   "perfMonitorTitle": "Perf monitor",
   "perfMonitorToggle": "Record stalls, slow frames and slow taps",
-  "perfMonitorToggleHint": "Off by default — costs nothing while off",
+  "perfMonitorToggleHint": "Off by default — costs nothing while off",
   "perfMonitorEmpty": "nothing recorded",
   "perfMonitorCopy": "Copy to clipboard",
   "perfMonitorClear": "Clear",
@@ -522,13 +522,13 @@
   },
   "sessionOffline": "No connection",
   "sessionLoadFailed": "Couldn't load the session",
-  "syncStuckBanner": "Answers aren't reaching the server — check your connection",
+  "syncStuckBanner": "Answers aren't reaching the server — check your connection",
   "syncUnreachableBanner": "Server unreachable · showing what's saved",
   "poolEnrollAction": "Learn this word",
   "poolEnrollNote": "It joins the queue and starts coming up in your sessions.",
   "poolUnenrollAction": "Stop studying",
   "poolUnenrollTitle": "Stop studying “{term}”?",
-  "poolUnenrollMessage": "The word stops coming up in your sessions. Its progress and history are kept — you can bring it back at any time.",
+  "poolUnenrollMessage": "The word stops coming up in your sessions. Its progress and history are kept — you can bring it back at any time.",
   "poolUnenrollConfirm": "Stop",
   "myWordsTitle": "My words",
   "myWordsCount": "{count, plural, one{{count} word} other{{count} words}}",
@@ -540,7 +540,7 @@
   "myWordsSourceAll": "All collections",
   "myWordsSourceNone": "No collection",
   "myWordsEmptyTitle": "Nothing here yet",
-  "myWordsEmptyMessage": "Words land here when you sweep a collection with “don’t know” or “not sure” — or tap “Learn this word” on a word card.",
+  "myWordsEmptyMessage": "Words land here when you sweep a collection with “don’t know” or “not sure” — or tap “Learn this word” on a word card.",
   "myWordsNothingFound": "Nothing found",
   "homeStreakBadge": "Streak {count}",
   "@homeStreakBadge": {
@@ -552,15 +552,15 @@
     }
   },
   "challengeLabel": "Word challenge",
-  "challengeStreak": "{count, plural, one{{count} in a row} other{{count} in a row}}",
+  "challengeStreak": "{count, plural, one{{count} in a row} other{{count} in a row}}",
   "challengeStreakReset": "streak reset",
   "challengePraise": "You know it!",
-  "challengeAnswer": "{term} — {translation}",
-  "challengeExample": "{sentence} — {translation}",
-  "challengeMistake": "You picked “{chosen}” — that is {term}",
+  "challengeAnswer": "{term} — {translation}",
+  "challengeExample": "{sentence} — {translation}",
+  "challengeMistake": "You picked “{chosen}” — that is {term}",
   "challengeLearn": "Learn it",
   "challengeTomorrow": "New one tomorrow",
-  "challengeCollapsed": "A new word tomorrow",
+  "challengeCollapsed": "A new word tomorrow",
   "challengeLearning": "In your queue",
   "homeSessionBadge": "Session",
   "homeSessionUnitWords": "{count, plural, one{word} other{words}}",
@@ -639,7 +639,7 @@
   "@homeIdleTakeNew": {
     "description": "Primary button of state B (frame 17d)."
   },
-  "homeIdleQueueStalled": "No new words taken today — the queue is standing still.",
+  "homeIdleQueueStalled": "No new words taken today — the queue is standing still.",
   "@homeIdleQueueStalled": {
     "description": "Note under «All reviewed» (frame 17d)."
   },
@@ -696,14 +696,14 @@
   "homeTomorrowRow": "{count, plural, one{{count} word comes back tomorrow} other{{count} words come back tomorrow}}",
   "homeAwardPromoted": "{count, plural, one{+{count} word moved up} other{+{count} words moved up}}",
   "homeAwardExample": "{term} reached “{rung}”",
-  "homeGenerateCardTitle": "Generate a set",
-  "homeGenerateCardHint": "Describe the situation — we’ll build a set for it",
+  "homeGenerateCardTitle": "Generate a set",
+  "homeGenerateCardHint": "Describe the situation — we’ll build a set for it",
   "homeStoreShowcaseTitle": "Ready-made sets",
   "homeStoreShowcaseAll": "all {count}",
-  "homeFirstDayPromise": "5 minutes a day — 20 words a week",
+  "homeFirstDayPromise": "5 minutes a day — 20 words a week",
   "homeGenerateChipVet": "At the vet",
   "homeGenerateChipMoving": "Moving abroad",
-  "homeFirstDayTitle": "Let's start with a first set",
+  "homeFirstDayTitle": "Let's start with a first set",
   "@homeFirstDayTitle": {
     "description": "First-day greeting (frame 17c)."
   },
@@ -745,7 +745,7 @@
   "searchOpen": "Search",
   "commonBack": "Back",
   "devVoicesTitle": "Line voices",
-  "devVoicesLead": "The same five lines of the qa plan, read by every candidate at one pace. Judge them on the phone rather than in the files: the speaker and the headphones decide more than a spectrogram.",
+  "devVoicesLead": "The same five lines of the qa plan, read by every candidate at one pace. Judge them on the phone rather than in the files: the speaker and the headphones decide more than a spectrogram.",
   "devVoicesSystem": "The phone's own voice",
   "devVoicesSystemNote": "Spoken live, at the line tempo. The voice is whichever one iOS Settings has; an enhanced voice is downloaded there.",
   "devVoicesPrice": "≈ {price} per plan",
@@ -758,11 +758,11 @@
   "@planEmptyTitle": {
     "description": "Заголовок витрины, Literata 30 — обещание результата, а не вопрос (кадр 21-1, plan.empty.title)."
   },
-  "planEmptySub": "a scene a day · 20 minutes · a rehearsal out loud",
+  "planEmptySub": "a scene a day · 20 minutes · a rehearsal out loud",
   "@planEmptySub": {
     "description": "Подпись витрины в ОДНУ строку (кадр 21-1, plan.empty.sub)."
   },
-  "planRuleSituation": "One situation a day. Days open one at a time",
+  "planRuleSituation": "One situation a day. Days open one at a time",
   "@planRuleSituation": {
     "description": "Первое правило плана — витрина 21-1 и лист 21-8 (plan.rule.situation)."
   },
@@ -774,7 +774,7 @@
   "@planRuleReturn": {
     "description": "Третье правило плана — витрина 21-1 и лист 21-8 (plan.rule.return)."
   },
-  "planExampleDoctorTitle": "A doctor's visit",
+  "planExampleDoctorTitle": "A doctor's visit",
   "@planExampleDoctorTitle": {
     "description": "Витрина 21-1, лента примеров: заголовок карточки «Приём у врача» (Literata 20). Статический пример клиента, тексты из кадра."
   },
@@ -786,7 +786,7 @@
   "@planExampleDoctorGoal11": {
     "description": "Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleDoctorGoal12": "agree on a slot",
+  "planExampleDoctorGoal12": "agree on a slot",
   "@planExampleDoctorGoal12": {
     "description": "Витрина 21-1, пример «Приём у врача», день 1: что человек скажет после дня — строка у латунной точки."
   },
@@ -826,7 +826,7 @@
   "@planExampleDoctorGoal33": {
     "description": "Витрина 21-1, пример «Приём у врача», день 3: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleInterviewTitle": "A job interview",
+  "planExampleInterviewTitle": "A job interview",
   "@planExampleInterviewTitle": {
     "description": "Витрина 21-1, лента примеров: заголовок карточки «Собеседование» (Literata 20). Статический пример клиента, тексты из кадра."
   },
@@ -850,7 +850,7 @@
   "@planExampleInterviewDay2": {
     "description": "Витрина 21-1, пример «Собеседование»: название дня 2 — идёт после «День 2 · »."
   },
-  "planExampleInterviewGoal21": "describe a project",
+  "planExampleInterviewGoal21": "describe a project",
   "@planExampleInterviewGoal21": {
     "description": "Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки."
   },
@@ -858,7 +858,7 @@
   "@planExampleInterviewGoal22": {
     "description": "Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleInterviewGoal23": "own a mistake",
+  "planExampleInterviewGoal23": "own a mistake",
   "@planExampleInterviewGoal23": {
     "description": "Витрина 21-1, пример «Собеседование», день 2: что человек скажет после дня — строка у латунной точки."
   },
@@ -874,11 +874,11 @@
   "@planExampleInterviewGoal32": {
     "description": "Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleInterviewGoal33": "agree a start date",
+  "planExampleInterviewGoal33": "agree a start date",
   "@planExampleInterviewGoal33": {
     "description": "Витрина 21-1, пример «Собеседование», день 3: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleLandlordTitle": "A call to the landlord",
+  "planExampleLandlordTitle": "A call to the landlord",
   "@planExampleLandlordTitle": {
     "description": "Витрина 21-1, лента примеров: заголовок карточки «Звонок арендодателю» (Literata 20). Статический пример клиента, тексты из кадра."
   },
@@ -906,11 +906,11 @@
   "@planExampleLandlordGoal21": {
     "description": "Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleLandlordGoal22": "ask for a repairman",
+  "planExampleLandlordGoal22": "ask for a repairman",
   "@planExampleLandlordGoal22": {
     "description": "Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки."
   },
-  "planExampleLandlordGoal23": "agree on a time",
+  "planExampleLandlordGoal23": "agree on a time",
   "@planExampleLandlordGoal23": {
     "description": "Витрина 21-1, пример «Звонок арендодателю», день 2: что человек скажет после дня — строка у латунной точки."
   },
@@ -955,7 +955,7 @@
   "@planExampleWhole": {
     "description": "Витрина 21-1: подвал примера, где показаны все дни плана (3 дня)."
   },
-  "planEmptyCta": "Build a plan",
+  "planEmptyCta": "Build a plan",
   "@planEmptyCta": {},
   "planFinishedTitle": "Finished plans",
   "@planFinishedTitle": {},
@@ -1061,7 +1061,7 @@
       }
     }
   },
-  "planPlateBuildingSub": "about a minute · you can close the app",
+  "planPlateBuildingSub": "about a minute · you can close the app",
   "@planPlateBuildingSub": {
     "description": "Подпись под «Собираем день N»: срок назван, уходить разрешено (кадр 22-5a, plan.plate.building.sub)."
   },
@@ -1196,7 +1196,7 @@
   "@planRouteMetaOpensTomorrow": {
     "description": "Мета-строка первого запертого дня, когда предыдущий уже пройден (кадр 21-4, plan.route.meta.opens.tomorrow)."
   },
-  "planRouteEventNoDate": "set a date",
+  "planRouteEventNoDate": "set a date",
   "@planRouteEventNoDate": {
     "description": "Мишень события без даты — пунктирный узел маршрута (кадр 21-2b, plan.route.event.nodate)."
   },
@@ -1222,7 +1222,7 @@
       }
     }
   },
-  "planDoneCollection": "The plan's words and phrases stay in the collection “{name}” — they will keep coming back for review",
+  "planDoneCollection": "The plan's words and phrases stay in the collection “{name}” — they will keep coming back for review",
   "@planDoneCollection": {
     "placeholders": {
       "name": {
@@ -1230,13 +1230,13 @@
       }
     }
   },
-  "planDoneCta": "Build a new plan",
+  "planDoneCta": "Build a new plan",
   "@planDoneCta": {},
   "planDoneCtaReadonly": "Open the collection",
   "@planDoneCtaReadonly": {},
   "planMenuDate": "Change the date",
   "@planMenuDate": {},
-  "planMenuNew": "Build a new plan",
+  "planMenuNew": "Build a new plan",
   "@planMenuNew": {},
   "planMenuCollection": "Open the collection",
   "@planMenuCollection": {},
@@ -1272,7 +1272,7 @@
   "@planDateCancel": {},
   "planDateRemove": "No date",
   "@planDateRemove": {},
-  "planNewTitle": "Start a different plan?",
+  "planNewTitle": "Start a different plan?",
   "@planNewTitle": {},
   "planNewBody": "This plan will end on day {n} of {total}. Everything already in progress stays in the collection “{name}” and keeps coming back for review",
   "@planNewBody": {
@@ -1288,7 +1288,7 @@
       }
     }
   },
-  "planNewCta": "Build a new one",
+  "planNewCta": "Build a new one",
   "@planNewCta": {},
   "planNewKeep": "Keep this one",
   "@planNewKeep": {},
@@ -1357,7 +1357,7 @@
       }
     }
   },
-  "planHintFirstReturn": "These cards come back the next day — that is how they stick",
+  "planHintFirstReturn": "These cards come back the next day — that is how they stick",
   "@planHintFirstReturn": {},
   "planSheetTitle": "How the plan works",
   "@planSheetTitle": {},
@@ -1379,37 +1379,45 @@
   "@planEntryGoalSub": {
     "description": "Подпись под вопросом цели (кадр 22-1, entry.goal.sub)."
   },
-  "planEntryGoalTyping1": "Interview on Friday, afraid of…",
-  "@planEntryGoalTyping1": {
-    "description": "Печатающийся плейсхолдер поля цели, кадр 1 — примеры НЕ те, что в списке историй (кадр 22-1, entry.goal.typing.1)."
+  "planEntryGoalExample1": "Job interview as a cook on Friday. Worked three years in a restaurant",
+  "@planEntryGoalExample1": {
+    "description": "Пример-подсказка в пустом поле цели, 1 из 4 — с деталями о себе: профессия, опыт (наряд CLIENT-22-1 §1b). Сменяются плавно раз в 4 с, пока поле пустое и не идёт диктовка; первый символ останавливает (кадр 22-1)."
   },
-  "planEntryGoalTyping2": "Calling the bank, can't follow on the phone…",
-  "@planEntryGoalTyping2": {
-    "description": "Печатающийся плейсхолдер поля цели, кадр 2 (кадр 22-1, entry.goal.typing.2)."
+  "planEntryGoalExample2": "Doctor's appointment in Berlin — my back hurts, I need a prescription",
+  "@planEntryGoalExample2": {
+    "description": "Пример-подсказка в пустом поле цели, 2 из 4 — город, что болит, что нужно (кадр 22-1, CLIENT-22-1 §1b)."
   },
-  "planEntryGoalTyping3": "Going to the doctor…",
-  "@planEntryGoalTyping3": {
-    "description": "Печатающийся плейсхолдер поля цели, кадр 3 (кадр 22-1, entry.goal.typing.3)."
+  "planEntryGoalExample3": "Renting a flat in Lisbon for a year, with a dog",
+  "@planEntryGoalExample3": {
+    "description": "Пример-подсказка в пустом поле цели, 3 из 4 — город, срок, с кем (кадр 22-1, CLIENT-22-1 §1b)."
+  },
+  "planEntryGoalExample4": "Calling the bank: my card is blocked, I'm not a resident",
+  "@planEntryGoalExample4": {
+    "description": "Пример-подсказка в пустом поле цели, 4 из 4 — что случилось и кто ты для банка (кадр 22-1, CLIENT-22-1 §1b)."
   },
   "planEntryGoalStoriesTitle": "How others put it",
   "@planEntryGoalStoriesTitle": {
     "description": "Метка списка историй под полем цели (кадр 22-1, entry.goal.stories.title)."
   },
-  "planEntryGoalStory1": "Interview on Friday, afraid of questions about my experience",
+  "planEntryGoalStory1": "Job interview as a cook on Friday — three years in a restaurant, afraid of questions about experience",
   "@planEntryGoalStory1": {
-    "description": "История «так пишут другие» — тап подставляет её в поле (кадр 22-1, entry.goal.story.1)."
+    "description": "История «так пишут другие» — с деталями ученика, как просит спутник: профессия, опыт, город, сроки (доработка CLIENT-22-1); тап подставляет её в поле (кадр 22-1, entry.goal.story.1)."
   },
-  "planEntryGoalStory2": "To the doctor with my child, first time at the local clinic",
+  "planEntryGoalStory2": "To the doctor with my child in Berlin, first time at the local clinic — my son has a fever",
   "@planEntryGoalStory2": {
     "description": "История «так пишут другие» (кадр 22-1, entry.goal.story.2)."
   },
-  "planEntryGoalStory3": "Call to the landlord about the deposit",
+  "planEntryGoalStory3": "Call to the landlord about the deposit — renting for a year, moving out in May",
   "@planEntryGoalStory3": {
     "description": "История «так пишут другие» (кадр 22-1, entry.goal.story.3)."
   },
-  "planEntryGoalShortHint": "Add who you talk to and what matters — the plan gets sharper",
-  "@planEntryGoalShortHint": {
-    "description": "Подсказка под коротким ответом; НЕ блокирует «Далее» (кадр 22-1c, entry.goal.short.hint)."
+  "planEntryGoalCompanion": "Who you are and what matters — job, experience, city. The plan is built around it.",
+  "@planEntryGoalCompanion": {
+    "description": "Спутник под полем цели — всегда виден, Inter 13 tertiary: подсказывает написать о себе, чтобы план собрался под ученика (наряд CLIENT-22-1 §1a, кадр 22-1)."
+  },
+  "planEntryGoalCompanionShort": "Add a few words about yourself: your job, your experience — and the plan will be about you",
+  "@planEntryGoalCompanionShort": {
+    "description": "Спутник под полем цели при короткой цели — меньше четырёх слов после ввода или диктовки; «Далее» НЕ блокирует. Четыре слова и больше — снова обычный спутник (наряд CLIENT-22-1 §1c, кадр 22-1c)."
   },
   "planEntryGoalDictate": "or dictate it",
   "@planEntryGoalDictate": {
@@ -1459,13 +1467,13 @@
   "@planEntryLevelBeginner": {
     "description": "Уровень — название (кадр 22-2, entry.level.beginner)."
   },
-  "planEntryLevelBeginnerSub": "I know some words",
+  "planEntryLevelBeginnerSub": "I know some words",
   "@planEntryLevelBeginnerSub": {
     "description": "Уровень описан тем, что человек умеет (кадр 22-2, entry.level.beginner.sub)."
   },
   "planEntryLevelIntermediate": "Intermediate",
   "@planEntryLevelIntermediate": {},
-  "planEntryLevelIntermediateSub": "I follow simple speech, I speak with mistakes",
+  "planEntryLevelIntermediateSub": "I follow simple speech, I speak with mistakes",
   "@planEntryLevelIntermediateSub": {
     "description": "Уровень описан тем, что человек умеет (кадр 22-2, entry.level.intermediate.sub)."
   },
@@ -1519,7 +1527,7 @@
   "@planEntryDateUnknown": {
     "description": "Равноправный вариант выбора даты (кадр 22-3b, entry.date.unknown)."
   },
-  "planEntryDateUnknownSub": "a plan with no date, days run back to back",
+  "planEntryDateUnknownSub": "a plan with no date, days run back to back",
   "@planEntryDateUnknownSub": {
     "description": "Подпись варианта без даты (кадр 22-3b, entry.date.unknown.sub)."
   },
@@ -1531,7 +1539,7 @@
   "@planEntryDateOtherSub": {
     "description": "Подпись варианта «Другая дата» (кадр 22-3b, entry.date.other.sub)."
   },
-  "planEntryDateRehearsalOn": "The rehearsal lands on {date} — the day before the conversation",
+  "planEntryDateRehearsalOn": "The rehearsal lands on {date} — the day before the conversation",
   "@planEntryDateRehearsalOn": {
     "description": "Строка следствия под выбором даты (кадр 22-3b, entry.date.rehearsal.on).",
     "placeholders": {
@@ -1586,7 +1594,7 @@
   "@planEntryPreviewErrorWhat": {
     "description": "Что случилось при неудачной сборке (кадр 22-4c, entry.preview.error.what)."
   },
-  "planEntryPreviewErrorSub": "Your answers are saved — try again, no need to retell anything",
+  "planEntryPreviewErrorSub": "Your answers are saved — try again, no need to retell anything",
   "@planEntryPreviewErrorSub": {
     "description": "Что уцелело при неудачной сборке (кадр 22-4c, entry.preview.error.sub)."
   },
@@ -1594,11 +1602,11 @@
   "@planEntryPreviewErrorRetry": {
     "description": "Кнопка неудачной сборки; повтор не уводит на первый шаг (кадр 22-4c, entry.preview.error.retry)."
   },
-  "planEntryPreviewUnclearTitle": "A little more, please",
+  "planEntryPreviewUnclearTitle": "A little more, please",
   "@planEntryPreviewUnclearTitle": {
     "description": "Заголовок, когда цель непонятна — просьба, не упрёк (кадр 22-4d, entry.preview.unclear.title)."
   },
-  "planEntryPreviewUnclearQuote": "“{goal}” — what is it about?",
+  "planEntryPreviewUnclearQuote": "“{goal}” — what is it about?",
   "@planEntryPreviewUnclearQuote": {
     "description": "Цитата ответа человека в кадре «цель непонятна» (кадр 22-4d, entry.preview.unclear.quote).",
     "placeholders": {
@@ -1607,7 +1615,7 @@
       }
     }
   },
-  "planEntryPreviewUnclearSub": "Say where you will be speaking and with whom: a doctor's visit, a call to the bank, a chat with a neighbour",
+  "planEntryPreviewUnclearSub": "Say where you will be speaking and with whom: a doctor's visit, a call to the bank, a chat with a neighbour",
   "@planEntryPreviewUnclearSub": {
     "description": "Три примера того, чего не хватает (кадр 22-4d, entry.preview.unclear.sub)."
   },
@@ -1617,7 +1625,7 @@
   },
   "planEntryPushTitle": "Plan is ready",
   "@planEntryPushTitle": {},
-  "planEntryPushBody": "{until}. Day 1 — “{dayTitle}”",
+  "planEntryPushBody": "{until}. Day 1 — “{dayTitle}”",
   "@planEntryPushBody": {
     "description": "Тело уведомления «План готов»: срок до события и первый день (кадр 22-6, entry.push.body).",
     "placeholders": {
@@ -1629,7 +1637,7 @@
       }
     }
   },
-  "planEntryPushBodyNoDate": "{days}. Day 1 — “{dayTitle}”",
+  "planEntryPushBodyNoDate": "{days}. Day 1 — “{dayTitle}”",
   "@planEntryPushBodyNoDate": {
     "description": "Тело уведомления у плана без даты события (кадр 22-6, entry.push.body.nodate).",
     "placeholders": {
@@ -1650,7 +1658,7 @@
       }
     }
   },
-  "planNotifyDayReadyBody": "“{title}” — you can start",
+  "planNotifyDayReadyBody": "“{title}” — you can start",
   "@planNotifyDayReadyBody": {
     "description": "Тело уведомления «день собран».",
     "placeholders": {
@@ -1668,7 +1676,7 @@
       }
     }
   },
-  "planNotifyReminderBody": "“{title}” — pick up where you left off",
+  "planNotifyReminderBody": "“{title}” — pick up where you left off",
   "@planNotifyReminderBody": {
     "description": "Тело ежедневного напоминания.",
     "placeholders": {
@@ -1690,7 +1698,7 @@
   "@planNotifyEventTodayTitleNoName": {
     "description": "Уведомление в день события, когда сервер не назвал событие."
   },
-  "planNotifyEventTodayBody": "Say it yourself first — run it out loud",
+  "planNotifyEventTodayBody": "Say it yourself first — run it out loud",
   "@planNotifyEventTodayBody": {
     "description": "Тело уведомления в день события."
   },
@@ -1715,7 +1723,7 @@
   "@planBannerAppMark": {
     "description": "Баннер уведомления в приложении (кадр 22-6): буква-значок приложения «Слова» в квадрате 34."
   },
-  "planEntryOffline": "The plan cannot be built without a network",
+  "planEntryOffline": "The plan cannot be built without a network",
   "@planEntryOffline": {},
   "planWindowBack": "Back",
   "planWindowStateNotStarted": "not started",
@@ -1778,14 +1786,14 @@
   "planSessionStateDone": "done",
   "planSessionStateAhead": "ahead",
   "planSessionApproxMinutes": "≈ {n} min",
-  "planSessionDescWords": "{n, plural, one{{n} word of the day} other{{n} words of the day}} — look, listen and say them aloud",
-  "planSessionDescPhrases": "{n, plural, one{{n} phrase of the day} other{{n} phrases of the day}} — one slot changes, the phrase stays",
+  "planSessionDescWords": "{n, plural, one{{n} word of the day} other{{n} words of the day}} — look, listen and say them aloud",
+  "planSessionDescPhrases": "{n, plural, one{{n} phrase of the day} other{{n} phrases of the day}} — one slot changes, the phrase stays",
   "planSessionDescDialogue": "The conversation step by step: understand the line and answer with the day's phrases",
   "planSessionDescListen": "The whole conversation by ear, then questions about it",
-  "planSessionDescSpeak": "They ask — answer about yourself, in your own words. You know the frames; the slot is yours",
+  "planSessionDescSpeak": "They ask — answer about yourself, in your own words. You know the frames; the slot is yours",
   "planSessionNoHints": "No hints",
   "planSessionNoHintsSub": "Dialogue and “Speak myself” go straight to voice",
-  "planSessionNoHintsTalk": "In the talk — no hints, the partner's text stays closed",
+  "planSessionNoHintsTalk": "In the talk — no hints, the partner's text stays closed",
   "planSessionStart": "Start",
   "planSessionBuild": "build {version}",
   "planSessionLeftWords": "{n, plural, one{{n} word left} other{{n} words left}}",
@@ -1794,7 +1802,7 @@
   "planSessionClose": "Close",
   "planSessionTaskRememberWord": "Remember the word",
   "planSessionTaskSayWord": "Say the word aloud",
-  "planSessionCompanionSayWord": "Say it the way you hear it — {role} will understand",
+  "planSessionCompanionSayWord": "Say it the way you hear it — {role} will understand",
   "planSessionTaskChooseTranslation": "Choose the translation",
   "planSessionTaskChooseWord": "Choose the word",
   "planSessionTaskChooseHeard": "Choose what you heard",
@@ -1826,7 +1834,7 @@
   "planSessionMicHeard": "heard",
   "planSessionPlaying": "playing",
   "planSessionMicMissed": "didn't catch that, once more",
-  "planSessionEcho": "heard — just like the recording",
+  "planSessionEcho": "heard — just like the recording",
   "planSessionSkip": "Skip",
   "planSessionDebugHeard": "what was heard",
   "planSessionNoMicTitle": "Microphone needed",
@@ -1835,10 +1843,10 @@
   "planSessionTryAgain": "Try again",
   "planSessionReturnsTomorrow": "Coming back tomorrow",
   "planSessionExitTitle": "Leave? Your progress is saved",
-  "planSessionExitBody": "The cards you've done in “{stage}” stay done — you'll pick up where you left off.",
+  "planSessionExitBody": "The cards you've done in “{stage}” stay done — you'll pick up where you left off.",
   "planSessionExitStay": "Continue",
   "planSessionExitLeave": "Leave",
-  "planSessionOffline": "no connection — the answer will be sent once you're back online",
+  "planSessionOffline": "no connection — the answer will be sent once you're back online",
   "planSessionLoadFailed": "The day didn't load",
   "planSessionLeftExchanges": "{n, plural, one{{n} line left} other{{n} lines left}}",
   "planSessionLeftQuestions": "{n, plural, one{{n} question left} other{{n} questions left}}",
@@ -1848,7 +1856,7 @@
   "planSessionPaceLabel": "pace",
   "planSessionTaskCollectAnswer": "Build your answer",
   "planSessionTaskSayLine": "Say your line",
-  "planSessionTaskRescue": "Didn't catch it — ask again",
+  "planSessionTaskRescue": "Didn't catch it — ask again",
   "planSessionAnyChip": "any of them is your answer",
   "planSessionNotUnderstood": "Didn't catch that",
   "planSessionSlowly": "slowly",
@@ -1879,12 +1887,12 @@
   "planSessionTaskAskYourself": "Ask, in your own words",
   "planSessionAskIntent": "Ask: «{text}»",
   "planSessionTaskAnswerOwnWords": "Answer in your own words",
-  "planSessionTaskRepeatPause": "Repeat after a pause",
+  "planSessionTaskRepeatPause": "Repeat after a pause",
   "planSessionTaskRetell": "Say in your language what you heard",
   "planSessionBrowLine": "Line",
   "planSessionListenCue": "listen",
   "planSessionWaiting": "waiting",
-  "planSessionNotThat": "not that — let's try again",
+  "planSessionNotThat": "not that — let's try again",
   "planSessionHintAction": "Hint",
   "planSessionDayTotal": "Day total",
   "planSessionDayDoneTitle": "Day done · {minutes}",
@@ -1894,9 +1902,9 @@
   "planSessionReturnPhrases": "{n, plural, one{{n} phrase} other{{n} phrases}}",
   "planSessionReturnExchanges": "{n, plural, one{{n} line} other{{n} lines}}",
   "planSessionAnd": "{a} and {b}",
-  "planSessionNextDayBuilding": "Day {n} — building",
-  "planSessionNextDayReady": "Day {n} — ready",
-  "planSessionCloseFailed": "The day didn't close — no connection",
+  "planSessionNextDayBuilding": "Day {n} — building",
+  "planSessionNextDayReady": "Day {n} — ready",
+  "planSessionCloseFailed": "The day didn't close — no connection",
   "planPlateStageTalk": "Talk",
   "planPlateStageRecall": "Recall",
   "planTalkEntryMinutes": "{n, plural, one{about {n} minute} other{about {n} minutes}}",
@@ -1932,10 +1940,10 @@
   "planTalkOpenText": "text",
   "planTalkInterrupted": "cut short",
   "planTalkSilenceEnds": "silence ends it",
-  "planTalkUnheard": "didn't catch that — say it again",
-  "planTalkOffline": "Connection lost — the talk goes on from here",
-  "planTalkSilent": "No answer — try once more",
-  "planTalkOpenFailed": "The talk did not start — try once more",
+  "planTalkUnheard": "didn't catch that — say it again",
+  "planTalkOffline": "Connection lost — the talk goes on from here",
+  "planTalkSilent": "No answer — try once more",
+  "planTalkOpenFailed": "The talk did not start — try once more",
   "planTalkNotInDay": "This day has no talk",
   "planTalkEnded": "Talk over",
   "planTalkSummaryAction": "Summary",
@@ -1948,7 +1956,7 @@
     }
   },
   "planTalkUnderstoodAll": "You got every question",
-  "planTalkUnderstoodExcept": "{n, plural, one{You got the questions but one — it comes back} other{You got the questions but {n} — they come back}}",
+  "planTalkUnderstoodExcept": "{n, plural, one{You got the questions but one — it comes back} other{You got the questions but {n} — they come back}}",
   "@planTalkUnderstoodExcept": {
     "placeholders": {
       "n": {
@@ -1966,15 +1974,15 @@
   },
   "planTalkReady": "You are ready for the conversation",
   "planTalkHighlights": "What went well",
-  "planSessionListenWholeOne": "Listen to the whole of it — only one answer fits",
-  "planSessionFrameWhole": "This phrase is said whole — nothing in it changes",
+  "planSessionListenWholeOne": "Listen to the whole of it — only one answer fits",
+  "planSessionFrameWhole": "This phrase is said whole — nothing in it changes",
   "planSessionChangeable": "this part can change",
   "planSessionInTalk": "In the talk",
   "planSessionOwnWordChip": "your own word",
-  "planTalkNoMic": "Microphone needed — the talk can't go on without it",
-  "planSessionDescRecall": "Your own lines from every scene — look, listen and say them aloud",
+  "planTalkNoMic": "Microphone needed — the talk can't go on without it",
+  "planSessionDescRecall": "Your own lines from every scene — look, listen and say them aloud",
   "planSessionRecallTask": "Recall your lines",
-  "planSessionRecallLast": "Next — say them aloud",
+  "planSessionRecallLast": "Next — say them aloud",
   "planWindowRehearsalBefore": "before the event",
   "planWindowOnWeekday": "{weekday, select, mon{on Monday} tue{on Tuesday} wed{on Wednesday} thu{on Thursday} fri{on Friday} sat{on Saturday} sun{on Sunday} other{}}",
   "@planWindowOnWeekday": {
@@ -2090,7 +2098,7 @@
       }
     }
   },
-  "planSessionRescuedSlower": "{n, plural, =1{asked again — the {role} said it slower} =2{asked again twice — the {role} said it slower} other{asked again {n} times — the {role} said it slower}}",
+  "planSessionRescuedSlower": "{n, plural, =1{asked again — the {role} said it slower} =2{asked again twice — the {role} said it slower} other{asked again {n} times — the {role} said it slower}}",
   "@planSessionRescuedSlower": {
     "placeholders": {
       "n": {
@@ -2101,11 +2109,11 @@
       }
     }
   },
-  "planSessionWarmWords": "You know these words now — next they turn up in phrases",
-  "planSessionWarmPhrases": "The phrases are built and said aloud — they will come in handy in the dialogue",
+  "planSessionWarmWords": "You know these words now — next they turn up in phrases",
+  "planSessionWarmPhrases": "The phrases are built and said aloud — they will come in handy in the dialogue",
   "planSessionWarmListen": "You understand the other side by ear",
-  "planSessionWarmSpeak": "You said your lines yourself — next comes a live talk",
-  "planSessionWarmRecall": "Your lines are in place — next comes the whole talk",
+  "planSessionWarmSpeak": "You said your lines yourself — next comes a live talk",
+  "planSessionWarmRecall": "Your lines are in place — next comes the whole talk",
   "planSessionWarmRepetition": "Everything that came back has been said once more",
   "planTalkEntrySay": "Say in the talk",
   "planVoiceTitle": "Which voice should say your lines?",
@@ -2117,11 +2125,11 @@
   "planTalkConstructions": "Constructions in the talk",
   "planTalkYouSaid": "you said: {said}",
   "planTalkRepeatBefore": "go over it before the conversation",
-  "planTalkAlmostLine": "almost — say it whole: {line}",
+  "planTalkAlmostLine": "almost — say it whole: {line}",
   "planTalkFromLessonLine": "from the lesson: {line}",
-  "planTalkAlmostJudge": "Almost — say it whole",
+  "planTalkAlmostJudge": "Almost — say it whole",
   "planTalkExtraSaid": "You also used",
-  "planTalkEndedByTime": "The talk ran out of time — what you did not say comes back",
+  "planTalkEndedByTime": "The talk ran out of time — what you did not say comes back",
   "planTalkEndedByTimeOnly": "The talk ran out of time",
   "planTalkSceneNumber": "Scene {n}",
   "planTalkSceneOf": "Scene {n} of {total}",
@@ -2150,7 +2158,7 @@
     "description": "Кнопка пройденного дня (23-0c): ведёт на итог дня 30-7; повтора дня целиком нет."
   },
   "planWindowSummary": "Summary",
-  "planWindowTalkReplayLimit": "The talk was already replayed today — come back tomorrow",
+  "planWindowTalkReplayLimit": "The talk was already replayed today — come back tomorrow",
   "startSlogan": "Prepared to speak.",
   "startSignInApple": "Sign in with Apple",
   "startSignInGoogle": "Sign in with Google",

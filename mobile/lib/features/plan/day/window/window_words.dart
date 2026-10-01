@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/day_window.dart';
 import '../../../../data/plan/plan_models.dart';
@@ -97,7 +98,7 @@ class WindowWordCard extends StatelessWidget {
                     Text(reading, style: AppTextWindow.reading),
                     const SizedBox(height: 4),
                   ],
-                  Text(word.translation, style: AppTextWindow.translation),
+                  Text(context.nativeText(word.translation), style: AppTextWindow.translation),
                 ],
               ),
             ),

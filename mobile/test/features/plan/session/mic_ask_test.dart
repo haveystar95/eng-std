@@ -21,6 +21,7 @@ import 'package:eng_std/features/plan/session/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/session_harness.dart';
 import '../../../support/speech_probe_channel.dart';
 
@@ -47,7 +48,7 @@ void main() {
 
     await _start(tester);
     expect(find.byKey(const ValueKey('mic-ask')), findsOneWidget);
-    expect(find.text('Ritora слушает, как ты говоришь'), findsOneWidget);
+    expect(find.text(nbTypo('Ritora слушает, как ты говоришь')), findsOneWidget);
     expect(recognizer.prepares, 0, reason: 'iOS is asked only after «Разрешить микрофон»');
     await _close(tester);
   });

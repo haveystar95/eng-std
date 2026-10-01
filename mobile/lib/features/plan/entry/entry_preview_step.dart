@@ -57,8 +57,9 @@ class EntryPreviewStep extends StatelessWidget {
         summary: summary,
         body: _Notice(
           icon: PlanIcon.noticeUnclear,
-          // Заголовок цитирует то, что человек написал: «"Английский" — это про что?»
-          title: l.planEntryPreviewUnclearQuote(state.goal.trim()),
+          // Заголовок цитирует то, что человек написал: «"Английский" — это про что?» — как и строки сводки, по правилу
+          // типографики его языка (CLIENT-22-1 §2); уходит на сервер цель нетронутой.
+          title: l.planEntryPreviewUnclearQuote(context.nativeText(state.goal.trim())),
           sub: l.planEntryPreviewUnclearSub,
           action: l.planEntryPreviewUnclearCta,
           onAction: onEditGoal,
@@ -193,7 +194,9 @@ class _Ready extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
-    final story = plan.summary;
+    final native = NativeTypesetter.of(context);
+    // «Как это будет» — composed by the server from its packs (plan-api: ru, uk, en; else English).
+    final story = plan.summary == null ? null : native.composed(plan.summary!);
 
     return ListView(
       padding: EdgeInsets.fromLTRB(20, 8, 20, bottom),
@@ -201,7 +204,7 @@ class _Ready extends StatelessWidget {
         Text(l.planEntryPreviewTitle, style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, color: AppColors.secondary)),
         const SizedBox(height: 6),
         Text(
-          plan.displayTitle,
+          native(plan.displayTitle),
           style: const TextStyle(
             fontFamily: AppFonts.literata,
             fontSize: 22,
@@ -226,7 +229,12 @@ class _Ready extends StatelessWidget {
           RouteEntrance(index: 0, child: _HowItGoes(label: l.planEntryPreviewHowLabel, text: story)),
         ],
         const SizedBox(height: 54),
-        RouteLine(days: planPreviewDays(l, plan, dpr), event: planRouteEvent(l, locale, plan), progress: false, entrance: true),
+        RouteLine(
+          days: planPreviewDays(l, native, plan, dpr),
+          event: planRouteEvent(l, native, locale, plan),
+          progress: false,
+          entrance: true,
+        ),
       ],
     );
   }
@@ -234,17 +242,17 @@ class _Ready extends StatelessWidget {
 
 /// Дни превью: полный контраст, цели дня латунными точками (до трёх — столько держит узел кадра),
 /// у повторения и репетиции — их строка.
-List<RouteDayView> planPreviewDays(AppLocalizations l, Plan plan, double dpr) => [
+List<RouteDayView> planPreviewDays(AppLocalizations l, NativeTypesetter native, Plan plan, double dpr) => [
   for (final d in plan.days)
     RouteDayView(
-      title: l.planRouteDayTitle(d.number, planRouteDayName(l, plan, d)),
+      title: l.planRouteDayTitle(d.number, planRouteDayName(l, native, plan, d)),
       circle: planRouteCircle(plan, d, dpr),
       tone: RouteDayTone.plain,
       children: [
         for (final goal in switch (d.type) {
           PlanDayType.review => [_reviewSub(l, plan, d)].whereType<String>(),
           PlanDayType.rehearsal => [l.planRouteDayRehearsalSub],
-          _ => (plan.sceneOf(d)?.goalsNative ?? const <String>[]).take(3),
+          _ => (plan.sceneOf(d)?.goalsNative ?? const <String>[]).take(3).map(native.call),
         })
           RouteChildView(label: goal, mark: RouteChildMark.goal),
       ],

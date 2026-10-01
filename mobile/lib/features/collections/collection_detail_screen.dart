@@ -269,7 +269,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     final l = AppLocalizations.of(context);
     final ok = await showCenterAlert(
       context: context,
-      title: l.collectionUnsubscribeTitle(widget.title),
+      title: l.collectionUnsubscribeTitle(context.nativeText(widget.title)),
       message: l.collectionUnsubscribeMessage,
       confirmLabel: l.collectionMenuRemoveFromMine,
       cancelLabel: l.commonCancel,
@@ -286,7 +286,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     final l = AppLocalizations.of(context);
     final ok = await showCenterAlert(
       context: context,
-      title: l.collectionDeleteTitle(widget.title),
+      title: l.collectionDeleteTitle(context.nativeText(widget.title)),
       message: l.collectionDeleteMessage,
       confirmLabel: l.actionDelete,
       cancelLabel: l.commonCancel,
@@ -384,7 +384,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.title, style: AppText.collectionNameScreen),
+                      Text(context.nativeText(widget.title), style: AppText.collectionNameScreen),
                       const SizedBox(height: 6),
                       Row(
                         children: [

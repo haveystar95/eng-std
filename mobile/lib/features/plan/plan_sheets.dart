@@ -147,7 +147,7 @@ class _DateSheetBodyState extends State<_DateSheetBody> {
     // «Когда приём?» — СТРОЧНАЯ внутри фразы. Сервер отдаёт `event_native` как отдельное слово
     // («Приём»), с заглавной, и подставленное как есть оно даёт «Когда Приём?» (снимок 21-10).
     // Лента входа приводит его к нижнему регистру ровно по той же причине.
-    final event = (widget.plan.eventNative ?? '').trim().toLowerCase();
+    final event = context.nativeText((widget.plan.eventNative ?? '').trim().toLowerCase());
     final keepSelected = _picked == null && !_clear;
     final changed = _picked != null || _clear;
 
@@ -216,7 +216,7 @@ Future<bool> showPlanNewSheet(BuildContext context, Plan plan) async {
       title: l.planNewTitle,
       children: [
         Text(
-          l.planNewBody(day, plan.daysTotal, plan.displayTitle),
+          l.planNewBody(day, plan.daysTotal, context.nativeText(plan.displayTitle)),
           style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, height: 1.5, color: AppColors.inkBody),
         ),
         const SizedBox(height: AppSpacing.s26),
@@ -237,7 +237,7 @@ Future<bool> showPlanDeleteAlert(BuildContext context, Plan plan) async {
     title: l.planDeleteTitle,
     message: plan.collectionId == null
         ? l.planDeleteBodyNoCollection
-        : l.planDeleteBody(plan.displayTitle),
+        : l.planDeleteBody(context.nativeText(plan.displayTitle)),
     confirmLabel: l.planDeleteConfirm,
     cancelLabel: l.planDateCancel,
   );

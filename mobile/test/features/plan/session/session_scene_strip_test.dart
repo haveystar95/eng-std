@@ -9,6 +9,7 @@ import 'package:eng_std/features/plan/session/session_texts.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/session_harness.dart';
 
 /// THE ROLE IN THE SCENE STRIP (правка архитектора CLIENT-CONV-1a, 21.09): «Приём у врача · врач».
@@ -40,15 +41,15 @@ void main() {
   // ЛОВИТ: «Приём у врача · Врач» — полоса на снимках и живых кадрах до правки.
   testWidgets('полоса сцены: роль со строчной', (tester) async {
     await pumpStrip(tester, scene('Врач'));
-    expect(find.text('Приём у врача · врач'), findsOneWidget);
-    expect(find.text('Приём у врача · Врач'), findsNothing);
+    expect(find.text(nbTypo('Приём у врача · врач')), findsOneWidget);
+    expect(find.text(nbTypo('Приём у врача · Врач')), findsNothing);
   });
 
   // ПРАВИЛО: аббревиатура держит заглавные — буква опускается, только если за ней уже строчная.
   // ЛОВИТ: «лОР» вместо «ЛОР».
   testWidgets('аббревиатура в роли остаётся как есть', (tester) async {
     await pumpStrip(tester, scene('ЛОР'));
-    expect(find.text('Приём у врача · ЛОР'), findsOneWidget);
+    expect(find.text(nbTypo('Приём у врача · ЛОР')), findsOneWidget);
     expect(SessionTexts.roleInline('ЛОР-врач'), 'ЛОР-врач');
     expect(SessionTexts.roleInline('Администратор'), 'администратор');
     expect(SessionTexts.roleInline('врач'), 'врач');

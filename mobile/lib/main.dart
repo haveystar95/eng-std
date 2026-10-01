@@ -9,9 +9,11 @@ import 'data/app_identity.dart';
 import 'data/deep_links.dart';
 import 'data/locale_controller.dart';
 import 'data/providers.dart';
+import 'features/plan/plan_providers.dart';
 import 'features/profile/qa_report_button.dart';
 import 'features/start/start_gate.dart';
 import 'l10n/app_localizations.dart';
+import 'ui/native_text.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +50,11 @@ class EngStdApp extends ConsumerWidget {
     // `app_ru.arb` all along (наряд DAY-2-FIX, Ч.1.2).
     final option = ref.watch(localeControllerProvider).asData?.value ?? UiLanguageOption.system;
     final supportLang = ref.watch(authControllerProvider).value?.profile?.nativeLanguage;
+    // THE NATIVE OF THE SERVER'S TEXTS (наряд CLIENT-22-1 §2): the held plan's — a plan keeps the native it was made in
+    // when the profile's changes — else the profile's. Read without waking the tab (as [heldPlan] does).
+    final planNative = ref.exists(planTabProvider)
+        ? ref.watch(planTabProvider.select((s) => s.value?.plan?.nativeLang))
+        : null;
     return MaterialApp(
       title: 'Ritora',
       debugShowCheckedModeBanner: false,
@@ -60,7 +67,10 @@ class EngStdApp extends ConsumerWidget {
       // нажимают её там, где что-то не так, и заранее известного списка таких мест нет. Обёртка
       // ставится через `builder`, чтобы попасть ВНУТРЬ навигатора — иначе снимок не поймал бы ни
       // одного вытолкнутого экрана. Кнопки нет ни у кого, кроме QA-аккаунта; решает сервер.
-      builder: (context, child) => QaReportOverlay(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => NativeLanguageScope(
+        language: (planNative ?? '').isNotEmpty ? planNative! : (supportLang ?? 'ru'),
+        child: QaReportOverlay(child: child ?? const SizedBox.shrink()),
+      ),
       home: const StartGate(),
     );
   }

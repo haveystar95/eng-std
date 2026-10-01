@@ -98,7 +98,7 @@ void main() {
 
     expect(counts, findsNothing, reason: 'у не начатого дня цифр «N / M» нет');
     expect(find.descendant(of: find.byType(WindowStageRow), matching: find.text('впереди')), findsNWidgets(5));
-    expect(find.text(nb('СЛОВА · 8')), findsOneWidget);
+    expect(find.text(nbTypo('СЛОВА · 8')), findsOneWidget);
     expectPlateCeiling(tester);
     await expectDarkFromTop(tester);
     expectOneButton(tester, 'Начать');
@@ -112,7 +112,7 @@ void main() {
 
     // Наряд FIX-3 §5, кадры серии 38: «N / M» снято из рядов — состояние говорит словом и полосой.
     expect(counts, findsNothing, reason: 'цифр в рядах нет');
-    expect(find.text(nb('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА')), findsOneWidget);
+    expect(find.text(nbTypo('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА')), findsOneWidget);
     expect(find.descendant(of: find.byType(WindowPill), matching: find.textContaining(RegExp(r'\d'))), findsNothing);
     expectPlateCeiling(tester);
     expectOneButton(tester, 'Продолжить');
@@ -128,7 +128,7 @@ void main() {
     // Наряд FIX-3 §5: пройденный ряд, который можно пройти ещё раз (`stages[].again`), говорит «ещё раз» и ведёт туда.
     expect(find.descendant(of: find.byType(WindowStageRow), matching: find.text('ещё раз')), findsNWidgets(5));
     expect(find.textContaining('День пройден ·'), findsOneWidget);
-    expect(find.text(nb('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА')), findsOneWidget);
+    expect(find.text(nbTypo('СЛОВА · 8 · 6 ПРОЙДЕНО · 2 ВЕРНУТСЯ ЗАВТРА')), findsOneWidget);
     final brass = find.descendant(
       of: find.byType(WindowWordCard),
       matching: find.byWidgetPredicate((w) => w is WindowUnitMarker && w.state == WindowUnitState.returnsTomorrow),
@@ -199,7 +199,7 @@ void main() {
       expect(find.descendant(of: sheet, matching: find.text('Закрыть')), findsOneWidget);
       expect(find.descendant(of: sheet, matching: find.byType(ButtonStyleButton)), findsNothing);
       expect(tester.widget<ModalBarrier>(find.byType(ModalBarrier).last).color, AppColors.windowSheetScrim);
-      expect(find.descendant(of: sheet, matching: find.text(s.line)), findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.text(nbTypo(s.line))), findsOneWidget);
       expect(find.descendant(of: sheet, matching: counts), findsNothing);
       expectNothingCut(tester);
       await shoot('23-0e-${s.slug}');
@@ -217,7 +217,7 @@ void main() {
     testWidgets('${s.golden}: ряды и минуты сервера, «${s.brow}», одна кнопка', (tester) async {
       await pumpDayWindow(tester, PlanDayRoom.fromJson(serverFixtureJson(s.fixture)), plan: planFrom('plan_rehearsal'));
       expect(find.byType(WindowPill), findsNothing);
-      expect(find.text(s.brow), findsOneWidget);
+      expect(find.text(nbTypo(s.brow)), findsOneWidget);
       expect(counts, findsNothing, reason: 'цифр в рядах нет (наряд FIX-3 §5)');
       expectOneButton(tester, 'Продолжить');
       expectNothingCut(tester);

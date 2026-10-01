@@ -13,6 +13,7 @@ import 'package:eng_std/features/search/search_result_card.dart';
 import 'package:eng_std/features/search/search_screen.dart';
 import 'package:eng_std/features/word_card/word_card_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import '../../support/nbsp.dart';
 
 /// THE LIFE OF A CARD, as the search screen has to tell it (наряд A-4.1 Ч.4).
 ///
@@ -169,7 +170,7 @@ void main() {
       await _submit(tester, 'привет');
 
       expect(find.text('Собрать карточку'), findsOneWidget);
-      expect(find.text('Добавить в коллекцию'), findsNothing);
+      expect(find.text(nbTypo('Добавить в коллекцию')), findsNothing);
       expect(find.byType(SearchResultCard), findsNothing);
     });
   });
@@ -188,8 +189,8 @@ void main() {
       await _submit(tester, 'привет');
 
       expect(find.byType(SearchResultCard), findsOneWidget);
-      expect(find.text('Уже в коллекции «Испанский»'), findsOneWidget);
-      expect(find.text('Добавить в другую коллекцию'), findsOneWidget);
+      expect(find.text(nbTypo('Уже в коллекции «Испанский»')), findsOneWidget);
+      expect(find.text(nbTypo('Добавить в другую коллекцию')), findsOneWidget);
       expect(
         find.text('Собрать карточку'),
         findsNothing,
@@ -206,13 +207,13 @@ void main() {
 
       expect(find.byType(SearchResultCard), findsOneWidget);
       expect(find.text('hola'), findsWidgets);
-      expect(find.text('Добавить в коллекцию'), findsOneWidget);
+      expect(find.text(nbTypo('Добавить в коллекцию')), findsOneWidget);
       expect(
         find.text('Собрать карточку'),
         findsNothing,
         reason: 'a word survives its collection; there is nothing left to build',
       );
-      expect(find.textContaining('Уже в коллекции'), findsNothing);
+      expect(find.textContaining(nbTypo('Уже в коллекции')), findsNothing);
     });
 
     testWidgets('the sheet opens on the shelf and saves the term by id', (tester) async {
@@ -220,7 +221,7 @@ void main() {
       await _pump(tester, api);
       await _submit(tester, 'привет');
 
-      await tester.tap(find.text('Добавить в коллекцию'));
+      await tester.tap(find.text(nbTypo('Добавить в коллекцию')));
       await tester.pumpAndSettle();
 
       // The sheet, with the pair's collections and the always-present «create one».
@@ -232,7 +233,7 @@ void main() {
       expect(api.addedTermId, 'ID-hola', reason: 'an existing term is addressed by its id');
       expect(api.addedLookupId, isNull);
       // And the screen has moved to (б) without waiting for the free search to come back.
-      expect(find.text('Уже в коллекции «Испанский»'), findsOneWidget);
+      expect(find.text(nbTypo('Уже в коллекции «Испанский»')), findsOneWidget);
       expect(find.text('Собрать карточку'), findsNothing);
     });
   });
@@ -272,7 +273,7 @@ void main() {
         findsNothing,
         reason: 'the build succeeded — showing the button again denies that it happened',
       );
-      expect(find.text('Добавить в коллекцию'), findsOneWidget);
+      expect(find.text(nbTypo('Добавить в коллекцию')), findsOneWidget);
       expect(api.lookupCalls, 1);
     });
 
@@ -299,7 +300,7 @@ void main() {
       tester.state<NavigatorState>(find.byType(Navigator).first).pop();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Добавить в коллекцию'));
+      await tester.tap(find.text(nbTypo('Добавить в коллекцию')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Испанский').last);
       await tester.pumpAndSettle();
@@ -308,7 +309,7 @@ void main() {
       // «Добавить в коллекцию» is the SHELVING act: the word goes on a shelf and waits in the swipe
       // pass. It used to enrol silently, which is how a word filed for later became a debt.
       expect(api.addedEnroll, isFalse);
-      expect(find.text('Уже в коллекции «Испанский»'), findsOneWidget);
+      expect(find.text(nbTypo('Уже в коллекции «Испанский»')), findsOneWidget);
     });
 
     testWidgets('«Учить сразу» sits beside it and asks for the queue', (tester) async {
@@ -386,7 +387,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // The refusal is on screen, and the button is still there to press again.
-      expect(find.textContaining('Не получилось распознать'), findsOneWidget);
+      expect(find.textContaining(nbTypo('Не получилось распознать')), findsOneWidget);
       expect(api.retriesPerCall, [false]);
 
       await tester.tap(find.text('Собрать карточку'));

@@ -17,12 +17,15 @@ import 'goal_dictation.dart';
 /// строится из ситуации. Вместо них — «Так пишут другие»: три истории, тап подставляет текст в
 /// поле, и они же работают подсказкой примером.
 ///
-/// ПЛЕЙСХОЛДЕР ПЕЧАТАЕТСЯ и меняется по кругу, но его примеры — ДРУГИЕ, чем в списке ниже: иначе
-/// человек читает одно и то же дважды. Фокус или первый символ останавливают цикл навсегда —
-/// печатающая машинка за спиной у пишущего человека мешает.
-///
-/// «Далее» неактивна при пустом поле; счётчика символов нет. Одно слово — валидный ответ (22-1c):
-/// подсказка под полем говорит, что даст уточнение, и НЕ блокирует.
+/// WHO YOU ARE AND WHAT MATTERS (наряд CLIENT-22-1 §1). The server builds the plan and the lessons from this text:
+/// whatever the learner says about themselves becomes their details in the fillers («I worked at ___» → «a
+/// restaurant»); with none, the model invents a job for them. So the step suggests, and never demands:
+/// - the COMPANION under the field, always there — «Кто ты и что важно…»; a goal of fewer than four words (typed, or
+///   left by the dictation) turns it to «Добавь пару слов о себе…» and back at four; «Далее» stays live either way;
+/// - the EXAMPLES in the empty field — four goals with details, one at a time, a crossfade every 4 s. They turn only
+///   while the field is empty and nobody is dictating: a focus in the field does not stop them, the first character
+///   does (and an emptied field lets them go on).
+/// Neither is sent anywhere: the goal leaves as it was entered ([PlanEntryScreen]).
 class EntryGoalStep extends StatefulWidget {
   const EntryGoalStep({
     super.key,
@@ -42,102 +45,67 @@ class EntryGoalStep extends StatefulWidget {
   final VoidCallback onMic;
   final ValueChanged<String> onStory;
 
+  /// «Короткая цель» (22-1c, CLIENT-22-1 §1c): fewer than four words. A word is a run with a letter or a digit in it —
+  /// a lone dash is none.
+  static bool isShort(String goal) {
+    final words = goal.split(RegExp(r'\s+')).where((w) => w.contains(RegExp(r'[\p{L}\p{N}]', unicode: true))).length;
+
+    return words > 0 && words < 4;
+  }
+
   @override
   State<EntryGoalStep> createState() => _EntryGoalStepState();
 }
 
 class _EntryGoalStepState extends State<EntryGoalStep> {
-  Timer? _type;
-
-  /// Какой пример печатается и сколько его букв видно.
+  /// Which of the four examples the empty field shows.
   int _example = 0;
-  int _shown = 0;
-  bool _erasing = false;
+  Timer? _turn;
 
-  /// Цикл остановлен навсегда — человек тронул поле.
-  bool _stopped = false;
+  /// The companion's text: the short-goal one or not. Read off the field after typing and when a dictation closes —
+  /// not while it runs, or the line would flicker with every heard word.
+  late bool _short = EntryGoalStep.isShort(widget.controller.text);
 
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(_stopOnInput);
-    widget.focus.addListener(_stopOnInput);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Снимок не должен зависеть от кадра, на котором его сняли: под «уменьшением движения»
-    // плейсхолдер стоит целым первым примером.
-    if (MediaQuery.of(context).disableAnimations) {
-      _stopped = true;
-      _shown = _examples(context).first.length;
-    }
-    _restart();
+    widget.controller.addListener(_changed);
+    widget.dictation.addListener(_changed);
+    _rotate();
   }
 
   @override
   void dispose() {
-    _type?.cancel();
-    widget.controller.removeListener(_stopOnInput);
-    widget.focus.removeListener(_stopOnInput);
+    _turn?.cancel();
+    widget.controller.removeListener(_changed);
+    widget.dictation.removeListener(_changed);
     super.dispose();
   }
 
-  void _stopOnInput() {
-    if (_stopped) return;
-    if (!widget.focus.hasFocus && widget.controller.text.isEmpty) return;
-    _type?.cancel();
-    setState(() => _stopped = true);
+  void _changed() {
+    if (!mounted) return;
+    final short = widget.dictation.listening ? _short : EntryGoalStep.isShort(widget.controller.text);
+    if (short != _short) setState(() => _short = short);
+    _rotate();
   }
 
-  void _restart() {
-    _type?.cancel();
-    if (_stopped) return;
-    // 24 зн./с печатает, 40 зн./с стирает, пауза 1.4 с на полном примере (канва 22-1).
-    _type = Timer.periodic(Duration(milliseconds: _erasing ? 25 : 42), (_) {
-      if (!mounted) return;
-      final examples = _examples(context);
-      final full = examples[_example % examples.length];
-      setState(() {
-        if (_erasing) {
-          _shown = _shown > 0 ? _shown - 1 : 0;
-          if (_shown == 0) {
-            _erasing = false;
-            _example++;
-            _restart();
-          }
-        } else {
-          _shown = _shown < full.length ? _shown + 1 : full.length;
-          if (_shown == full.length) {
-            _type?.cancel();
-            _type = Timer(const Duration(milliseconds: 1400), () {
-              if (!mounted || _stopped) return;
-              setState(() => _erasing = true);
-              _restart();
-            });
-          }
-        }
+  /// The examples turn while the field is empty and nobody dictates — and stand still otherwise.
+  void _rotate() {
+    final turning = widget.controller.text.isEmpty && !widget.dictation.listening;
+    if (turning && _turn == null) {
+      _turn = Timer.periodic(AppMotion.goalExampleEvery, (_) {
+        if (mounted) setState(() => _example = (_example + 1) % _GoalExamples.count);
       });
-    });
-  }
-
-  /// Примеры ПЛЕЙСХОЛДЕРА — не те, что в списке историй.
-  List<String> _examples(BuildContext context) {
-    final l = AppLocalizations.of(context);
-
-    return [l.planEntryGoalTyping1, l.planEntryGoalTyping2, l.planEntryGoalTyping3];
+    } else if (!turning) {
+      _turn?.cancel();
+      _turn = null;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final examples = _examples(context);
-    final full = examples[_example % examples.length];
-    final placeholder = _stopped ? examples.first : full.substring(0, _shown.clamp(0, full.length));
     final stories = [l.planEntryGoalStory1, l.planEntryGoalStory2, l.planEntryGoalStory3];
-    final short = widget.controller.text.trim().isNotEmpty &&
-        _isShort(widget.controller.text);
 
     return EntryContent(
       children: [
@@ -166,23 +134,29 @@ class _EntryGoalStepState extends State<EntryGoalStep> {
                     ? Padding(padding: const EdgeInsets.only(bottom: 10), child: DictationWave(level: widget.dictation.level))
                     : const SizedBox(width: double.infinity),
               ),
-              _Field(controller: widget.controller, focus: widget.focus, placeholder: placeholder, dictation: widget.dictation, onMic: widget.onMic),
+              _Field(controller: widget.controller, focus: widget.focus, example: _example, dictation: widget.dictation, onMic: widget.onMic),
             ],
           ),
         ),
-        // 22-1c: одно слово проходит — подсказка объясняет выгоду, а не отчитывает.
-        if (short) ...[
-          const SizedBox(height: 10),
-          Text(
-            l.planEntryGoalShortHint,
+        // The companion (CLIENT-22-1 §1a, §1c): always under the field; a short goal turns its text, never the button.
+        const SizedBox(height: 10),
+        AnimatedSwitcher(
+          duration: AppMotion.goalCompanionFade,
+          layoutBuilder: (current, previous) => Stack(
+            alignment: Alignment.topLeft,
+            children: [...previous, ?current],
+          ),
+          child: Text(
+            _short ? l.planEntryGoalCompanionShort : l.planEntryGoalCompanion,
+            key: ValueKey(_short ? 'goal-companion-short' : 'goal-companion'),
             style: const TextStyle(
               fontFamily: AppFonts.inter,
-              fontSize: 14,
+              fontSize: 13,
               height: 1.4,
               color: AppColors.tertiary,
             ),
           ),
-        ],
+        ),
         const SizedBox(height: 32),
         Text(
           l.planEntryGoalStoriesTitle.toUpperCase(),
@@ -202,12 +176,34 @@ class _EntryGoalStepState extends State<EntryGoalStep> {
       ],
     );
   }
+}
 
-  /// «Короткий ответ» — меньше восьми слов (то же правило, что у сервера в 22-4d).
-  static bool _isShort(String goal) {
-    final words = goal.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+/// THE FOUR EXAMPLES of the empty field (CLIENT-22-1 §1b) — all four laid out on top of each other, so the field is as
+/// tall as the longest and does not jump when they change; the shown one is opaque, the rest fade out.
+class _GoalExamples extends StatelessWidget {
+  const _GoalExamples({required this.shown, required this.style});
 
-    return words > 0 && words < 8;
+  static const count = 4;
+
+  final int shown;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final examples = [l.planEntryGoalExample1, l.planEntryGoalExample2, l.planEntryGoalExample3, l.planEntryGoalExample4];
+
+    return Stack(
+      children: [
+        for (var i = 0; i < examples.length; i++)
+          AnimatedOpacity(
+            key: ValueKey('goal-example-${i + 1}'),
+            opacity: i == shown % count ? 1 : 0,
+            duration: AppMotion.goalExampleFade,
+            child: Text(examples[i], style: style),
+          ),
+      ],
+    );
   }
 }
 
@@ -220,14 +216,15 @@ class _Field extends StatelessWidget {
   const _Field({
     required this.controller,
     required this.focus,
-    required this.placeholder,
+    required this.example,
     required this.dictation,
     required this.onMic,
   });
 
   final TextEditingController controller;
   final FocusNode focus;
-  final String placeholder;
+  /// Which example the empty field shows.
+  final int example;
   final GoalDictation dictation;
   final VoidCallback onMic;
 
@@ -272,8 +269,7 @@ class _Field extends StatelessWidget {
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
                       border: InputBorder.none,
-                      hintText: placeholder,
-                      hintStyle: _text.copyWith(color: AppColors.planInactive),
+                      hint: _GoalExamples(shown: example, style: _text.copyWith(color: AppColors.planInactive)),
                     ),
                   ),
           ),
@@ -295,7 +291,7 @@ class _Field extends StatelessWidget {
                       ),
               ),
               const SizedBox(width: 10),
-              _MicButton(listening: listening, onTap: onMic),
+              _MicButton(key: const ValueKey('goal-mic'), listening: listening, onTap: onMic),
             ],
           ),
         ],
@@ -306,7 +302,7 @@ class _Field extends StatelessWidget {
 
 /// Микрофон 44: в покое — кружок ground со значком, пока говорит — латунный со стопом.
 class _MicButton extends StatelessWidget {
-  const _MicButton({required this.listening, required this.onTap});
+  const _MicButton({super.key, required this.listening, required this.onTap});
 
   final bool listening;
   final VoidCallback onTap;

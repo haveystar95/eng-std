@@ -56,8 +56,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Пройти ещё раз'), findsOneWidget);
-    expect(find.textContaining(nb('слов: 3 из 5')), findsOneWidget);
-    expect(find.text(nb('Разговор · 3 мин')), findsNothing);
+    expect(find.textContaining(nbTypo('слов: 3 из 5')), findsOneWidget);
+    expect(find.text(nbTypo('Разговор · 3 мин')), findsNothing);
   });
 
   testWidgets('without a result: the plain «Разговор · 3 мин» and no result row', (tester) async {
@@ -65,7 +65,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text(nb('Разговор · 3 мин')), findsOneWidget);
+    expect(find.text(nbTypo('Разговор · 3 мин')), findsOneWidget);
     expect(find.text('Пройти ещё раз'), findsNothing);
     expect(find.textContaining('слов:'), findsNothing);
   });
@@ -75,7 +75,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text(nb('Разговор · 3 мин')), findsNothing);
+    expect(find.text(nbTypo('Разговор · 3 мин')), findsNothing);
     expect(find.text('Пройти ещё раз'), findsNothing);
   });
 }

@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/plan/session/session_models.dart';
 import 'package:eng_std/features/plan/session/parts/session_bits.dart';
 
+import '../../../support/nbsp.dart';
 import '../../../support/server_fixtures.dart';
 import '../../../support/session_harness.dart';
 
@@ -34,7 +35,7 @@ void main() {
     final line = find.byKey(const ValueKey('combine-partner-line'));
     expect(line, findsOneWidget);
     final text = tester.widget<Text>(line);
-    expect(text.data, '${partner['text_target']} · ${partner['text_native']}', reason: 'the whole line, both languages');
+    expect(text.data, '${partner['text_target']} · ${nt(partner['text_native'] as String)}', reason: 'the whole line, both languages — the native half set');
     expect(text.maxLines, isNull);
     expect(text.overflow, isNull);
     final paragraph = tester.renderObject<RenderParagraph>(find.descendant(of: line, matching: find.byType(RichText)));

@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/local/cached_image_provider.dart';
 import '../../../../data/plan/session/listen_timeline.dart';
@@ -507,7 +508,7 @@ class _ListenQuestionCardState extends State<ListenQuestionCard> with ChoiceCard
       task: SessionTask(l.planSessionTaskWhatUnderstood),
       body: SessionQuestionSheet(
         eyebrow: l.planSessionBrowQuestion,
-        text: Text(widget.payload.questionNative, style: AppTextSession.question),
+        text: Text(context.nativeText(widget.payload.questionNative), style: AppTextSession.question),
         translation: l.planSessionFromMemory,
         translationStyle: AppTextSession.meta,
       ),
@@ -793,7 +794,7 @@ class _PredictOwnBubble extends StatelessWidget {
                 children: [
                   Text(open.textTarget, style: SessionBubble.lineStyle(own: true)),
                   const SizedBox(height: 2),
-                  Text(open.textNative, style: SessionBubble.translationStyle(own: true)),
+                  Text(context.nativeText(open.textNative), style: SessionBubble.translationStyle(own: true)),
                 ],
               ),
             ),

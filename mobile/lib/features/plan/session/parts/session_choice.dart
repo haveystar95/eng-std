@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import 'session_bits.dart';
 
@@ -72,7 +73,9 @@ class SessionOption extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: Text(text, style: target ? AppTextSession.target22 : AppTextSession.option)),
+          // A target option as it came; a native one (a translation, an answer in the learner's words) — set by its
+          // typography (CLIENT-22-1 §2).
+          Expanded(child: Text(target ? text : context.nativeText(text), style: target ? AppTextSession.target22 : AppTextSession.option)),
           if (trailing != null) ...[const SizedBox(width: 12), trailing],
         ],
       ),
@@ -204,7 +207,7 @@ class SessionSoundPlate extends StatelessWidget {
                         children: [
                           Text(textTarget ?? '', style: AppTextSession.target22),
                           const SizedBox(height: 4),
-                          Text(textNative ?? '', style: AppTextSession.body),
+                          Text(context.nativeText(textNative ?? ''), style: AppTextSession.body),
                         ],
                       )
                     : Align(

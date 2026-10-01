@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/plan/day_window.dart';
 import 'window_bits.dart';
@@ -98,7 +99,7 @@ class WindowWordSheet extends StatelessWidget {
                     Text(reading, style: AppTextWindow.sheetReading),
                   ],
                   const SizedBox(height: 4),
-                  Text(word.translation, style: AppTextWindow.sheetTranslation),
+                  Text(context.nativeText(word.translation), style: AppTextWindow.sheetTranslation),
                   if (word.definition case final definition?) ...[
                     const SizedBox(height: 12),
                     Text(definition, style: AppTextWindow.translation),
@@ -119,7 +120,7 @@ class WindowWordSheet extends StatelessWidget {
                               children: [
                                 Text.rich(WindowUsageLine.span(usage), style: AppTextWindow.target),
                                 const SizedBox(height: 4),
-                                Text(usage.translation, style: AppTextWindow.translation),
+                                Text(context.nativeText(usage.translation), style: AppTextWindow.translation),
                               ],
                             ),
                           ),

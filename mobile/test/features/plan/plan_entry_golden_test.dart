@@ -9,9 +9,16 @@ import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/plan/plan_languages.dart';
 import 'package:eng_std/data/plan/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
+import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/plan/entry/plan_entry_screen.dart';
+import 'package:eng_std/l10n/app_localizations_ru.dart';
+import 'package:eng_std/theme/theme.dart';
 
+import '../../support/held_recognizer.dart';
 import '../../support/plan_goldens.dart';
+
+/// The stories of «Так пишут другие» as the interface shows them — the tests tap them by the `.arb`, not by a copy.
+final _ru = AppLocalizationsRu();
 
 /// ВХОД В ПЛАН, ШАГ ЗА ШАГОМ — кадры 22-1 … 22-4d (наряд PLAN-UI-2).
 ///
@@ -26,7 +33,7 @@ import '../../support/plan_goldens.dart';
 void main() {
   setUpAll(setUpPlanGoldens);
 
-  Widget entry(_Api api, {bool online = true}) => planGoldenApp(
+  Widget entry(_Api api, {bool online = true, SpeechRecognizer? recognizer, Locale locale = const Locale('ru')}) => planGoldenApp(
     ProviderScope(
       overrides: [
         apiClientProvider.overrideWithValue(api),
@@ -34,9 +41,11 @@ void main() {
         // merely depends on the api above would be created in the root container with the real one.
         planLanguagesProvider.overrideWith((ref) => loadPlanLanguages(api)),
         connectivityProvider.overrideWith((ref) => Stream.value(online)),
+        if (recognizer != null) speechRecognizerProvider.overrideWithValue(recognizer),
       ],
       child: PlanEntryScreen(now: () => DateTime(2026, 9, 12, 12)),
     ),
+    locale: locale,
   );
 
   /// Кнопка шага — одна, внизу, и называется по-разному; тест жмёт её по имени, как человек.
@@ -51,16 +60,24 @@ void main() {
     final api = _Api();
     await expectPlanGolden(tester, entry(api), 'plan/22-1-goal');
 
-    // 22-1c: одно слово — валидный ответ, подсказка появляется и НЕ блокирует.
+    // 22-1c: одно слово — валидный ответ; спутник под полем меняет текст на «Добавь пару слов о себе…» и НЕ блокирует
+    // (наряд CLIENT-22-1 §1c). Смена — перетекание: кадр снимается, когда оно закончилось.
     await tester.enterText(find.byType(TextField), 'врач');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump(AppMotion.goalCompanionFade);
     await tester.pump();
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('../../goldens/plan/22-1c-goal-short.png'),
     );
 
-    // Тап по истории «так пишут другие» подставляет её текст в поле.
-    await tester.tap(find.text('Звонок арендодателю про залог'));
+    // Тап по истории «так пишут другие» подставляет её текст в поле; спутник возвращается к обычному тексту. Кадр — когда
+    // и перетекание спутника, и чернила тапа по карточке истории закончились.
+    await tester.tap(find.text(_ru.planEntryGoalStory3));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump(const Duration(seconds: 1));
     await tester.pump();
     await expectLater(
       find.byType(MaterialApp),
@@ -102,6 +119,30 @@ void main() {
     );
   });
 
+  // 22-1 WHILE THE LEARNER DICTATES (наряд CLIENT-22-1 §1): the words typed as they are said, the last one grey, the
+  // wave over the field and the clock; the companion keeps its text — it waits for the dictation to close.
+  testWidgets('22-1 во время диктовки', (tester) async {
+    await expectPlanGolden(
+      tester,
+      entry(_Api(), recognizer: HeldRecognizer(['Собеседование на повара', 'Собеседование на повара в пятницу, работал три года'])),
+      'plan/22-1-goal-dictation',
+      prime: (tester) async {
+        await tester.tap(find.byKey(const ValueKey('goal-mic')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+      },
+    );
+    // The recording closes — no timer outlives the test.
+    await tester.tap(find.byKey(const ValueKey('goal-mic')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  // 22-1 in English: the companion and the example of the English interface.
+  testWidgets('22-1 en — the companion and the example', (tester) async {
+    await expectPlanGolden(tester, entry(_Api(), locale: const Locale('en')), 'plan/22-1-goal-en');
+  });
+
   // LANG-1: the server's seven targets (minus the native) do not fit the 844 frame — the level goes
   // below the fold. The step is shot whole, so the snapshot shows every language card and both level cards.
   testWidgets('22-2 целиком — семь целей и уровень', (tester) async {
@@ -111,7 +152,7 @@ void main() {
       'plan/22-2-language-level-full',
       size: const Size(390, 1240),
       prime: (tester) async {
-        await tester.tap(find.text('Звонок арендодателю про залог'));
+        await tester.tap(find.text(_ru.planEntryGoalStory3));
         await tester.pump();
         await tester.tap(find.text('Далее'));
         await tester.pump();
@@ -180,7 +221,7 @@ void main() {
 
 /// Доводит вход до шага ДАТЫ: история в поле, «Далее» трижды.
 Future<void> _toDate(WidgetTester tester) async {
-  await tester.tap(find.text('К врачу с ребёнком, первый раз в местной клинике'));
+  await tester.tap(find.text(_ru.planEntryGoalStory2));
   await tester.pump();
   for (var i = 0; i < 3; i++) {
     await tester.tap(find.text('Далее'));

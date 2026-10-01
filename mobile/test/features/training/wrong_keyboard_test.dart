@@ -10,6 +10,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import '../../support/nbsp.dart';
 
 /// Ч.2 — «поле ответа знает язык».
 ///
@@ -123,7 +124,7 @@ void main() {
       expect(find.byKey(sessionWrongKeyboardKey), findsOneWidget);
       // Nothing was graded, nothing was uploaded, and the card is still answerable.
       expect(answers, isEmpty);
-      expect(find.text('Не помню'), findsOneWidget);
+      expect(find.text(nbTypo('Не помню')), findsOneWidget);
     });
 
     testWidgets('the text is kept, so the learner retypes rather than starts over', (tester) async {

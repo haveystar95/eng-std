@@ -113,7 +113,7 @@ void main() {
   // ЛОВИТ: фразы дня вместо конструкций, заполненное окно до разговора и пример, набранный как перевод.
   testWidgets('37-5: «Скажи в разговоре» — каркасы с окном и пример урока серым', (tester) async {
     await pumpEntry(tester, day.scene, targets: targets);
-    final brow = find.text('СКАЖИ В РАЗГОВОРЕ');
+    final brow = find.text(nbTypo('СКАЖИ В РАЗГОВОРЕ'));
     expect(brow, findsOneWidget);
     final rules = tester.getRect(find.byKey(const ValueKey('talk-entry-rule-counts')));
     expect(tester.getRect(brow).top - rules.bottom, moreOrLessEquals(24, epsilon: 1), reason: 'под правилами через 24');
@@ -133,7 +133,7 @@ void main() {
         if (native == null) {
           expect(find.descendant(of: row, matching: find.byType(Text)), findsOneWidget, reason: '${t.ref}: без примера');
         } else {
-          expect(find.descendant(of: row, matching: find.text(native)), findsOneWidget, reason: '${t.ref}: строка урока');
+          expect(find.descendant(of: row, matching: find.text(nt(native))), findsOneWidget, reason: '${t.ref}: строка урока');
           expect(find.descendant(of: row, matching: find.byType(Text)), findsNWidgets(2), reason: '${t.ref}: и больше ничего');
         }
         continue;
@@ -144,7 +144,7 @@ void main() {
       final native = t.lineNative;
       final example = find.descendant(
         of: row,
-        matching: find.text(native == null ? t.saidWith(t.exampleTarget) : '${t.saidWith(t.exampleTarget)} · $native'),
+        matching: find.text(native == null ? t.saidWith(t.exampleTarget) : '${t.saidWith(t.exampleTarget)} · ${nt(native)}'),
       );
       expect(example, findsOneWidget, reason: '${t.ref}: пример урока одной строкой');
       expect(tester.widget<Text>(example).style, AppTextSession.meta);
@@ -158,7 +158,7 @@ void main() {
     expect(tester.getRect(second).top - tester.getRect(first).bottom, moreOrLessEquals(10, epsilon: 0.5));
 
     await pumpEntry(tester, day.scene);
-    expect(find.text('СКАЖИ В РАЗГОВОРЕ'), findsNothing, reason: 'нет конструкций — нет блока');
+    expect(find.text(nbTypo('СКАЖИ В РАЗГОВОРЕ')), findsNothing, reason: 'нет конструкций — нет блока');
   });
 
   // ПРАВИЛО: после «около» — родительный падеж; у строки свой plural, а не planMinutesCount.

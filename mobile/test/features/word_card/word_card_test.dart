@@ -171,7 +171,7 @@ void main() {
       await _pump(tester, subject: _fillOut());
 
       expect(find.text('+ Сохранённые'), findsOneWidget);
-      expect(find.text('Справа — выбрать другую коллекцию'), findsOneWidget);
+      expect(find.text(nbTypo('Справа — выбрать другую коллекцию')), findsOneWidget);
     });
 
     testWidgets('a word with no photo degrades to a lower plate, not to a hole', (tester) async {
@@ -306,7 +306,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byType(SavedStateLine),
-          matching: find.text('Сохранено в «Сохранённые» · в очереди на разбор'),
+          matching: find.text(nbTypo('Сохранено в «Сохранённые» · в очереди на разбор')),
         ),
         findsOneWidget,
       );
@@ -325,12 +325,12 @@ void main() {
         ),
       );
 
-      expect(find.text('Добавить в другую коллекцию'), findsOneWidget);
-      expect(find.text('Справа — выбрать другую коллекцию'), findsNothing);
+      expect(find.text(nbTypo('Добавить в другую коллекцию')), findsOneWidget);
+      expect(find.text(nbTypo('Справа — выбрать другую коллекцию')), findsNothing);
 
       // Ink, not terracotta: adding a word to one more collection destroys nothing, and the delete
       // colour on the safest action read as a warning (QA-OBS-19).
-      final link = tester.widget<Text>(find.text('Добавить в другую коллекцию'));
+      final link = tester.widget<Text>(find.text(nbTypo('Добавить в другую коллекцию')));
       expect(link.style?.color, AppColors.ink);
       expect(link.style?.color, isNot(AppColors.destructiveText));
     });
@@ -352,7 +352,7 @@ void main() {
         expect(
           find.descendant(
             of: find.byType(SavedStateLine),
-            matching: find.text('Сохранено в «Сохранённые» · в очереди на разбор'),
+            matching: find.text(nbTypo('Сохранено в «Сохранённые» · в очереди на разбор')),
           ),
           findsOneWidget,
         );
@@ -375,7 +375,7 @@ void main() {
         expect(
           find.descendant(
             of: find.byType(SavedStateLine),
-            matching: find.text('Сохранено в «Сохранённые» · учится'),
+            matching: find.text(nbTypo('Сохранено в «Сохранённые» · учится')),
           ),
           findsOneWidget,
         );
@@ -393,7 +393,7 @@ void main() {
         expect(
           find.descendant(
             of: find.byType(SnackBar),
-            matching: find.text('Сохранено в «Сохранённые» · в очереди на разбор'),
+            matching: find.text(nbTypo('Сохранено в «Сохранённые» · в очереди на разбор')),
           ),
           findsOneWidget,
         );
@@ -424,9 +424,9 @@ void main() {
           ],
         );
 
-        await tester.ensureVisible(find.text('Добавить в другую коллекцию'));
+        await tester.ensureVisible(find.text(nbTypo('Добавить в другую коллекцию')));
         await tester.pump();
-        await tester.tap(find.text('Добавить в другую коллекцию'));
+        await tester.tap(find.text(nbTypo('Добавить в другую коллекцию')));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Банк'));
         await tester.pumpAndSettle();
@@ -445,7 +445,7 @@ void main() {
         ),
       );
 
-      expect(find.text('В коллекции «Мои находки»'), findsOneWidget);
+      expect(find.text(nbTypo('В коллекции «Мои находки»')), findsOneWidget);
     });
   });
 
@@ -467,7 +467,7 @@ void main() {
       await _pump(tester, subject: fromFolder(), mode: WordCardMode.folder);
 
       expect(find.text('ПРОГРЕСС СЛОВА'), findsOneWidget);
-      expect(find.text(nb('2 из 5')), findsOneWidget);
+      expect(find.text(nbTypo('2 из 5')), findsOneWidget);
       expect(find.byType(LadderTrack), findsOneWidget);
       // The current rung is captioned in ink; the rest stay quiet.
       expect(find.text('узнавание'), findsOneWidget);
@@ -486,7 +486,7 @@ void main() {
 
       expect(find.text('Тренировать слово'), findsOneWidget);
       expect(find.text('+ Сохранённые'), findsNothing);
-      expect(find.text('Добавить в другую коллекцию'), findsOneWidget);
+      expect(find.text(nbTypo('Добавить в другую коллекцию')), findsOneWidget);
 
       await tester.ensureVisible(find.text('Тренировать слово'));
       await tester.pump();
@@ -579,7 +579,7 @@ void main() {
       Future<void> openMenu(WidgetTester tester) async {
         await tester.tap(find.bySemanticsLabel('Ещё'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Убрать из изучения'));
+        await tester.tap(find.text(nbTypo('Убрать из изучения')));
         await tester.pumpAndSettle();
       }
 
@@ -596,7 +596,7 @@ void main() {
         );
 
         await openMenu(tester);
-        expect(find.textContaining('Прогресс и история сохранятся'), findsOneWidget);
+        expect(find.textContaining(nbTypo('Прогресс и история сохранятся')), findsOneWidget);
 
         await tester.tap(find.text('Убрать'));
         await tester.pumpAndSettle();

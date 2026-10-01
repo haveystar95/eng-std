@@ -38,7 +38,8 @@ void main() {
     expect([for (final f in feed) f.line.ref], ['x1', 'x1b']);
     expect([for (final f in feed) f.own], [false, true]);
     expect(feed.last.mark, FeedMark.passed);
-    expect(feed.first.line.textTarget, 'Where does it hurt: his upper back or his lower back?');
+    // The line as the fixture has it today (наряд CLIENT-22-1 §4): the first exchange's partner line, whatever its words.
+    expect(feed.first.line.textTarget, (at(day, 1).payload as DialoguePartnerPayload).partnerLine.textTarget);
 
     // On dialogue_answer x2 (position 4) the partner's x2 is the card's own bubble — the feed stops at x1b.
     final answer = _dialogueAnsweredBefore(4);

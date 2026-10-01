@@ -14,6 +14,7 @@ import 'package:eng_std/data/speech/speech_diagnostics.dart';
 import 'package:eng_std/data/speech/speech_turn.dart';
 import 'package:eng_std/features/training/session/intro_card.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import '../../support/nbsp.dart';
 
 /// The intro card's optional echo: listen, say something kind, write nothing.
 ///
@@ -219,7 +220,7 @@ void main() {
       await tester.tap(micButton());
       await tester.pumpAndSettle();
 
-      expect(find.text(expected), findsOneWidget, reason: heard);
+      expect(find.text(nbTypo(expected)), findsOneWidget, reason: heard);
     }
   });
 
@@ -364,7 +365,7 @@ void main() {
       expect(diagnostics.phase, SpeechPhase.closedBySilence);
       expect(diagnostics.log, isNotEmpty);
       // …и по-прежнему НИЧЕГО не пишет в лестницу: у карточки нет ни ответа, ни вердикта.
-      expect(find.textContaining('Не то'), findsNothing);
+      expect(find.textContaining(nbTypo('Не то')), findsNothing);
     });
   });
 

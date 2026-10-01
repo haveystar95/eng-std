@@ -16,6 +16,7 @@ import 'package:eng_std/features/plan/route/route_view.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
+import '../../support/nbsp.dart';
 import '../../support/plan_goldens.dart';
 
 /// КАНОН ПЛАНА — правила канвы и наряда, а не снимок текущего кода.
@@ -281,13 +282,13 @@ void main() {
       await pump(tester, entry(), size: const Size(390, 844));
       await tester.tap(find.text('Далее'));
       await tester.pump(const Duration(milliseconds: 200));
-      expect(find.text('К чему готовишься?'), findsOneWidget);
+      expect(find.text(nbTypo('К чему готовишься?')), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), 'врач');
       await tester.pump();
       await tester.tap(find.text('Далее'));
       await tester.pump(const Duration(milliseconds: 200));
-      expect(find.text('На каком языке говорить?'), findsOneWidget);
+      expect(find.text(nbTypo('На каком языке говорить?')), findsOneWidget);
     });
 
     // ПРАВИЛО (наряд §2): состояния «распознаю…» нет — голос печатается в поле по мере речи.

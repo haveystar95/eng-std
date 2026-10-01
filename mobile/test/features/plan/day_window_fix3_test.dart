@@ -68,12 +68,12 @@ void main() {
     testWidgets('пройденный разговор с повторами — «ещё раз»', (tester) async {
       await pumpDayWindow(tester, withTalk(again: true));
       expect(find.descendant(of: find.byType(WindowStageRow), matching: find.text('ещё раз')), findsNWidgets(6));
-      expect(find.text('лимит на сегодня'), findsNothing);
+      expect(find.text(nbTypo('лимит на сегодня')), findsNothing);
     });
 
     testWidgets('разговор упёрся в лимит повторов — «лимит на сегодня»', (tester) async {
       await pumpDayWindow(tester, withTalk(again: false));
-      expect(find.text('лимит на сегодня'), findsOneWidget);
+      expect(find.text(nbTypo('лимит на сегодня')), findsOneWidget);
     });
 
     // ПРАВИЛО: у ИДУЩЕГО ряда «ещё раз» не предлагается — он ещё не пройден, и «ещё раз» там нечему.
@@ -147,7 +147,7 @@ void main() {
 
       final heading = find.byType(WindowReturnHeading);
       expect(heading, findsOneWidget, reason: 'одна сцена-источник — одна группа');
-      expect(find.descendant(of: heading, matching: find.text('ВЕРНУЛОСЬ ИЗ ДНЯ 1')), findsOneWidget);
+      expect(find.descendant(of: heading, matching: find.text(nbTypo('ВЕРНУЛОСЬ ИЗ ДНЯ 1'))), findsOneWidget);
       expect(find.descendant(of: heading, matching: find.text(nb('День 1 · Ресепшен зала'))), findsOneWidget);
 
       final cards = tester.widgetList<WindowWordCard>(find.byType(WindowWordCard)).toList();

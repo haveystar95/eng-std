@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/day_plate.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../data/app_version.dart';
 import '../../../data/languages.dart' show sttLocaleFor;
@@ -306,7 +307,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final l = AppLocalizations.of(context);
     final plan = _session.currentPlan;
     final route = plan.days.where((d) => d.number == widget.number).firstOrNull;
-    final title = (route == null ? null : (route.titleNative ?? plan.sceneOf(route)?.titleNative)) ?? plan.displayTitle;
+    final title = context.nativeText((route == null ? null : (route.titleNative ?? plan.sceneOf(route)?.titleNative)) ?? plan.displayTitle);
     final failed = _session.phase == SessionPhase.lessonFailed;
     final bySubscription = _session.phase == SessionPhase.lockedBySubscription;
     if (bySubscription) {
@@ -445,7 +446,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       voice: _voice,
       targetLang: plan.targetLang,
       localeId: localeId,
-      role: scene?.partnerRoleNative?.trim() ?? '',
+      // The partner's role, in the learner's language — set once here for every card that names it (CLIENT-22-1 §2).
+      role: context.nativeText(scene?.partnerRoleNative?.trim() ?? ''),
       submit: (answer) => _session.submit(card, answer),
       next: () async {
         await _voice.stop();
@@ -680,7 +682,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         l,
         stage,
         SessionSummaries.stageTally(q, stage, server: _session.summaryOf(stage)),
-        role: _session.scene?.partnerRoleNative,
+        role: context.nativeTextOrNull(_session.scene?.partnerRoleNative),
       ),
       next: next == null
           ? (stage: null, name: l.planSessionDayTotal, value: l.planMinutesCount(_session.dayMinutes))

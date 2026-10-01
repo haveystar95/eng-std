@@ -12,6 +12,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/search/search_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import '../../support/nbsp.dart';
 
 /// The instant translation, after «Фаза 3» moved it INSIDE the field.
 ///
@@ -265,7 +266,7 @@ void main() {
       await ask(tester, 'root');
 
       expect(find.text('Собрать карточку'), findsOneWidget);
-      expect(find.textContaining('Значение и пример'), findsOneWidget);
+      expect(find.textContaining(nbTypo('Значение и пример')), findsOneWidget);
     });
 
     testWidgets('no answer, no line — the frame does not reserve space for it', (tester) async {
@@ -346,7 +347,7 @@ void main() {
       await _pump(tester, _Api(hint: const InstantHint(query: 'x', queryTooLong: true)));
       await ask(tester, 'x');
 
-      expect(find.text('Поиск — для слов и коротких фраз'), findsOneWidget);
+      expect(find.text(nbTypo('Поиск — для слов и коротких фраз')), findsOneWidget);
       // Nothing here to build a card out of, so nothing offers to.
       expect(find.text('Собрать карточку'), findsNothing);
     });
@@ -361,9 +362,9 @@ void main() {
       await tester.tap(find.text('Собрать карточку'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Не получилось распознать, проверьте написание'), findsOneWidget);
+      expect(find.text(nbTypo('Не получилось распознать, проверьте написание')), findsOneWidget);
       // Not the failure line: the app did not break, the spelling did.
-      expect(find.text('Не удалось найти это слово'), findsNothing);
+      expect(find.text(nbTypo('Не удалось найти это слово')), findsNothing);
       expect(tester.takeException(), isNull);
     });
   });

@@ -14,6 +14,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import '../../support/nbsp.dart';
 
 /// `dictation`: the example sentence is spoken, the learner writes it down.
 ///
@@ -75,7 +76,7 @@ void main() {
       expect(find.text(sentence), findsNothing);
       // …and no written cue either: a translation on screen would make it a translation exercise.
       expect(find.text('У меня бронь на сегодня.'), findsNothing);
-      expect(find.text('прослушай и запиши предложение'), findsOneWidget);
+      expect(find.text(nbTypo('прослушай и запиши предложение')), findsOneWidget);
     });
 
     testWidgets('speaks the sentence on appearance, after the slide (F20)', (tester) async {
@@ -107,15 +108,15 @@ void main() {
       await tester.pumpWidget(host(dictationCard()));
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Не помню'), findsOneWidget);
+      expect(find.text(nbTypo('Не помню')), findsOneWidget);
 
-      await tester.tap(find.text('Не помню'));
+      await tester.tap(find.text(nbTypo('Не помню')));
       await tester.pump();
       // The correct form «writes itself» character by character (§4е), so give it its 350 ms.
       await tester.pump(const Duration(milliseconds: 500));
 
       // An empty answer is a miss, and the correct sentence is revealed.
-      expect(find.textContaining('Не то'), findsOneWidget);
+      expect(find.textContaining(nbTypo('Не то')), findsOneWidget);
       expect(find.text(sentence), findsWidgets);
     });
 

@@ -11,6 +11,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import '../../support/nbsp.dart';
 
 /// «Не помню» belongs to BOTH assembly modes, through the one lapse channel.
 ///
@@ -91,22 +92,22 @@ void main() {
     await tester.pumpWidget(host(wordBank()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Не помню'), findsOneWidget);
+    expect(find.text(nbTypo('Не помню')), findsOneWidget);
   });
 
   testWidgets('scramble still offers it — this is one channel, not two', (tester) async {
     await tester.pumpWidget(host(scramble()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Не помню'), findsOneWidget);
+    expect(find.text(nbTypo('Не помню')), findsOneWidget);
   });
 
   testWidgets('the tap commits an EMPTY answer, not a wrong guess', (tester) async {
     await tester.pumpWidget(host(wordBank()));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Не помню'));
-    await tester.tap(find.text('Не помню'));
+    await tester.ensureVisible(find.text(nbTypo('Не помню')));
+    await tester.tap(find.text(nbTypo('Не помню')));
     await tester.pumpAndSettle();
 
     expect(answers, hasLength(1));
@@ -120,11 +121,11 @@ void main() {
     await tester.pumpWidget(host(wordBank()));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Не помню'));
-    await tester.tap(find.text('Не помню'));
+    await tester.ensureVisible(find.text(nbTypo('Не помню')));
+    await tester.tap(find.text(nbTypo('Не помню')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Не помню'), findsNothing);
+    expect(find.text(nbTypo('Не помню')), findsNothing);
     expect(answers, hasLength(1));
   });
 
@@ -140,9 +141,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Лейбл блока задания (4м) набран капителью.
-    expect(find.textContaining('СОБЕРИ ИЗ БУКВ'), findsOneWidget);
-    expect(find.text('Собери из букв ниже'), findsOneWidget);
-    expect(find.textContaining('СОБЕРИ ИЗ СЛОВ'), findsNothing);
+    expect(find.textContaining(nbTypo('СОБЕРИ ИЗ БУКВ')), findsOneWidget);
+    expect(find.text(nbTypo('Собери из букв ниже')), findsOneWidget);
+    expect(find.textContaining(nbTypo('СОБЕРИ ИЗ СЛОВ')), findsNothing);
   });
 
   testWidgets('the assembled letters commit as ONE WORD, not as spaced tokens', (tester) async {
@@ -215,7 +216,7 @@ void main() {
     await tester.pumpWidget(host(phrase));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('СОБЕРИ ИЗ СЛОВ'), findsOneWidget);
-    expect(find.text('Собери из слов ниже'), findsOneWidget);
+    expect(find.textContaining(nbTypo('СОБЕРИ ИЗ СЛОВ')), findsOneWidget);
+    expect(find.text(nbTypo('Собери из слов ниже')), findsOneWidget);
   });
 }

@@ -13,6 +13,7 @@ import 'package:eng_std/data/speech/speech_recognizer.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/ui/ui.dart';
+import '../../support/nbsp.dart';
 
 /// THERE IS ALWAYS A WAY OUT OF A SPEAKING CARD — E2E-SIM-2, С-4.
 ///
@@ -111,7 +112,7 @@ void main() {
   /// Is «Не помню» tappable right now? A disabled [QuietButton] carries a null `onPressed`.
   bool giveUpEnabled(WidgetTester tester) => tester
       .widget<QuietButton>(
-        find.ancestor(of: find.text('Не помню'), matching: find.byType(QuietButton)).first,
+        find.ancestor(of: find.text(nbTypo('Не помню')), matching: find.byType(QuietButton)).first,
       )
       .onPressed !=
       null;
@@ -131,23 +132,23 @@ void main() {
     expect(engine.calls, 1);
     // «Пишу…» — подпись кнопки (наряд SPEECH-2, Ч.1.1). Отдельной строки «Слушаю…» под кружком
     // больше нет: состояние называет сама кнопка, и двух подписей об одном не бывает.
-    expect(find.text('Пишу — скажи и нажми «Готово»'), findsOneWidget);
+    expect(find.text(nbTypo('Пишу — скажи и нажми «Готово»')), findsOneWidget);
     expect(giveUpEnabled(tester), isFalse);
     expect(find.text('Пропустить'), findsNothing);
 
     // Fourteen seconds in, nothing has changed: the grace period is a real one, not an instant
     // give-up that would cut a slow audio session off before it came up.
     await tester.pump(const Duration(seconds: 14));
-    expect(find.text('Пишу — скажи и нажми «Готово»'), findsOneWidget);
+    expect(find.text(nbTypo('Пишу — скажи и нажми «Готово»')), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 2));
 
     // Fifteen seconds with nothing back at all is the engine's own watchdog: since SPEECH-2 (Ч.2.1)
     // it measures the WHOLE recording from the tap, and the card says so in the words it has for a
     // microphone that heard nothing. Both exits are live.
-    expect(find.text('Пишу — скажи и нажми «Готово»'), findsNothing);
-    expect(find.text('Твоя очередь — нажми и говори'), findsOneWidget, reason: 'кнопка снова зовёт');
-    expect(find.textContaining('Не расслышал'), findsOneWidget);
+    expect(find.text(nbTypo('Пишу — скажи и нажми «Готово»')), findsNothing);
+    expect(find.text(nbTypo('Твоя очередь — нажми и говори')), findsOneWidget, reason: 'кнопка снова зовёт');
+    expect(find.textContaining(nbTypo('Не расслышал')), findsOneWidget);
     expect(find.text('Пропустить'), findsOneWidget);
     expect(giveUpEnabled(tester), isTrue);
     expect(engine.cancels, greaterThan(0), reason: 'the abandoned attempt is closed, not left holding the mic');
@@ -187,7 +188,7 @@ void main() {
     await tester.tap(find.byType(MicButton).first);
     await tester.pump(const Duration(seconds: 16));
 
-    await tester.tap(find.text('Не помню'));
+    await tester.tap(find.text(nbTypo('Не помню')));
     await tester.pumpAndSettle();
 
     expect(answers.length, 1);

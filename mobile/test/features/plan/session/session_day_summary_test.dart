@@ -183,14 +183,14 @@ void main() {
     final backend = _Backend(_day(returns: {'words': {3}, 'phrases': {2}, 'dialogue': {1}}));
     await _open(tester, backend);
 
-    expect(find.text(nb('День пройден · 19 минут')), findsOneWidget);
+    expect(find.text(nbTypo('День пройден · 19 минут')), findsOneWidget);
     expect(find.byKey(const ValueKey('day-summary-plate')), findsOneWidget);
     for (final stage in ['Слова', 'Фразы', 'Диалог', 'Слушаю и отвечаю', 'Говорю сам', 'Разговор']) {
-      expect(find.descendant(of: find.byKey(const ValueKey('day-summary-plate')), matching: find.text(stage)), findsOneWidget, reason: stage);
+      expect(find.descendant(of: find.byKey(const ValueKey('day-summary-plate')), matching: find.text(nbTypo(stage))), findsOneWidget, reason: stage);
     }
     expect(find.text('ВЕРНЁТСЯ ЗАВТРА'), findsOneWidget);
-    expect(find.text(nb('3 карточки: 1 слово, 1 фраза и 1 реплика.')), findsOneWidget);
-    expect(find.text('День 2 — собираю'), findsOneWidget);
+    expect(find.text(nbTypo('3 карточки: 1 слово, 1 фраза и 1 реплика.')), findsOneWidget);
+    expect(find.text(nbTypo('День 2 — собираю')), findsOneWidget);
     expect(sounds, contains('day_done'));
 
     await tester.tap(find.byKey(const ValueKey('day-summary-close')));
@@ -210,7 +210,7 @@ void main() {
     final backend = _Backend(_day(talk: false));
     await _open(tester, backend);
 
-    expect(find.text(nb('День пройден · 19 минут')), findsOneWidget);
+    expect(find.text(nbTypo('День пройден · 19 минут')), findsOneWidget);
     expect(find.descendant(of: find.byKey(const ValueKey('day-summary-plate')), matching: find.text('Разговор')), findsNothing);
     expect(find.text('ЧТО БЫЛО ХОРОШО'), findsNothing, reason: 'the server sent no lines');
 
@@ -233,7 +233,8 @@ void main() {
     expect(find.text('ЧТО БЫЛО ХОРОШО'), findsOneWidget);
     for (final (i, line) in ['Сказал сам 6 реплик из 8', 'В разговоре использовал 5 фраз из 7', 'Понял все вопросы врача'].indexed) {
       expect(find.byKey(ValueKey('day-summary-highlight-$i')), findsOneWidget);
-      expect(find.text(line), findsOneWidget);
+      // The server's ready lines, set by the learner's typography at display (CLIENT-22-1 §2).
+      expect(find.text(nt(line)), findsOneWidget);
     }
   });
 

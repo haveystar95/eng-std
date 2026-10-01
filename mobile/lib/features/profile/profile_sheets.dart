@@ -20,6 +20,9 @@ import 'profile_screen.dart' show setRemindersFromProfile;
 
 /// ИМЯ (frame 42-2): one field under the sheet's title — no label of its own, «Как тебя зовут» in it while empty — and
 /// «Готово»; no «Отмена» — the sheet goes down by a drag. Over the keyboard whole.
+///
+/// «Готово» is inactive while the name is empty or only spaces, and wakes with the first character typed (наряд
+/// CLIENT-22-1 §3): a button that closes the sheet and quietly keeps the old name reads as a save that did not happen.
 Future<void> showNameSheet(BuildContext context, WidgetRef ref, {required String current}) async {
   final name = await showPaperSheet<String>(context: context, builder: (_) => _NameSheet(current: current));
   if (name != null && name.trim().isNotEmpty && name.trim() != current) {
@@ -45,7 +48,11 @@ class _NameSheetState extends State<_NameSheet> {
     super.dispose();
   }
 
-  void _done() => Navigator.of(context).pop(_field.text);
+  bool get _named => _field.text.trim().isNotEmpty;
+
+  void _done() {
+    if (_named) Navigator.of(context).pop(_field.text);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +87,10 @@ class _NameSheetState extends State<_NameSheet> {
           ),
         ),
         const SizedBox(height: 32),
-        DockButton(key: const ValueKey('name-done'), label: l.accountDone, onTap: _done),
+        ListenableBuilder(
+          listenable: _field,
+          builder: (context, _) => DockButton(key: const ValueKey('name-done'), label: l.accountDone, enabled: _named, onTap: _done),
+        ),
       ],
     );
   }
@@ -137,7 +147,7 @@ class _DeleteSheetState extends ConsumerState<_DeleteSheet> {
       child: PaperSheetBody(
         key: const ValueKey('delete-sheet'),
         title: l.accountDeleteTitle,
-        body: plan == null || plan.trim().isEmpty ? l.accountDeleteBody : l.accountDeleteBodyPlan(plan.trim()),
+        body: plan == null || plan.trim().isEmpty ? l.accountDeleteBody : l.accountDeleteBodyPlan(context.nativeText(plan.trim())),
         note: _failed ? l.accountDeleteFailed : l.accountDeleteNote,
         stayLabel: l.commonCancel,
         onStay: () => Navigator.of(context).pop(),

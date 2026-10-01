@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../support/nbsp.dart';
 
 /// Sessions are still built server-side, so «нет сети» is a state the user WILL hit — and it used
 /// to appear as `Не удалось загрузить сессию: DioException [connection error] …`, with no way out
@@ -72,7 +73,7 @@ void main() {
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
 
-    expect(find.text('Не удалось загрузить сессию'), findsOneWidget);
+    expect(find.text(nbTypo('Не удалось загрузить сессию')), findsOneWidget);
     expect(find.text('Нет соединения'), findsNothing);
     expect(find.textContaining('DioException'), findsNothing);
 

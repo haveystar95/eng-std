@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 
 import '../../../../data/local/cached_image_provider.dart';
 import '../../../../data/plan/plan_models.dart';
@@ -111,7 +112,8 @@ class SessionCheckQuestion extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     children: [
       if (task case final line?) ...[Text(line, style: AppTextSession.task), const SizedBox(height: 6)],
-      Text(question, key: const ValueKey('check-question'), style: AppTextSession.question),
+      // The question is the learner's language (`question_native`) — set by its typography (CLIENT-22-1 §2).
+      Text(context.nativeText(question), key: const ValueKey('check-question'), style: AppTextSession.question),
     ],
   );
 }

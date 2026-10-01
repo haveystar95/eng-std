@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/native_text.dart';
 import 'package:eng_std/ui/paper_switch.dart';
 import 'package:eng_std/ui/paper_sheet.dart';
 
@@ -512,7 +513,8 @@ class SessionDaySummary extends StatelessWidget {
                         const SizedBox(height: 14),
                         for (final (i, line) in highlights.indexed) ...[
                           if (i > 0) const SizedBox(height: 8),
-                          Text(line, key: ValueKey('day-summary-highlight-$i'), style: AppTextSession.body),
+                          // «Что было хорошо» — the server's ready lines, composed from its packs (CLIENT-22-1 §2).
+                          Text(context.composedText(line), key: ValueKey('day-summary-highlight-$i'), style: AppTextSession.body),
                         ],
                       ],
                       if (returnsLine != null || nextDay != null) SizedBox(height: highlights.isEmpty ? 100 : 40),
